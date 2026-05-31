@@ -7,7 +7,7 @@ GO
 
 -- Usage: SELECT dbo.fn_TinhPhiHangLy(20.0, SYSUTCDATETIME(), @MaChuyenBay)
 -- Selects the smallest active BANGGIA_HANHLY tier where TrongLuongToiDa >= @TongTrongLuong.
--- Returns GiaMuaTruoc when @ThoiDiemMua < (NgayGioBay - THOI_GIAN_MUA_TRUOC_HANHLY hours),
+-- Returns GiaMuaTruoc when @ThoiDiemMua < (NgayGioBay - ThoiGianMuaHanhLyUuDai hours),
 --         GiaTaiSanBay otherwise. NULL if no matching active tier or flight not found.
 CREATE OR ALTER FUNCTION dbo.fn_TinhPhiHangLy
 (
@@ -30,9 +30,9 @@ BEGIN
 
     IF @NgayGioBay IS NULL RETURN NULL;
 
-    SELECT @NguongGio = ISNULL(TRY_CAST(ConfigValue AS INT), 3)
-    FROM dbo.APP_CONFIG
-    WHERE ConfigKey = 'THOI_GIAN_MUA_TRUOC_HANHLY';
+    SELECT @NguongGio = ISNULL(TRY_CAST(GiaTri AS INT), 3)
+    FROM dbo.THAM_SO
+    WHERE TenThamSo = 'ThoiGianMuaHanhLyUuDai';
 
     SELECT TOP 1
         @GiaMuaTruoc  = GiaMuaTruoc,

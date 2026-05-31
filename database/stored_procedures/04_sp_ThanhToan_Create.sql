@@ -111,9 +111,9 @@ BEGIN
             SET @MaVeTarget = @MaVe;
         END;
 
-        -- Tính thuế VAT từ APP_CONFIG
-        SELECT @ThuVAT = TRY_CAST(ConfigValue AS DECIMAL(18,2)) / 100
-        FROM dbo.APP_CONFIG WHERE ConfigKey = 'THUE_VAT';
+        -- Tính thuế VAT từ THAM_SO
+        SELECT @ThuVAT = TRY_CAST(GiaTri AS DECIMAL(18,2)) / 100
+        FROM dbo.THAM_SO WHERE TenThamSo = 'ThueVAT';
         SET @ThuVAT = ISNULL(@ThuVAT, 0.10);
 
         SET @ThueVATAmount = @GiaGoc * @ThuVAT;

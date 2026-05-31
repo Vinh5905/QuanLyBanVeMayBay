@@ -38,12 +38,12 @@ BEGIN
             RETURN;
         END;
 
-        -- Kiểm tra thời gian đóng bán vé (từ APP_CONFIG)
-        SELECT @ThoiGianDong = TRY_CAST(ConfigValue AS INT)
-        FROM dbo.APP_CONFIG WHERE ConfigKey = 'THOI_GIAN_DONG_BAN_VE';
-        SET @ThoiGianDong = ISNULL(@ThoiGianDong, 24);
+        -- Kiểm tra thời gian đóng bán vé (từ THAM_SO)
+        SELECT @ThoiGianDong = TRY_CAST(GiaTri AS INT)
+        FROM dbo.THAM_SO WHERE TenThamSo = 'ThoiGianDongBanVe';
+        SET @ThoiGianDong = ISNULL(@ThoiGianDong, 45);
 
-        IF DATEADD(HOUR, -@ThoiGianDong, @NgayGioBay) < SYSUTCDATETIME()
+        IF DATEADD(MINUTE, -@ThoiGianDong, @NgayGioBay) < SYSUTCDATETIME()
         BEGIN
             IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 1002 AS ErrorCode, N'Đã quá thời gian bán vé cho chuyến bay này' AS Message;

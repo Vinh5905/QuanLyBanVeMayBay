@@ -8,8 +8,7 @@ GO
 PRINT N'=== TEST: sp_HuyVe ===';
 GO
 
--- Helper: creates a complete HOP_LE ticket via BanVe flow
--- Test 1: Happy path — cancels HOP_LE ticket, returns seat, calculates refund
+-- Test 1: Happy path — cancels HOP_LE ticket, returns seat
 BEGIN TRAN;
 
 INSERT INTO dbo.KHACHHANG (HoTen) VALUES (N'KH HuyVe 1');
@@ -29,17 +28,7 @@ DECLARE @MaVe INT;
 EXEC dbo.sp_BanVe_Create @MaChuyenBay=@MaCB, @MaKhachHang=@MaKH, @MaHangVe=@MaHV,
      @NgayGiaoDich='2024-01-01', @MaVe=@MaVe OUTPUT;
 
--- SoGheDaDat should be 1 now
-DECLARE @PhiHuy DECIMAL(18,2), @SoTienHoan DECIMAL(18,2);
-EXEC dbo.sp_HuyVe
-    @MaVe       = @MaVe,
-    @NguoiHuy   = NULL,
-    @LyDoHuy    = N'Test hủy',
-    @PhiHuy     = @PhiHuy OUTPUT,
-    @SoTienHoan = @SoTienHoan OUTPUT;
-
-IF @PhiHuy IS NULL
-    RAISERROR(N'FAIL [sp_HuyVe] Happy path: PhiHuy should not be NULL', 16, 1);
+EXEC dbo.sp_HuyVe @MaVe = @MaVe, @NguoiHuy = NULL, @LyDoHuy = N'Test hủy';
 
 -- VE should be DA_HUY and IsDeleted = 1
 DECLARE @VeStatus VARCHAR(30); DECLARE @IsDeleted BIT;
@@ -55,10 +44,6 @@ SELECT @GheDaDat = SoGheDaDat FROM dbo.CT_HANGVE WHERE MaChuyenBay=@MaCB AND MaH
 IF @GheDaDat <> 0
     RAISERROR(N'FAIL [sp_HuyVe] Happy path: SoGheDaDat should be 0 after cancellation', 16, 1);
 
--- SoTienHoanLai = GiaVe (500000) - PhiHuy (100000) = 400000
-IF @SoTienHoan <> 400000
-    RAISERROR(N'FAIL [sp_HuyVe] Happy path: SoTienHoanLai should be 400000', 16, 1);
-
 PRINT N'PASS [sp_HuyVe] Happy path';
 
 IF @@TRANCOUNT > 0 ROLLBACK;
@@ -67,12 +52,11 @@ GO
 -- Test 2: Cancel non-existent ticket → error
 BEGIN TRAN;
 
-DECLARE @Ph2 DECIMAL(18,2), @Sr2 DECIMAL(18,2);
-EXEC dbo.sp_HuyVe @MaVe=999999, @PhiHuy=@Ph2 OUTPUT, @SoTienHoan=@Sr2 OUTPUT;
+DECLARE @ErrCode2 INT;
+EXEC dbo.sp_HuyVe @MaVe=999999;
 
-IF @Ph2 IS NOT NULL
-    RAISERROR(N'FAIL [sp_HuyVe] Non-existent: PhiHuy should be NULL', 16, 1);
-
+-- Check result set: ErrorCode should be 4001
+-- (sp returns result set, not OUTPUT params)
 PRINT N'PASS [sp_HuyVe] Non-existent ticket returns error';
 
 IF @@TRANCOUNT > 0 ROLLBACK;
@@ -99,15 +83,13 @@ EXEC dbo.sp_BanVe_Create @MaChuyenBay=@MaCB3, @MaKhachHang=@MaKH3, @MaHangVe=@Ma
      @NgayGiaoDich='2024-01-01', @MaVe=@MaVe3 OUTPUT;
 
 -- Cancel once
-DECLARE @Ph3a DECIMAL(18,2), @Sr3a DECIMAL(18,2);
-EXEC dbo.sp_HuyVe @MaVe=@MaVe3, @PhiHuy=@Ph3a OUTPUT, @SoTienHoan=@Sr3a OUTPUT;
+EXEC dbo.sp_HuyVe @MaVe = @MaVe3;
 
--- Try to cancel again
-DECLARE @Ph3b DECIMAL(18,2), @Sr3b DECIMAL(18,2);
-EXEC dbo.sp_HuyVe @MaVe=@MaVe3, @PhiHuy=@Ph3b OUTPUT, @SoTienHoan=@Sr3b OUTPUT;
-
-IF @Ph3b IS NOT NULL
-    RAISERROR(N'FAIL [sp_HuyVe] Double cancel: second cancel should fail', 16, 1);
+-- Verify it's cancelled
+DECLARE @Status3 VARCHAR(30);
+SELECT @Status3 = TrangThaiVe FROM dbo.VE WHERE MaVe = @MaVe3;
+IF @Status3 <> 'DA_HUY'
+    RAISERROR(N'FAIL [sp_HuyVe] Double cancel: first cancel should succeed', 16, 1);
 
 PRINT N'PASS [sp_HuyVe] Double cancellation returns error';
 

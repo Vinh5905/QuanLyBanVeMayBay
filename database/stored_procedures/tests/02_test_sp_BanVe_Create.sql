@@ -145,8 +145,8 @@ INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia)
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'TEST_CLOSED_CLASS', 1.0);
 DECLARE @MaHV4 INT = SCOPE_IDENTITY();
 
--- Departure in 1 hour — within the 24h no-sell window
-DECLARE @NgayBay4 DATETIME2(0) = DATEADD(HOUR, 1, SYSUTCDATETIME());
+-- Departure in 30 minutes — within the 45-minute no-sell window
+DECLARE @NgayBay4 DATETIME2(0) = DATEADD(MINUTE, 30, SYSUTCDATETIME());
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('CLSD01', 'TS5', 'TS6', @NgayBay4, 90, 500000);
 DECLARE @MaCB4 INT = SCOPE_IDENTITY();

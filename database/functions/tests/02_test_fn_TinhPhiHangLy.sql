@@ -25,14 +25,14 @@ VALUES ('FHL_' + CAST(@@SPID AS VARCHAR), 'FHL1', 'FHL2', @NgayBay, 90, 300000);
 DECLARE @MaCB INT = SCOPE_IDENTITY();
 
 INSERT INTO dbo.BANGGIA_HANHLY (TenGoi, TrongLuongToiDa, GiaMuaTruoc, GiaTaiSanBay)
-VALUES (N'FHL_Tier_' + CAST(@@SPID AS NVARCHAR), 23.0, 200000, 350000);
+VALUES (N'FHL_Tier_' + CAST(@@SPID AS NVARCHAR), 40.0, 200000, 350000);
 
-DECLARE @PhiEarly DECIMAL(18,2) = dbo.fn_TinhPhiHangLy(20.0, SYSUTCDATETIME(), @MaCB);
+DECLARE @PhiEarly DECIMAL(18,2) = dbo.fn_TinhPhiHangLy(35.0, SYSUTCDATETIME(), @MaCB);
 IF @PhiEarly <> 200000
     RAISERROR(N'FAIL [fn_TinhPhiHangLy] Early purchase should return GiaMuaTruoc (200000)', 16, 1);
 PRINT N'PASS [fn_TinhPhiHangLy] Early purchase returns GiaMuaTruoc';
 
-DECLARE @PhiLate DECIMAL(18,2) = dbo.fn_TinhPhiHangLy(20.0, DATEADD(HOUR, 4, SYSUTCDATETIME()), @MaCB);
+DECLARE @PhiLate DECIMAL(18,2) = dbo.fn_TinhPhiHangLy(35.0, DATEADD(HOUR, 4, SYSUTCDATETIME()), @MaCB);
 IF @PhiLate <> 350000
     RAISERROR(N'FAIL [fn_TinhPhiHangLy] Late purchase should return GiaTaiSanBay (350000)', 16, 1);
 PRINT N'PASS [fn_TinhPhiHangLy] Late purchase returns GiaTaiSanBay';
@@ -76,9 +76,9 @@ VALUES ('FHL4_' + CAST(@@SPID AS VARCHAR), 'FHL5', 'FHL6', @NgayBay4, 90, 300000
 DECLARE @MaCB4 INT = SCOPE_IDENTITY();
 
 INSERT INTO dbo.BANGGIA_HANHLY (TenGoi, TrongLuongToiDa, GiaMuaTruoc, GiaTaiSanBay, IsActive)
-VALUES (N'FHL_Inactive_' + CAST(@@SPID AS NVARCHAR), 23.0, 200000, 350000, 0);
+VALUES (N'FHL_Inactive_' + CAST(@@SPID AS NVARCHAR), 50.0, 200000, 350000, 0);
 
-DECLARE @PhiInactive DECIMAL(18,2) = dbo.fn_TinhPhiHangLy(20.0, SYSUTCDATETIME(), @MaCB4);
+DECLARE @PhiInactive DECIMAL(18,2) = dbo.fn_TinhPhiHangLy(45.0, SYSUTCDATETIME(), @MaCB4);
 IF @PhiInactive IS NOT NULL
     RAISERROR(N'FAIL [fn_TinhPhiHangLy] IsActive=0 tier should be excluded → NULL', 16, 1);
 PRINT N'PASS [fn_TinhPhiHangLy] Inactive tier excluded';

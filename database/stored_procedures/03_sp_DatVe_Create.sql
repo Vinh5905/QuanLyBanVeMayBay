@@ -43,12 +43,12 @@ BEGIN
             RETURN;
         END;
 
-        -- Kiểm tra thời gian đặt vé chậm nhất (dùng chung key với bán vé)
-        SELECT @TGDongBan = TRY_CAST(ConfigValue AS INT)
-        FROM dbo.APP_CONFIG WHERE ConfigKey = 'THOI_GIAN_DONG_BAN_VE';
-        SET @TGDongBan = ISNULL(@TGDongBan, 24);
+        -- Kiểm tra thời gian đặt vé chậm nhất (kênh online dùng TGDatVeChamNhat)
+        SELECT @TGDongBan = TRY_CAST(GiaTri AS INT)
+        FROM dbo.THAM_SO WHERE TenThamSo = 'TGDatVeChamNhat';
+        SET @TGDongBan = ISNULL(@TGDongBan, 120);
 
-        IF DATEADD(HOUR, -@TGDongBan, @NgayGioBay) < SYSUTCDATETIME()
+        IF DATEADD(MINUTE, -@TGDongBan, @NgayGioBay) < SYSUTCDATETIME()
         BEGIN
             IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 2002 AS ErrorCode, N'Đã quá thời gian đặt vé cho chuyến bay này' AS Message;
@@ -85,9 +85,9 @@ BEGIN
             RETURN;
         END;
 
-        -- Tính hạn thanh toán từ APP_CONFIG
-        SELECT @ThoiHanThanhToan = TRY_CAST(ConfigValue AS INT)
-        FROM dbo.APP_CONFIG WHERE ConfigKey = 'THOI_HAN_THANH_TOAN';
+        -- Tính hạn thanh toán từ THAM_SO
+        SELECT @ThoiHanThanhToan = TRY_CAST(GiaTri AS INT)
+        FROM dbo.THAM_SO WHERE TenThamSo = 'ThoiHanThanhToan';
         SET @ThoiHanThanhToan = ISNULL(@ThoiHanThanhToan, 2);
         SET @HanThanhToan = DATEADD(HOUR, @ThoiHanThanhToan, SYSUTCDATETIME());
 

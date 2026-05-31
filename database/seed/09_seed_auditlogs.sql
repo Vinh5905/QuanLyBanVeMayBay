@@ -21,9 +21,9 @@ BEGIN
      NULL, NULL, '192.168.1.100', DATEADD(HOUR, -72, SYSUTCDATETIME())),
 
     -- Admin updated a config value
-    (@TK_Admin, 'UPDATE_CONFIG', 'APP_CONFIG', 'SEED-CFG-THUE_VAT',
-     N'{"ConfigKey":"THUE_VAT","ConfigValue":"8"}',
-     N'{"ConfigKey":"THUE_VAT","ConfigValue":"10"}',
+    (@TK_Admin, 'UPDATE_CONFIG', 'THAM_SO', 'SEED-CFG-ThueVAT',
+     N'{"TenThamSo":"ThueVAT","GiaTri":"8"}',
+     N'{"TenThamSo":"ThueVAT","GiaTri":"10"}',
      '192.168.1.100', DATEADD(HOUR, -71, SYSUTCDATETIME())),
 
     -- Staff login

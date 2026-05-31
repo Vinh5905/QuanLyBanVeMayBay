@@ -1,9 +1,9 @@
 USE [$(DB_NAME)];
 GO
 
--- Online check-in with time-window enforcement from APP_CONFIG:
---   Window opens:  NgayGioBay - THOI_GIAN_MO_CHECKIN hours   (default 24h)
---   Window closes: NgayGioBay - THOI_GIAN_DONG_CHECKIN minutes (default 60min)
+-- Online check-in with time-window enforcement from THAM_SO:
+--   Window opens:  NgayGioBay - ThoiGianMoCheckInOnline hours   (default 24h)
+--   Window closes: NgayGioBay - ThoiGianDongCheckInOnline minutes (default 60min)
 -- BoardingPassCode format: 'BP' + yyyyMMddHHmmss + 6-digit random suffix.
 CREATE OR ALTER PROCEDURE dbo.sp_CheckIn_Online
     @MaVe            INT,
@@ -63,12 +63,12 @@ BEGIN
         WHERE MaChuyenBay = @MaChuyenBay;
 
         -- Lấy cấu hình cửa sổ check-in
-        SELECT @TGMoCheckIn = TRY_CAST(ConfigValue AS INT)
-        FROM dbo.APP_CONFIG WHERE ConfigKey = 'THOI_GIAN_MO_CHECKIN';
+        SELECT @TGMoCheckIn = TRY_CAST(GiaTri AS INT)
+        FROM dbo.THAM_SO WHERE TenThamSo = 'ThoiGianMoCheckInOnline';
         SET @TGMoCheckIn = ISNULL(@TGMoCheckIn, 24);
 
-        SELECT @TGDongCheckIn = TRY_CAST(ConfigValue AS INT)
-        FROM dbo.APP_CONFIG WHERE ConfigKey = 'THOI_GIAN_DONG_CHECKIN';
+        SELECT @TGDongCheckIn = TRY_CAST(GiaTri AS INT)
+        FROM dbo.THAM_SO WHERE TenThamSo = 'ThoiGianDongCheckInOnline';
         SET @TGDongCheckIn = ISNULL(@TGDongCheckIn, 60);
 
         -- Kiểm tra: chưa đến giờ mở
