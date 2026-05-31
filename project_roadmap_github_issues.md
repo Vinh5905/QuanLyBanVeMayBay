@@ -9,7 +9,7 @@
 **Môn học:** SE104.Q22 – Nhập môn Công nghệ phần mềm  
 **Backend framework:** Spring Boot  
 **Database:** SQL Server (chạy trên Docker)  
-**Giao diện:** Web Application  
+**Giao diện:** ReactJS Web Application
 
 ### Mục tiêu hệ thống
 
@@ -39,7 +39,7 @@ Xây dựng một phần mềm quản lý toàn bộ nghiệp vụ bán vé máy
 ### Luồng xử lý tổng quát
 
 ```
-Giao diện (GUI)
+ReactJS Web Application
     ↓ HTTP Request (JSON)
 Spring Boot Backend
     ├── Authorization Manager (JWT + RBAC)
@@ -60,7 +60,7 @@ Spring Boot Backend
 | **Dữ liệu nhất quán** | Không xóa chuyến bay có vé, không bán vượt số ghế, ràng buộc FK |
 | **Dễ bảo trì** | 3-layer architecture, đặt tên chuẩn, có Swagger docs |
 | **Dễ mở rộng** | Module độc lập, tham số nghiệp vụ lưu trong DB (THAMSO) |
-| **Docker** | SQL Server + Backend đều chạy được bằng `docker-compose up` |
+| **Docker** | SQL Server + Backend + Frontend đều chạy được bằng `docker-compose up` |
 | **Demo/Test** | Có seed data đầy đủ cho tất cả vai trò và nghiệp vụ |
 
 ---
@@ -72,6 +72,8 @@ Spring Boot Backend
 | `figma` | `#7c3aed` (tím) | Tất cả issue thiết kế UI/UX trên Figma | Thiết kế màn hình bán vé |
 | `database` | `#0369a1` (xanh đậm) | Schema, SP, trigger, view, function, index | Thiết kế bảng VE, CHUYENBAY |
 | `backend` | `#15803d` (xanh lá) | API, business logic, Spring Boot | Xây dựng API bán vé |
+| `frontend` | `#0ea5e9` (xanh da trời) | ReactJS UI, routing, state và tích hợp API | Xây dựng màn hình bán vé |
+| `reactjs` | `#61dafb` (xanh React) | Công việc frontend sử dụng ReactJS | Setup ReactJS project |
 | `security` | `#dc2626` (đỏ) | Auth, RBAC, phân quyền DB, bảo mật | Setup JWT, tạo DB user cho app |
 | `docker` | `#0284c7` (xanh nhạt) | Dockerfile, docker-compose, volume, env | Setup SQL Server container |
 | `seed-data` | `#d97706` (cam) | Dữ liệu demo, script khởi tạo dữ liệu | Tạo tài khoản demo các vai trò |
@@ -2055,7 +2057,427 @@ backend:
 
 ---
 
-## 6. Roadmap triển khai
+## 6. Frontend ReactJS Issues
+
+---
+
+### Issue FE-01: Setup ReactJS Project
+
+**Tag:** `frontend`, `reactjs`, `priority-high`
+
+#### Mục tiêu
+Khởi tạo ReactJS web frontend với TypeScript, cấu trúc module rõ ràng và kết nối được tới Spring Boot API.
+
+#### Dependencies
+- BE-01: Setup Spring Boot Project
+- BE-09: Error Handling & Response Format
+
+#### Công việc cần làm
+- [ ] Khởi tạo project ReactJS bằng Vite + TypeScript
+- [ ] Cấu hình ESLint, Prettier và script build
+- [ ] Cấu hình React Router
+- [ ] Cấu hình HTTP client dùng `VITE_API_BASE_URL`
+- [ ] Tạo query/state provider cho dữ liệu API
+- [ ] Tạo response adapter theo format chuẩn của BE-09
+- [ ] Tạo `.env.example` riêng cho frontend
+- [ ] Viết README hướng dẫn chạy frontend
+
+#### Cấu trúc thư mục
+```text
+frontend/src/
+├── api/          # HTTP client, endpoint modules, response adapters
+├── app/          # Router, providers, app bootstrap
+├── components/   # Shared UI components
+├── features/     # Feature modules theo nghiệp vụ
+├── hooks/        # Shared hooks
+├── layouts/      # App shell, sidebar, header
+├── pages/        # Route-level pages
+├── types/        # Shared TypeScript types
+└── utils/        # Helper functions
+```
+
+#### Biến môi trường
+```text
+VITE_API_BASE_URL=http://localhost:8080/api
+```
+
+#### Tiêu chí hoàn thành
+- [ ] `npm install` và `npm run dev` chạy không lỗi
+- [ ] `npm run build` thành công
+- [ ] Frontend đọc API URL từ env, không hardcode trong component
+- [ ] Có route health/demo gọi được backend
+- [ ] Có README hướng dẫn setup
+
+---
+
+### Issue FE-02: Xây dựng Design System, Layout & Navigation
+
+**Tag:** `frontend`, `reactjs`, `priority-high`
+
+#### Mục tiêu
+Hiện thực component dùng chung, app shell và navigation responsive theo Figma.
+
+#### Dependencies
+- F-01: Thiết kế Design System & Style Guide
+- F-02: Thiết kế Layout tổng thể & Navigation
+- FE-01: Setup ReactJS Project
+
+#### Công việc cần làm
+- [ ] Cấu hình design tokens: màu sắc, typography, spacing, radius
+- [ ] Tạo Button, Input, Select, Textarea, Modal, Table, Badge, Toast
+- [ ] Tạo loading spinner, skeleton, empty state và error state
+- [ ] Tạo `AppLayout`: sidebar, header, breadcrumb, content area
+- [ ] Tạo menu theo role Admin, Staff, Agent, User
+- [ ] Hỗ trợ desktop, tablet và mobile
+
+#### Component bắt buộc
+```text
+components/
+├── Button
+├── FormField
+├── Modal
+├── DataTable
+├── Pagination
+├── Badge
+├── Toast
+├── LoadingState
+├── EmptyState
+└── ErrorState
+```
+
+#### Tiêu chí hoàn thành
+- [ ] UI bám sát Figma Design System
+- [ ] Component có state disabled, loading và error phù hợp
+- [ ] Sidebar responsive và menu hiển thị đúng theo role
+- [ ] Component dùng lại được, không copy CSS giữa các page
+- [ ] Có trang demo component để review
+
+---
+
+### Issue FE-03: Authentication, Registration & RBAC Routing
+
+**Tag:** `frontend`, `reactjs`, `api`, `security`, `priority-high`
+
+#### Mục tiêu
+Xây dựng luồng đăng nhập, đăng ký, đăng xuất và route protection theo JWT + RBAC.
+
+#### Dependencies
+- F-03: Thiết kế màn hình Đăng nhập
+- BE-02: Authentication API
+- BE-03: Authorization & RBAC
+- FE-02: Xây dựng Design System, Layout & Navigation
+
+#### API tích hợp
+| Method | Path | Sử dụng |
+|---|---|---|
+| POST | `/api/auth/login` | Đăng nhập |
+| POST | `/api/auth/register` | Đăng ký tài khoản User |
+| POST | `/api/auth/refresh` | Lấy access token mới |
+| POST | `/api/auth/logout` | Đăng xuất |
+| GET | `/api/auth/me` | Tải user hiện tại |
+| PUT | `/api/auth/change-password` | Đổi mật khẩu |
+
+#### Công việc cần làm
+- [ ] Tạo login/register/change-password forms với validation
+- [ ] Lưu auth state an toàn, không log token
+- [ ] Tự refresh access token khi API trả 401 phù hợp
+- [ ] Tạo `ProtectedRoute` và `RoleRoute`
+- [ ] Chặn menu và route không đúng quyền
+- [ ] Điều hướng về login khi session hết hạn
+- [ ] Hiển thị trang 403 khi thiếu quyền
+
+#### Tiêu chí hoàn thành
+- [ ] Đăng nhập thành công với tài khoản demo
+- [ ] Đăng nhập sai hiển thị message chung, không lộ chi tiết
+- [ ] Refresh token flow hoạt động
+- [ ] Logout xóa session phía frontend
+- [ ] Admin, Staff, Agent, User chỉ truy cập route đúng quyền
+
+---
+
+### Issue FE-04: Dashboard Theo Vai Trò
+
+**Tag:** `frontend`, `reactjs`, `api`
+
+#### Mục tiêu
+Xây dựng dashboard responsive theo role và hiển thị số liệu từ backend.
+
+#### Dependencies
+- F-04: Thiết kế Dashboard tổng quan
+- BE-07: API Dashboard & Báo cáo
+- FE-03: Authentication, Registration & RBAC Routing
+
+#### API tích hợp
+| Method | Path | Sử dụng |
+|---|---|---|
+| GET | `/api/dashboard/summary` | Stat cards |
+| GET | `/api/dashboard/charts/revenue` | Biểu đồ doanh thu |
+| GET | `/api/dashboard/charts/tickets` | Phân bổ hạng vé |
+| GET | `/api/dashboard/recent/tickets` | Vé bán gần đây |
+| GET | `/api/dashboard/today/flights` | Chuyến bay hôm nay |
+
+#### Công việc cần làm
+- [ ] Dashboard Admin/Staff với stat cards, charts và tables
+- [ ] Dashboard Agent tập trung tra cứu và bán vé
+- [ ] Dashboard User với đặt vé, vé của tôi và check-in
+- [ ] Loading, empty và error state cho từng widget
+- [ ] Responsive layout cho desktop, tablet và mobile
+
+#### Tiêu chí hoàn thành
+- [ ] Dashboard hiển thị đúng dữ liệu sau seed
+- [ ] Widget lỗi không làm hỏng toàn trang
+- [ ] Menu nhanh điều hướng đúng module
+- [ ] Dashboard hiển thị đúng theo role
+
+---
+
+### Issue FE-05: Quản Lý & Tra Cứu Chuyến Bay
+
+**Tag:** `frontend`, `reactjs`, `api`
+
+#### Mục tiêu
+Xây dựng màn hình quản lý chuyến bay cho nội bộ và màn hình tra cứu cho khách hàng.
+
+#### Dependencies
+- F-05: Thiết kế module Quản lý Chuyến bay
+- BE-04: API Quản lý Chuyến bay
+- FE-02: Xây dựng Design System, Layout & Navigation
+
+#### Chức năng
+- Danh sách chuyến bay với filter, sort và pagination
+- Tra cứu theo sân bay đi, sân bay đến và ngày bay
+- Xem chi tiết chuyến bay và sân bay trung gian
+- Tạo, sửa, hủy chuyến bay cho role phù hợp
+- Hiển thị validation error từ backend
+
+#### API tích hợp
+| Method | Path |
+|---|---|
+| GET | `/api/flights` |
+| GET | `/api/flights/search` |
+| GET | `/api/flights/{id}` |
+| POST | `/api/flights` |
+| PUT | `/api/flights/{id}` |
+| DELETE | `/api/flights/{id}` |
+
+#### Tiêu chí hoàn thành
+- [ ] Filter, pagination và detail hoạt động
+- [ ] Form tạo/sửa validate trước khi submit
+- [ ] Role không có quyền không thấy action tạo/sửa/hủy
+- [ ] Hiển thị rõ lỗi không thể hủy chuyến bay đã có vé
+- [ ] Có loading, empty và error state
+
+---
+
+### Issue FE-06: Bán Vé Tại Quầy & Đặt Vé Online
+
+**Tag:** `frontend`, `reactjs`, `api`, `priority-high`
+
+#### Mục tiêu
+Xây dựng luồng bán vé nội bộ và đặt giữ chỗ online cho khách hàng.
+
+#### Dependencies
+- F-06: Thiết kế module Bán vé & Đặt vé
+- BE-05: API Bán vé & Đặt vé
+- FE-05: Quản Lý & Tra Cứu Chuyến Bay
+
+#### Chức năng
+- Wizard bán vé tại quầy: chọn chuyến bay, nhập khách hàng, xác nhận vé
+- Đặt giữ chỗ online cho User
+- Danh sách vé và phiếu đặt chỗ với filter
+- Xem chi tiết vé
+- Đổi chuyến, nâng hạng và hủy vé
+- Hiển thị trạng thái giữ chỗ và hạn thanh toán
+
+#### API tích hợp
+| Method | Path |
+|---|---|
+| POST | `/api/tickets/sell` |
+| POST | `/api/bookings` |
+| GET | `/api/tickets` |
+| GET | `/api/tickets/my` |
+| GET | `/api/tickets/{id}` |
+| PUT | `/api/tickets/{id}/change-flight` |
+| PUT | `/api/tickets/{id}/upgrade` |
+| DELETE | `/api/tickets/{id}` |
+| GET | `/api/bookings` |
+| DELETE | `/api/bookings/{id}` |
+
+#### Tiêu chí hoàn thành
+- [ ] Bán vé end-to-end thành công
+- [ ] User đặt giữ chỗ và xem vé của mình
+- [ ] Xử lý rõ lỗi hết ghế, đóng bán và hết hạn giữ chỗ
+- [ ] Modal đổi chuyến, nâng hạng và hủy vé hoạt động
+- [ ] UI cập nhật lại dữ liệu sau mutation thành công
+
+---
+
+### Issue FE-07: Hành Lý Ký Gửi & Check-in Online
+
+**Tag:** `frontend`, `reactjs`, `api`
+
+#### Mục tiêu
+Xây dựng luồng đăng ký hành lý, check-in online và hiển thị boarding pass.
+
+#### Dependencies
+- F-07: Thiết kế module Hành lý & Check-in
+- BE-06: API Hành lý, Thanh toán & Check-in
+- FE-06: Bán Vé Tại Quầy & Đặt Vé Online
+
+#### Chức năng
+- Hiển thị bảng giá hành lý
+- Đăng ký gói hành lý và khai báo từng kiện
+- Validate trọng lượng tối đa 32kg mỗi kiện
+- Tra cứu hành lý theo vé
+- Check-in online theo mã vé
+- Hiển thị và in boarding pass
+
+#### API tích hợp
+| Method | Path |
+|---|---|
+| GET | `/api/baggage/pricing` |
+| POST | `/api/baggage` |
+| GET | `/api/baggage/ticket/{maVe}` |
+| DELETE | `/api/baggage/{id}` |
+| POST | `/api/checkin` |
+| GET | `/api/checkin/{maVe}` |
+
+#### Tiêu chí hoàn thành
+- [ ] Tính và hiển thị phí hành lý đúng
+- [ ] Chặn submit kiện hàng > 32kg
+- [ ] Check-in ngoài cửa sổ thời gian hiển thị lỗi rõ ràng
+- [ ] Không check-in được vé chưa thanh toán
+- [ ] Boarding pass đủ thông tin và có layout in được
+
+---
+
+### Issue FE-08: Thanh Toán, Hóa Đơn & Báo Cáo
+
+**Tag:** `frontend`, `reactjs`, `api`
+
+#### Mục tiêu
+Xây dựng màn hình thanh toán, hóa đơn và báo cáo doanh thu.
+
+#### Dependencies
+- F-08: Thiết kế module Thanh toán & Báo cáo
+- BE-06: API Hành lý, Thanh toán & Check-in
+- BE-07: API Dashboard & Báo cáo
+
+#### Chức năng
+- Tạo thanh toán cho vé hoặc phiếu đặt chỗ
+- Hiển thị chi tiết hóa đơn
+- Danh sách hóa đơn với filter
+- Báo cáo doanh thu tháng và năm
+- Export Excel/PDF qua backend
+
+#### API tích hợp
+| Method | Path |
+|---|---|
+| POST | `/api/payments` |
+| GET | `/api/payments/{id}` |
+| GET | `/api/payments` |
+| GET | `/api/reports/monthly` |
+| GET | `/api/reports/yearly` |
+| GET | `/api/reports/export` |
+
+#### Tiêu chí hoàn thành
+- [ ] Thanh toán thành công và UI cập nhật trạng thái
+- [ ] Hiển thị VAT và tổng tiền rõ ràng
+- [ ] Danh sách hóa đơn filter được
+- [ ] Báo cáo tháng/năm hiển thị đúng dữ liệu seed
+- [ ] Export file hoạt động
+
+---
+
+### Issue FE-09: Quản Lý Tài Khoản & Quy Định
+
+**Tag:** `frontend`, `reactjs`, `api`, `security`
+
+#### Mục tiêu
+Xây dựng màn hình quản lý tài khoản và tham số nghiệp vụ theo role.
+
+#### Dependencies
+- F-09: Thiết kế module Quản lý người dùng & Quy định
+- BE-08: API Quản lý Tài khoản & Quy định
+- FE-03: Authentication, Registration & RBAC Routing
+
+#### Chức năng
+- Danh sách tài khoản với filter role và trạng thái
+- Tạo tài khoản Staff/Agent
+- Khóa, mở khóa và reset mật khẩu
+- Danh sách quy định nghiệp vụ
+- Cập nhật một hoặc nhiều tham số
+- Hiển thị quyền truy cập đúng theo role
+
+#### API tích hợp
+| Method | Path |
+|---|---|
+| GET | `/api/accounts` |
+| POST | `/api/accounts` |
+| PUT | `/api/accounts/{id}` |
+| PUT | `/api/accounts/{id}/status` |
+| PUT | `/api/accounts/{id}/reset-password` |
+| GET | `/api/config` |
+| GET | `/api/config/{key}` |
+| PUT | `/api/config/{key}` |
+| PUT | `/api/config/batch` |
+
+#### Tiêu chí hoàn thành
+- [ ] Admin quản lý được Staff/Agent
+- [ ] Admin/Staff cập nhật quy định đúng quyền backend
+- [ ] User và Agent không truy cập được route quản trị
+- [ ] Validation miền giá trị hiển thị rõ ràng
+- [ ] Mutation thành công cập nhật lại dữ liệu
+
+---
+
+### Issue FE-10: Frontend Integration Hardening & Docker
+
+**Tag:** `frontend`, `reactjs`, `api`, `docker`, `priority-high`
+
+#### Mục tiêu
+Chuẩn hóa xử lý API toàn frontend, bổ sung test luồng chính và đóng gói frontend để chạy cùng hệ thống.
+
+#### Dependencies
+- FE-01 đến FE-09
+- BE-09: Error Handling & Response Format
+- BE-10: Docker cho Backend
+
+#### Công việc cần làm
+- [ ] Chuẩn hóa loading, empty, error và success state
+- [ ] Map validation errors từ backend vào form fields
+- [ ] Hiển thị toast cho lỗi nghiệp vụ và lỗi mạng
+- [ ] Xử lý 401, refresh token, logout và 403 nhất quán
+- [ ] Thêm smoke test cho các role Admin, Staff, Agent, User
+- [ ] Tạo production build
+- [ ] Tạo Dockerfile multi-stage cho frontend
+- [ ] Cập nhật `docker-compose.yml` thêm frontend service
+- [ ] Viết README chạy toàn hệ thống
+
+#### Dockerfile tham khảo
+```dockerfile
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
+```
+
+#### Tiêu chí hoàn thành
+- [ ] `npm run build` thành công
+- [ ] Các lỗi API hiển thị nhất quán
+- [ ] Smoke test các luồng chính PASS
+- [ ] `docker-compose up` chạy SQL Server + Backend + Frontend
+- [ ] Frontend truy cập được backend qua cấu hình env
+
+---
+
+## 7. Roadmap triển khai
 
 ### Giai đoạn 1: Phân tích & Thiết kế *(Tuần 1)*
 
@@ -2088,13 +2510,17 @@ backend:
 - BE-01: Setup Spring Boot
 - BE-02: Authentication API
 - F-03: Màn hình đăng nhập (Figma)
+- FE-01: Setup ReactJS Project
+- FE-02: Design System, Layout & Navigation
+- FE-03: Authentication, Registration & RBAC Routing
 
 **Đầu ra cần có:**
 - ✅ `docker-compose up` chạy được DB + Backend
 - ✅ Login API hoạt động với JWT
 - ✅ Figma màn hình đăng nhập
+- ✅ ReactJS app chạy được và login end-to-end
 
-**Điều kiện chuyển giai đoạn:** Login được, JWT valid, kết nối DB thành công.
+**Điều kiện chuyển giai đoạn:** Login được từ frontend, JWT valid, kết nối DB thành công.
 
 ---
 
@@ -2112,11 +2538,15 @@ backend:
 - F-04: Dashboard Figma
 - F-05: Module Chuyến bay Figma
 - F-06: Module Bán vé Figma
+- FE-04: Dashboard theo vai trò
+- FE-05: Quản lý & Tra cứu Chuyến bay
+- FE-06: Bán vé tại quầy & Đặt vé online
 
 **Đầu ra cần có:**
 - ✅ Bán vé thành công từ end-to-end
 - ✅ Đặt vé, đổi chuyến, hủy vé hoạt động
 - ✅ Figma module chuyến bay + bán vé xong
+- ✅ ReactJS hoàn tất dashboard, chuyến bay và bán vé
 
 ---
 
@@ -2129,11 +2559,15 @@ backend:
 - F-07: Màn hình Hành lý & Check-in (Figma)
 - F-08: Màn hình Thanh toán & Báo cáo (Figma)
 - F-09: Quản lý tài khoản & Quy định (Figma)
+- FE-07: Hành lý ký gửi & Check-in online
+- FE-08: Thanh toán, Hóa đơn & Báo cáo
+- FE-09: Quản lý Tài khoản & Quy định
 
 **Đầu ra cần có:**
 - ✅ Check-in online xuất Boarding Pass
 - ✅ Báo cáo doanh thu tháng/năm
 - ✅ Tất cả Figma screens xong
+- ✅ Các module ReactJS phụ trợ tích hợp API xong
 
 ---
 
@@ -2144,6 +2578,7 @@ backend:
 - BE-08: Quản lý tài khoản & Quy định API
 - BE-09: Error handling chuẩn
 - DB-09: Backup/Restore plan
+- FE-10: Frontend Integration Hardening & Docker
 - Test toàn bộ luồng với seed data
 - Fix bug
 - Code review
@@ -2152,6 +2587,7 @@ backend:
 - ✅ Tất cả API hoạt động đúng
 - ✅ Dashboard hiển thị số liệu sau seed
 - ✅ Tất cả role test thành công
+- ✅ Frontend hiển thị loading/error state nhất quán
 
 ---
 
@@ -2159,45 +2595,50 @@ backend:
 
 **Công việc:**
 - BE-10: Docker cho backend
+- FE-10: Docker cho frontend
 - Viết README đầy đủ
 - Viết API documentation (Swagger)
 - Security review
 - Chuẩn bị demo
 
 **Đầu ra cần có:**
-- ✅ `docker-compose up` chạy cả hệ thống
+- ✅ `docker-compose up` chạy SQL Server + Backend + Frontend
 - ✅ README hướng dẫn đầy đủ
 - ✅ Swagger UI accessible
 
 ---
 
-## 7. Thứ tự ưu tiên
+## 8. Thứ tự ưu tiên
 
 | Thứ tự | Nhóm việc | Lý do ưu tiên | Song song với |
 |---|---|---|---|
 | 1 | DB-02 Schema Database | Mọi thứ phụ thuộc vào schema | F-01 Design System |
 | 2 | DB-01 Docker Setup | Cần có DB để chạy backend | BE-01 Project Setup |
 | 3 | DB-03 DB Security | Bảo mật phải từ đầu | BE-02 Auth API |
-| 4 | BE-02 Authentication | Blocking cho mọi API có auth | F-03 Login Screen |
-| 5 | BE-09 Response Format | Standard trước khi code API | DB-04 Stored Procs |
-| 6 | BE-03 RBAC | Cần trước khi test quyền | DB-05 Triggers |
-| 7 | DB-08 Seed Data | Cần dữ liệu để test | F-04, F-05 Figma |
-| 8 | BE-04 Chuyến bay API | Module cơ bản nhất | F-06 Figma bán vé |
-| 9 | BE-05 Bán vé API | Nghiệp vụ cốt lõi | DB-06 Views |
-| 10 | BE-06 Hành lý/TT/CK | Phụ thuộc vé đã tạo | F-07, F-08 Figma |
-| 11 | BE-07 Dashboard API | Cần seed data xong | DB-07 Functions |
-| 12 | BE-08 Account/Config | Ít phụ thuộc nghiệp vụ | F-09 Figma |
-| 13 | DB-09 Backup/Restore | Cuối cùng, dev không block | BE-10 Docker |
-| 14 | BE-10 Docker Backend | Sau khi backend ổn định | – |
+| 4 | BE-02 Authentication | Blocking cho mọi API có auth | F-03 Login Screen, FE-01 Setup ReactJS |
+| 5 | BE-09 Response Format | Standard trước khi code API | FE-02 Layout, DB-04 Stored Procs |
+| 6 | FE-03 Auth & RBAC UI | Cần trước các route protected | BE-03 RBAC |
+| 7 | BE-03 RBAC | Cần trước khi test quyền | DB-05 Triggers |
+| 8 | DB-08 Seed Data | Cần dữ liệu để test | F-04, F-05 Figma |
+| 9 | BE-04 Chuyến bay API | Module cơ bản nhất | FE-05 Flight UI |
+| 10 | BE-05 Bán vé API | Nghiệp vụ cốt lõi | FE-06 Ticket UI |
+| 11 | BE-06 Hành lý/TT/CK | Phụ thuộc vé đã tạo | FE-07, FE-08 |
+| 12 | BE-07 Dashboard API | Cần seed data xong | FE-04 Dashboard |
+| 13 | BE-08 Account/Config | Ít phụ thuộc nghiệp vụ | FE-09 Account UI |
+| 14 | DB-09 Backup/Restore | Cuối cùng, dev không block | BE-10 Docker |
+| 15 | BE-10 Docker Backend | Sau khi backend ổn định | FE-10 Docker Frontend |
+| 16 | FE-10 Integration Hardening | Sau khi module ReactJS hoàn tất | Test end-to-end |
 
 **Có thể làm song song:**
 - Figma (F-01 đến F-09) và Database (DB-01 đến DB-09) không block nhau
 - BE-01 và DB-01 có thể làm cùng lúc
 - DB-04 Stored Procedure và BE-03 RBAC có thể làm song song
+- FE-01, FE-02 có thể làm song song với backend nền tảng
+- Mỗi module FE-04 đến FE-09 bắt đầu khi Figma tương ứng ổn định và API backend liên quan có contract rõ ràng
 
 ---
 
-## 8. Checklist hoàn thành
+## 9. Checklist hoàn thành
 
 ### ✅ Database Checklist
 
@@ -2312,6 +2753,49 @@ backend:
 - [ ] `docker-compose up` chạy cả backend + DB
 - [ ] Backend chờ DB healthy
 - [ ] `/actuator/health` trả UP
+
+---
+
+### ✅ Frontend ReactJS Checklist
+
+**Setup:**
+- [ ] ReactJS + TypeScript + Vite chạy được bằng `npm run dev`
+- [ ] `npm run build` thành công
+- [ ] ESLint và Prettier đã cấu hình
+- [ ] `VITE_API_BASE_URL` đọc từ env
+- [ ] HTTP client và response adapter hoạt động
+
+**Design System & Layout:**
+- [ ] Component dùng chung bám sát Figma
+- [ ] Sidebar, header và breadcrumb responsive
+- [ ] Loading, empty, error và toast state đầy đủ
+- [ ] Menu hiển thị đúng theo role
+
+**Authentication & Authorization:**
+- [ ] Login, register, logout và change password hoạt động
+- [ ] Refresh token flow hoạt động
+- [ ] Protected route và role route đúng
+- [ ] Session hết hạn điều hướng về login
+- [ ] Trang 403 hiển thị khi thiếu quyền
+
+**Module:**
+- [ ] Dashboard theo role
+- [ ] Quản lý và tra cứu chuyến bay
+- [ ] Bán vé tại quầy và đặt vé online
+- [ ] Đổi chuyến, nâng hạng và hủy vé
+- [ ] Hành lý ký gửi
+- [ ] Check-in online và boarding pass
+- [ ] Thanh toán và hóa đơn
+- [ ] Báo cáo tháng/năm và export
+- [ ] Quản lý tài khoản
+- [ ] Quản lý quy định
+
+**Integration & Docker:**
+- [ ] Validation error từ backend map vào form
+- [ ] 401, 403 và business error xử lý nhất quán
+- [ ] Smoke test cho Admin, Staff, Agent, User
+- [ ] Frontend Dockerfile build thành công
+- [ ] `docker-compose up` chạy SQL Server + Backend + Frontend
 
 ---
 

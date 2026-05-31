@@ -20,6 +20,7 @@ File `project_roadmap_github_issues.md` dùng mã công việc để phân nhóm
 | Figma | `F-<số>` | `F-03` |
 | Database | `DB-<số>` | `DB-02` |
 | Backend | `BE-<số>` | `BE-05` |
+| Frontend ReactJS | `FE-<số>` | `FE-06` |
 
 Sau khi tạo issue trên GitHub, GitHub sẽ cấp một số issue thật, ví dụ `#12`.
 
@@ -34,7 +35,7 @@ Mỗi issue cần có tối thiểu:
 - Tiêu đề bắt đầu bằng mã roadmap, ví dụ: `[BE-05] Xây dựng API bán vé và đặt vé`.
 - Mục tiêu và phạm vi thực hiện.
 - Tiêu chí hoàn thành dưới dạng checklist.
-- Label phù hợp từ roadmap, ví dụ: `backend`, `database`, `api`, `security`, `docker`, `figma`, `seed-data`, `priority-high`.
+- Label phù hợp từ roadmap, ví dụ: `backend`, `frontend`, `reactjs`, `database`, `api`, `security`, `docker`, `figma`, `seed-data`, `priority-high`.
 - Dependency hoặc issue liên quan nếu có.
 
 ## 4. Đặt tên branch
@@ -70,6 +71,7 @@ Ví dụ:
 ```text
 feat/be-02-authentication-api
 feat/be-05-ticket-booking-api
+feat/fe-06-ticket-booking-ui
 build/db-01-sql-server-docker
 docs/f-03-login-screen
 fix/be-05-prevent-overselling-seats
@@ -86,7 +88,7 @@ Dùng [Conventional Commits](https://www.conventionalcommits.org/) với format:
 Quy tắc:
 
 - Dùng các `type` giống phần đặt tên branch.
-- `scope` là module bị ảnh hưởng, ví dụ: `auth`, `flight`, `ticket`, `payment`, `checkin`, `report`, `database`, `docker`, `docs`.
+- `scope` là module bị ảnh hưởng, ví dụ: `auth`, `flight`, `ticket`, `payment`, `checkin`, `report`, `frontend`, `database`, `docker`, `docs`.
 - Phần mô tả viết thường, ngắn gọn, ở thể mệnh lệnh và không kết thúc bằng dấu chấm.
 - Một commit nên đại diện cho một thay đổi logic rõ ràng.
 - Commit local có thể dùng footer `Refs #<issue-number>`. Việc tự động đóng issue để PR xử lý bằng `Closes #<issue-number>`.
@@ -127,6 +129,7 @@ Ví dụ:
 
 ```text
 feat(auth): add jwt login endpoint [BE-02]
+feat(frontend): add ticket booking wizard [FE-06]
 build(docker): add sql server container [DB-01]
 docs(figma): add login screen design [F-03]
 ```
@@ -166,4 +169,3 @@ Mỗi PR cần nêu rõ:
 - Ghi chú phối hợp nếu PR phụ thuộc hoặc ảnh hưởng công việc khác.
 
 Template mặc định nằm tại `.github/pull_request_template.md`.
-
