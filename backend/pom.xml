@@ -93,6 +93,13 @@
             <version>${mapstruct.version}</version>
         </dependency>
 
+        <!-- Apache POI for Excel export -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.3.0</version>
+        </dependency>
+
         <!-- H2 for tests and local dev without SQL Server -->
         <dependency>
             <groupId>com.h2database</groupId>
