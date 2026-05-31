@@ -1,0 +1,54 @@
+USE [$(DB_NAME)];
+GO
+
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
+PRINT N'=== SEED: Check-in (CHECKIN) ===';
+GO
+
+-- Checked-in passengers on near-future flights (CB001, CB002, CB003)
+
+IF NOT EXISTS (SELECT 1 FROM dbo.CHECKIN WHERE BoardingPassCode = 'SEED-BP-001')
+BEGIN
+    DECLARE @V001 INT = (SELECT MaVe FROM dbo.VE WHERE MaVeCode = 'SEED-VE-001');
+    INSERT INTO dbo.CHECKIN (MaVe, SoGhe, BoardingPassCode, CheckInAt, TrangThai)
+    VALUES (@V001, '12A', 'SEED-BP-001', DATEADD(HOUR, -3, SYSUTCDATETIME()), 'CHECKED_IN');
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.CHECKIN WHERE BoardingPassCode = 'SEED-BP-002')
+BEGIN
+    DECLARE @V002 INT = (SELECT MaVe FROM dbo.VE WHERE MaVeCode = 'SEED-VE-002');
+    INSERT INTO dbo.CHECKIN (MaVe, SoGhe, BoardingPassCode, CheckInAt, TrangThai)
+    VALUES (@V002, '14B', 'SEED-BP-002', DATEADD(HOUR, -3, SYSUTCDATETIME()), 'CHECKED_IN');
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.CHECKIN WHERE BoardingPassCode = 'SEED-BP-003')
+BEGIN
+    DECLARE @V003 INT = (SELECT MaVe FROM dbo.VE WHERE MaVeCode = 'SEED-VE-003');
+    INSERT INTO dbo.CHECKIN (MaVe, SoGhe, BoardingPassCode, CheckInAt, TrangThai)
+    VALUES (@V003, '2A', 'SEED-BP-003', DATEADD(HOUR, -3, SYSUTCDATETIME()), 'CHECKED_IN');
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.CHECKIN WHERE BoardingPassCode = 'SEED-BP-004')
+BEGIN
+    DECLARE @V004 INT = (SELECT MaVe FROM dbo.VE WHERE MaVeCode = 'SEED-VE-004');
+    INSERT INTO dbo.CHECKIN (MaVe, SoGhe, BoardingPassCode, CheckInAt, TrangThai)
+    VALUES (@V004, '22C', 'SEED-BP-004', DATEADD(HOUR, -2, SYSUTCDATETIME()), 'CHECKED_IN');
+END;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.CHECKIN WHERE BoardingPassCode = 'SEED-BP-005')
+BEGIN
+    DECLARE @V006 INT = (SELECT MaVe FROM dbo.VE WHERE MaVeCode = 'SEED-VE-006');
+    INSERT INTO dbo.CHECKIN (MaVe, SoGhe, BoardingPassCode, CheckInAt, TrangThai)
+    VALUES (@V006, '18D', 'SEED-BP-005', DATEADD(HOUR, -1, SYSUTCDATETIME()), 'CHECKED_IN');
+END;
+GO
+
+PRINT N'=== Check-in seed completed ===';
+GO

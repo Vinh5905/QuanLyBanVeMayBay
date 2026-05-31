@@ -1,7 +1,7 @@
 ENV_FILE ?= .env.test
 COMPOSE := docker compose --env-file $(ENV_FILE)
 
-.PHONY: help config db-up db-init db-down db-logs db-status db-verify db-security-test db-sp-test db-trigger-test db-view-test db-function-test db-shell db-reset
+.PHONY: help config db-up db-init db-down db-logs db-status db-verify db-security-test db-sp-test db-trigger-test db-view-test db-function-test db-seed db-shell db-reset
 
 help:
 	@echo "Database commands:"
@@ -14,6 +14,7 @@ help:
 	@echo "  make db-trigger-test Run trigger tests"
 	@echo "  make db-view-test    Run view tests"
 	@echo "  make db-function-test Run function tests"
+	@echo "  make db-seed         (Re-)load seed/demo data"
 	@echo "  make db-status       Show database containers"
 	@echo "  make db-logs         Follow SQL Server logs"
 	@echo "  make db-shell        Open an interactive sqlcmd session as sa"
@@ -59,6 +60,9 @@ db-view-test:
 
 db-function-test:
 	$(COMPOSE) run --rm --entrypoint /bin/bash sqlserver-init /database/functions/tests/run-tests.sh
+
+db-seed:
+	$(COMPOSE) run --rm --entrypoint /bin/bash sqlserver-init /database/seed/run-seed.sh
 
 db-shell:
 	$(COMPOSE) exec sqlserver /bin/bash -lc 'SQLCMD=/opt/mssql-tools18/bin/sqlcmd; [ -x "$$SQLCMD" ] || SQLCMD=/opt/mssql-tools/bin/sqlcmd; exec "$$SQLCMD" -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C'

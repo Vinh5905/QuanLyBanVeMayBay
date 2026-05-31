@@ -79,4 +79,8 @@ if [[ -x /database/functions/run-functions.sh ]]; then
   /database/functions/run-functions.sh
 fi
 
+if [[ -x /database/seed/run-seed.sh ]]; then
+  /database/seed/run-seed.sh
+fi
+
 echo "Database initialization completed."
