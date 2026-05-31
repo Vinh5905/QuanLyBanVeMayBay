@@ -25,8 +25,8 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_REFRESH_TOKEN_MaTaiKh
     CREATE INDEX IX_REFRESH_TOKEN_MaTaiKhoan ON dbo.REFRESH_TOKEN(MaTaiKhoan);
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_AUDIT_LOG_MaTaiKhoan' AND object_id = OBJECT_ID(N'dbo.AUDIT_LOG'))
     CREATE INDEX IX_AUDIT_LOG_MaTaiKhoan ON dbo.AUDIT_LOG(MaTaiKhoan);
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_APP_CONFIG_UpdatedBy' AND object_id = OBJECT_ID(N'dbo.APP_CONFIG'))
-    CREATE INDEX IX_APP_CONFIG_UpdatedBy ON dbo.APP_CONFIG(UpdatedBy);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_THAM_SO_CapNhatBoi' AND object_id = OBJECT_ID(N'dbo.THAM_SO'))
+    CREATE INDEX IX_THAM_SO_CapNhatBoi ON dbo.THAM_SO(CapNhatBoi);
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_KHACHHANG_MaHangThanhVien' AND object_id = OBJECT_ID(N'dbo.KHACHHANG'))
     CREATE INDEX IX_KHACHHANG_MaHangThanhVien ON dbo.KHACHHANG(MaHangThanhVien);
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_KHACHHANG_CCCD' AND object_id = OBJECT_ID(N'dbo.KHACHHANG'))

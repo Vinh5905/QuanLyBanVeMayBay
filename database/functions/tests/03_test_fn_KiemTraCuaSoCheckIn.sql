@@ -8,7 +8,7 @@ GO
 PRINT N'=== TEST: fn_KiemTraCuaSoCheckIn ===';
 GO
 
--- Config from helpers: THOI_GIAN_MO_CHECKIN=24h, THOI_GIAN_DONG_CHECKIN=60min
+-- Config from helpers: ThoiGianMoCheckInOnline=24h, ThoiGianDongCheckInOnline=60min
 -- Flight departs in 12h → window opens at now-12h, closes at now+11h
 
 -- Test 1: Too early — 13h before departure, window opens at 12h before

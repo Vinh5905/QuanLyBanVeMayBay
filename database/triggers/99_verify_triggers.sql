@@ -14,7 +14,7 @@ FROM (VALUES
     ('tr_PHIEUDATCHO_AutoUpdateTimestamp'),
     ('tr_CHUYENBAY_PreventDelete'),
     ('tr_TAIKHOAN_AuditLogin'),
-    ('tr_APP_CONFIG_AuditChange')
+    ('tr_THAM_SO_AuditChange')
 ) AS expected(name)
 WHERE NOT EXISTS (
     SELECT 1 FROM sys.triggers
@@ -39,7 +39,7 @@ BEGIN
         'tr_PHIEUDATCHO_AutoUpdateTimestamp',
         'tr_CHUYENBAY_PreventDelete',
         'tr_TAIKHOAN_AuditLogin',
-        'tr_APP_CONFIG_AuditChange'
+        'tr_THAM_SO_AuditChange'
     )
     ORDER BY name;
 

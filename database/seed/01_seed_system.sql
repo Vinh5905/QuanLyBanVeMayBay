@@ -5,7 +5,7 @@ SET QUOTED_IDENTIFIER ON;
 SET ANSI_NULLS ON;
 GO
 
-PRINT N'=== SEED: System (VAITRO, APP_CONFIG, TAIKHOAN) ===';
+PRINT N'=== SEED: System (VAITRO, THAM_SO, TAIKHOAN) ===';
 GO
 
 -- ─── VAITRO ──────────────────────────────────────────────────────────────────
@@ -21,28 +21,33 @@ WHEN NOT MATCHED THEN
     INSERT (TenVaiTro, MoTa) VALUES (src.TenVaiTro, src.MoTa);
 GO
 
--- ─── APP_CONFIG ───────────────────────────────────────────────────────────────
-MERGE dbo.APP_CONFIG AS target
+-- ─── THAM_SO ─────────────────────────────────────────────────────────────────
+MERGE dbo.THAM_SO AS target
 USING (VALUES
-    ('THOI_GIAN_DONG_BAN_VE',        '24',     N'Giờ trước giờ bay đóng bán vé'),
-    ('THOI_HAN_THANH_TOAN',          '2',      N'Giờ thời hạn thanh toán giữ chỗ'),
-    ('THUE_VAT',                     '10',     N'% thuế VAT áp dụng'),
-    ('PHI_HUY_VE',                   '100000', N'Phí hủy vé (VNĐ)'),
-    ('PHI_DOI_VE',                   '200000', N'Phí đổi chuyến (VNĐ)'),
-    ('THOI_GIAN_MO_CHECKIN',         '24',     N'Giờ trước giờ bay mở check-in'),
-    ('THOI_GIAN_DONG_CHECKIN',       '60',     N'Phút trước giờ bay đóng check-in'),
-    ('THOI_GIAN_MUA_TRUOC_HANHLY',   '3',      N'Giờ trước giờ bay để dùng giá mua trước hành lý'),
-    ('REFRESH_TOKEN_EXPIRY_DAYS',    '7',      N'Số ngày refresh token còn hiệu lực'),
-    ('ACCESS_TOKEN_MINUTES',         '30',     N'Số phút access token còn hiệu lực'),
-    ('DIEM_TICH_LUY_PER_100K',       '50',     N'Điểm tích lũy cộng thêm cho mỗi 100.000 VNĐ chi tiêu'),
-    ('PHI_HANH_LY_KG_VUOT',         '50000',  N'Phí hành lý vượt ký (VNĐ/kg)'),
-    ('GIA_VE_TOI_THIEU',             '100000', N'Giá vé tối thiểu (VNĐ)')
-) AS src(ConfigKey, ConfigValue, MoTa)
-ON target.ConfigKey = src.ConfigKey
+    ('TuoiMuaVeToiThieu',        '18',    N'Tuổi tối thiểu để mua vé (năm)'),
+    ('ThoiGianBayToiThieu',      '30',    N'Thời gian bay tối thiểu (phút)'),
+    ('SoSanBayTrungGianToiDa',   '2',     N'Số sân bay trung gian tối đa mỗi chuyến bay'),
+    ('ThoiGianDungToiThieu',     '45',    N'Thời gian dừng tối thiểu tại sân bay TG (phút)'),
+    ('ThoiGianDungToiDa',        '120',   N'Thời gian dừng tối đa tại sân bay TG (phút)'),
+    ('ThoiGianDongBanVe',        '45',    N'Phút trước giờ bay đóng bán vé tại quầy'),
+    ('TGDatVeChamNhat',          '120',   N'Phút trước giờ bay để đặt vé qua app/web'),
+    ('TGHuyChamNhat',            '0',     N'Phút trước giờ bay được phép hủy vé (0 = đến tận giờ bay)'),
+    ('ThoiGianChoPhepDoiVe',     '24',    N'Giờ trước giờ bay được phép đổi chuyến'),
+    ('ThueVAT',                  '10',    N'% thuế VAT áp dụng lên tổng thanh toán'),
+    ('ThoiHanThanhToan',         '2',     N'Giờ thời hạn thanh toán sau khi đặt chỗ'),
+    ('TrongLuongToiDaMotKien',   '32',    N'Trọng lượng tối đa một kiện hành lý (kg)'),
+    ('SoKienToiDa',              '15',    N'Số kiện hành lý tối đa trong một gói'),
+    ('ThoiGianMuaHanhLyUuDai',   '3',     N'Giờ trước giờ bay để được giá mua hành lý ưu đãi'),
+    ('ThoiGianMoCheckInOnline',  '24',    N'Giờ trước giờ bay mở check-in online'),
+    ('ThoiGianDongCheckInOnline','60',    N'Phút trước giờ bay đóng check-in online'),
+    ('ACCESS_TOKEN_MINUTES',     '30',    N'Số phút access token JWT còn hiệu lực'),
+    ('REFRESH_TOKEN_EXPIRY_DAYS','7',     N'Số ngày refresh token còn hiệu lực')
+) AS src(TenThamSo, GiaTri, MoTa)
+ON target.TenThamSo = src.TenThamSo
 WHEN NOT MATCHED THEN
-    INSERT (ConfigKey, ConfigValue, MoTa) VALUES (src.ConfigKey, src.ConfigValue, src.MoTa)
-WHEN MATCHED AND target.ConfigValue <> src.ConfigValue THEN
-    UPDATE SET ConfigValue = src.ConfigValue, MoTa = src.MoTa;
+    INSERT (TenThamSo, GiaTri, MoTa) VALUES (src.TenThamSo, src.GiaTri, src.MoTa)
+WHEN MATCHED AND target.GiaTri <> src.GiaTri THEN
+    UPDATE SET GiaTri = src.GiaTri, MoTa = src.MoTa;
 GO
 
 -- ─── TAIKHOAN ────────────────────────────────────────────────────────────────

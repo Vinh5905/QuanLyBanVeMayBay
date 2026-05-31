@@ -5,12 +5,10 @@ GO
 --   - New flight must be on the same route (SanBayDi/SanBayDen must match).
 --   - Ticket status after change: 'HOP_LE' (still valid, now on new flight).
 --   - Old seat is released; new seat is reserved.
---   - Change fee is recorded as a THANHTOAN entry.
---   - Time-window check reuses THOI_GIAN_DONG_BAN_VE (hours before departure).
+--   - Time-window check uses ThoiGianChoPhepDoiVe (hours before departure).
 CREATE OR ALTER PROCEDURE dbo.sp_DoiChuyenBay
     @MaVe            INT,
-    @MaChuyenBayMoi  INT,
-    @MaThanhToanPhi  INT OUTPUT    -- MaThanhToan for the change fee record
+    @MaChuyenBayMoi  INT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -30,7 +28,6 @@ BEGIN
     DECLARE @SoLuongMoi      INT;
     DECLARE @SoGheDaDatMoi   INT;
     DECLARE @ThoiGianChoPhep INT;
-    DECLARE @PhiDoi          DECIMAL(18,2);
 
     BEGIN TRY
         IF @OuterTranCount = 0 BEGIN TRANSACTION;
@@ -65,8 +62,8 @@ BEGIN
         WHERE MaChuyenBay = @MaChuyenBayCu;
 
         -- Kiểm tra cửa sổ thời gian cho phép đổi (trước N giờ khởi hành cũ)
-        SELECT @ThoiGianChoPhep = TRY_CAST(ConfigValue AS INT)
-        FROM dbo.APP_CONFIG WHERE ConfigKey = 'THOI_GIAN_DONG_BAN_VE';
+        SELECT @ThoiGianChoPhep = TRY_CAST(GiaTri AS INT)
+        FROM dbo.THAM_SO WHERE TenThamSo = 'ThoiGianChoPhepDoiVe';
         SET @ThoiGianChoPhep = ISNULL(@ThoiGianChoPhep, 24);
 
         IF DATEADD(HOUR, -@ThoiGianChoPhep, @NgayGioBayCu) < SYSUTCDATETIME()
@@ -119,11 +116,6 @@ BEGIN
             RETURN;
         END;
 
-        -- Lấy phí đổi chuyến
-        SELECT @PhiDoi = TRY_CAST(ConfigValue AS DECIMAL(18,2))
-        FROM dbo.APP_CONFIG WHERE ConfigKey = 'PHI_DOI_VE';
-        SET @PhiDoi = ISNULL(@PhiDoi, 200000);
-
         -- Cập nhật vé sang chuyến mới (vẫn HOP_LE sau khi đổi)
         UPDATE dbo.VE
         SET MaChuyenBay = @MaChuyenBayMoi,
@@ -141,22 +133,12 @@ BEGIN
         SET SoGheDaDat = SoGheDaDat + 1
         WHERE MaChuyenBay = @MaChuyenBayMoi AND MaHangVe = @MaHangVe;
 
-        -- Ghi nhận phí đổi chuyến
-        INSERT INTO dbo.THANHTOAN
-            (MaVe, SoTien, ThueVAT, PhuongThuc, TrangThaiThanhToan, ThoiGianThanhToan)
-        VALUES
-            (@MaVe, @PhiDoi, 0, 'DOI_CHUYEN', 'COMPLETED', SYSUTCDATETIME());
-
-        SET @MaThanhToanPhi = SCOPE_IDENTITY();
-
         IF @OuterTranCount = 0 COMMIT TRANSACTION;
 
         SELECT 0 AS ErrorCode, N'Đổi chuyến bay thành công' AS Message,
                @MaVe            AS MaVe,
                @MaChuyenBayMoi  AS MaChuyenBayMoi,
-               @PhiDoi          AS PhiDoiChuyen,
-               @GiaMoi          AS GiaVeMoi,
-               @MaThanhToanPhi  AS MaThanhToanPhi;
+               @GiaMoi          AS GiaVeMoi;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 AND @OuterTranCount = 0 ROLLBACK TRANSACTION;

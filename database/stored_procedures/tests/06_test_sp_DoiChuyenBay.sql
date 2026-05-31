@@ -8,7 +8,7 @@ GO
 PRINT N'=== TEST: sp_DoiChuyenBay ===';
 GO
 
--- Test 1: Happy path — changes flight on same route, records fee, adjusts seat counts
+-- Test 1: Happy path — changes flight on same route, adjusts seat counts
 BEGIN TRAN;
 
 INSERT INTO dbo.KHACHHANG (HoTen) VALUES (N'KH DoiChuyen 1');
@@ -41,14 +41,7 @@ EXEC dbo.sp_BanVe_Create @MaChuyenBay=@MaCB1, @MaKhachHang=@MaKH, @MaHangVe=@MaH
      @NgayGiaoDich='2024-01-01', @MaVe=@MaVe OUTPUT;
 
 -- Change to second flight
-DECLARE @MaTTPhi INT;
-EXEC dbo.sp_DoiChuyenBay
-    @MaVe           = @MaVe,
-    @MaChuyenBayMoi = @MaCB2,
-    @MaThanhToanPhi = @MaTTPhi OUTPUT;
-
-IF @MaTTPhi IS NULL OR @MaTTPhi <= 0
-    RAISERROR(N'FAIL [sp_DoiChuyenBay] Happy path: MaThanhToanPhi should be > 0', 16, 1);
+EXEC dbo.sp_DoiChuyenBay @MaVe = @MaVe, @MaChuyenBayMoi = @MaCB2;
 
 -- VE should now point to new flight and be HOP_LE
 DECLARE @VeCB INT; DECLARE @VeStatus VARCHAR(30);
@@ -105,10 +98,12 @@ DECLARE @MaVe2 INT;
 EXEC dbo.sp_BanVe_Create @MaChuyenBay=@MaCB2a, @MaKhachHang=@MaKH2, @MaHangVe=@MaHV2,
      @NgayGiaoDich='2024-01-01', @MaVe=@MaVe2 OUTPUT;
 
-DECLARE @MaTTPhi2 INT;
-EXEC dbo.sp_DoiChuyenBay @MaVe=@MaVe2, @MaChuyenBayMoi=@MaCB2b, @MaThanhToanPhi=@MaTTPhi2 OUTPUT;
+EXEC dbo.sp_DoiChuyenBay @MaVe = @MaVe2, @MaChuyenBayMoi = @MaCB2b;
 
-IF @MaTTPhi2 IS NOT NULL
+-- VE should still be on old flight (change rejected)
+DECLARE @VeCB2 INT;
+SELECT @VeCB2 = MaChuyenBay FROM dbo.VE WHERE MaVe = @MaVe2;
+IF @VeCB2 <> @MaCB2a
     RAISERROR(N'FAIL [sp_DoiChuyenBay] Different route: should not allow change', 16, 1);
 
 PRINT N'PASS [sp_DoiChuyenBay] Different route returns error';

@@ -10,7 +10,7 @@ VALUES
     (N'TAIKHOAN'),
     (N'REFRESH_TOKEN'),
     (N'AUDIT_LOG'),
-    (N'APP_CONFIG'),
+    (N'THAM_SO'),
     (N'HANGTHANHVIEN'),
     (N'KHACHHANG'),
     (N'SANBAY'),
