@@ -67,4 +67,8 @@ if [[ -x /database/stored_procedures/run-sp.sh ]]; then
   /database/stored_procedures/run-sp.sh
 fi
 
+if [[ -x /database/triggers/run-triggers.sh ]]; then
+  /database/triggers/run-triggers.sh
+fi
+
 echo "Database initialization completed."
