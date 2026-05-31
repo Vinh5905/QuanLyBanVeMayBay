@@ -690,7 +690,7 @@ Thiết lập SQL Server chạy trên Docker, cấu hình đúng, bảo mật, d
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: vetmaybaay_sqlserver
+    container_name: vemaybay_sqlserver
     ports:
       - "${SQL_PORT:-1433}:1433"
     environment:
@@ -714,8 +714,8 @@ volumes:
 ```
 SA_PASSWORD=YourStrong@Password123
 SQL_PORT=1433
-DB_NAME=VeToMayBayDB
-APP_DB_USER=vetmaybay_app
+DB_NAME=VeMayBayDB
+APP_DB_USER=vemaybay_app
 APP_DB_PASSWORD=AppUser@Strong456
 ```
 
@@ -738,7 +738,7 @@ database/
 #### Lưu ý bảo mật
 - **KHÔNG** dùng tài khoản `sa` trong ứng dụng backend
 - Mật khẩu SA chỉ dùng để quản trị Docker, không commit lên git
-- Tạo user riêng `vetmaybay_app` với quyền tối thiểu
+- Tạo user riêng `vemaybay_app` với quyền tối thiểu
 
 #### Cách kiểm tra hoạt động
 - `docker-compose up -d` → container phải `healthy`
@@ -931,19 +931,19 @@ Thiết lập tài khoản database riêng cho ứng dụng backend với nguyê
 **Script tạo user:**
 ```sql
 -- Chạy với tài khoản sa (chỉ trong Docker setup)
-CREATE LOGIN vetmaybay_app
+CREATE LOGIN vemaybay_app
     WITH PASSWORD = '$(APP_DB_PASSWORD)',
          CHECK_POLICY = ON,
          CHECK_EXPIRATION = OFF;
 
-USE VeToMayBayDB;
-CREATE USER vetmaybay_app FOR LOGIN vetmaybay_app;
+USE VeMayBayDB;
+CREATE USER vemaybay_app FOR LOGIN vemaybay_app;
 
 -- Cấp quyền cần thiết
-GRANT SELECT, INSERT, UPDATE ON SCHEMA::dbo TO vetmaybay_app;
-GRANT DELETE ON VE TO vetmaybay_app;           -- Soft delete
-GRANT DELETE ON PHIEUDATCHO TO vetmaybay_app;
-GRANT EXECUTE ON SCHEMA::dbo TO vetmaybay_app; -- Stored procedures
+GRANT SELECT, INSERT, UPDATE ON SCHEMA::dbo TO vemaybay_app;
+GRANT DELETE ON VE TO vemaybay_app;           -- Soft delete
+GRANT DELETE ON PHIEUDATCHO TO vemaybay_app;
+GRANT EXECUTE ON SCHEMA::dbo TO vemaybay_app; -- Stored procedures
 
 -- KHÔNG cấp: DROP TABLE, CREATE TABLE, ALTER TABLE, TRUNCATE
 -- KHÔNG cấp: quyền trên system tables
@@ -974,7 +974,7 @@ database/init/
 ```
 
 #### Tiêu chí hoàn thành
-- [ ] Login `vetmaybay_app` tạo thành công
+- [ ] Login `vemaybay_app` tạo thành công
 - [ ] User không có quyền DROP/CREATE/ALTER table
 - [ ] User không thể truy cập database khác
 - [ ] Script sử dụng biến từ `.env`, không hardcode password
@@ -1328,9 +1328,9 @@ Tạo dữ liệu demo đầy đủ để test toàn bộ tính năng của hệ
 
 **Tài khoản demo:**
 ```
-admin@vetmaybay.com    / Pass: Admin@123      → Vai trò: Admin
-staff@vetmaybay.com    / Pass: Staff@123      → Vai trò: Staff
-agent@vetmaybay.com    / Pass: Agent@123      → Vai trò: Agent
+admin@vemaybay.com    / Pass: Admin@123      → Vai trò: Admin
+staff@vemaybay.com    / Pass: Staff@123      → Vai trò: Staff
+agent@vemaybay.com    / Pass: Agent@123      → Vai trò: Agent
 user1@gmail.com        / Pass: User@123       → Vai trò: User (gắn KH-001)
 user2@gmail.com        / Pass: User@123       → Vai trò: User (gắn KH-002)
 ```
@@ -1428,9 +1428,9 @@ Chuẩn hóa quy trình backup, restore và quản lý phiên bản schema datab
 
 ```bash
 # Backup database ra file .bak
-docker exec vetmaybaay_sqlserver /opt/mssql-tools/bin/sqlcmd \
+docker exec vemaybay_sqlserver /opt/mssql-tools/bin/sqlcmd \
   -S localhost -U sa -P "$SA_PASSWORD" \
-  -Q "BACKUP DATABASE VeToMayBayDB TO DISK='/var/opt/mssql/backup/vetmaybay_$(date +%Y%m%d).bak'"
+  -Q "BACKUP DATABASE VeMayBayDB TO DISK='/var/opt/mssql/backup/vemaybay_$(date +%Y%m%d).bak'"
 ```
 
 Script `db_backup.sh` cần:
@@ -1443,9 +1443,9 @@ Script `db_backup.sh` cần:
 
 ```bash
 # Restore từ file .bak
-docker exec vetmaybaay_sqlserver /opt/mssql-tools/bin/sqlcmd \
+docker exec vemaybay_sqlserver /opt/mssql-tools/bin/sqlcmd \
   -S localhost -U sa -P "$SA_PASSWORD" \
-  -Q "RESTORE DATABASE VeToMayBayDB FROM DISK='/var/opt/mssql/backup/vetmaybay_20250101.bak' WITH REPLACE"
+  -Q "RESTORE DATABASE VeMayBayDB FROM DISK='/var/opt/mssql/backup/vemaybay_20250101.bak' WITH REPLACE"
 ```
 
 #### Reset Database Dev
@@ -1521,7 +1521,7 @@ org.mapstruct:mapstruct
 
 #### Cấu trúc thư mục
 ```
-src/main/java/com/vetmaybay/
+src/main/java/com/vemaybay/
 ├── config/               -- Security, CORS, Swagger config
 ├── controller/           -- REST Controllers (API endpoints)
 ├── service/              -- Business logic interfaces + implementations
@@ -1538,8 +1538,8 @@ src/main/java/com/vetmaybay/
 ```yaml
 spring:
   datasource:
-    url: jdbc:sqlserver://${DB_HOST:localhost}:${DB_PORT:1433};databaseName=${DB_NAME:VeToMayBayDB};encrypt=true;trustServerCertificate=true
-    username: ${DB_USER:vetmaybay_app}
+    url: jdbc:sqlserver://${DB_HOST:localhost}:${DB_PORT:1433};databaseName=${DB_NAME:VeMayBayDB};encrypt=true;trustServerCertificate=true
+    username: ${DB_USER:vemaybay_app}
     password: ${DB_PASSWORD}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
@@ -1600,7 +1600,7 @@ Xây dựng hệ thống xác thực dùng JWT với refresh token, bảo vệ t
 ```json
 {
   "sub": "userId",
-  "username": "admin@vetmaybay.com",
+  "username": "admin@vemaybay.com",
   "role": "ADMIN",
   "iat": 1700000000,
   "exp": 1700003600
@@ -2024,7 +2024,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 ```yaml
 backend:
   build: ./backend
-  container_name: vetmaybay_backend
+  container_name: vemaybay_backend
   ports:
     - "8080:8080"
   environment:
@@ -2038,7 +2038,7 @@ backend:
     sqlserver:
       condition: service_healthy
   networks:
-    - vetmaybay_network
+    - vemaybay_network
   healthcheck:
     test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
     interval: 30s
@@ -2219,7 +2219,7 @@ backend:
 - [ ] Bảng CHECKIN có đúng cột (không nhầm với KIENHANHLY)
 
 **Bảo mật:**
-- [ ] Tài khoản `vetmaybay_app` đã tạo
+- [ ] Tài khoản `vemaybay_app` đã tạo
 - [ ] Không dùng `sa` trong application
 - [ ] Quyền tối thiểu đã cấp đúng
 - [ ] Script quyền có comment giải thích

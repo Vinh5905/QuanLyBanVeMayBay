@@ -1,0 +1,26 @@
+# Local environment files. Commit only documented development fixtures.
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Java / Spring Boot
+backend/target/
+*.class
+*.jar
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+frontend/coverage/
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+tmp/

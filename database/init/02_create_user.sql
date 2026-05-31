@@ -1,0 +1,43 @@
+USE [master];
+GO
+
+DECLARE @LoginName SYSNAME = N'$(APP_DB_USER)';
+DECLARE @DatabaseName SYSNAME = N'$(DB_NAME)';
+DECLARE @LoginSql NVARCHAR(MAX);
+
+IF SUSER_ID(@LoginName) IS NULL
+BEGIN
+    SET @LoginSql =
+        N'CREATE LOGIN ' + QUOTENAME(@LoginName) +
+        N' WITH PASSWORD = N''$(APP_DB_PASSWORD_SQL)'',' +
+        N' CHECK_POLICY = ON,' +
+        N' CHECK_EXPIRATION = OFF,' +
+        N' DEFAULT_DATABASE = ' + QUOTENAME(@DatabaseName) + N';';
+END
+ELSE
+BEGIN
+    SET @LoginSql =
+        N'ALTER LOGIN ' + QUOTENAME(@LoginName) +
+        N' WITH PASSWORD = N''$(APP_DB_PASSWORD_SQL)'',' +
+        N' CHECK_POLICY = ON,' +
+        N' CHECK_EXPIRATION = OFF,' +
+        N' DEFAULT_DATABASE = ' + QUOTENAME(@DatabaseName) + N';';
+END;
+
+EXEC sys.sp_executesql @LoginSql;
+GO
+
+GRANT CONNECT SQL TO [$(APP_DB_USER)];
+DENY VIEW ANY DATABASE TO [$(APP_DB_USER)];
+DENY ALTER ANY LOGIN TO [$(APP_DB_USER)];
+REVOKE CONTROL SERVER FROM [$(APP_DB_USER)];
+GO
+
+USE [$(DB_NAME)];
+GO
+
+IF DATABASE_PRINCIPAL_ID(N'$(APP_DB_USER)') IS NULL
+BEGIN
+    CREATE USER [$(APP_DB_USER)] FOR LOGIN [$(APP_DB_USER)];
+END;
+GO
