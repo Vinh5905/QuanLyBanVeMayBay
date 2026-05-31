@@ -44,5 +44,29 @@ services:
     entrypoint: ["/bin/bash", "/database/init/run-init.sh"]
     restart: "no"
 
+  backend:
+    build: ./backend
+    container_name: vemaybay_backend
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      DB_HOST: sqlserver
+      DB_PORT: 1433
+      DB_NAME: "${DB_NAME:-VeMayBayDB}"
+      DB_USER: "${APP_DB_USER:-vemaybay_app}"
+      DB_PASSWORD: "${APP_DB_PASSWORD:?APP_DB_PASSWORD must be set}"
+      JWT_SECRET: "${JWT_SECRET:-change-this-in-production-min-256-bits-long-secret-key!!}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000}"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
 volumes:
   sqlserver_data:
