@@ -1,0 +1,47 @@
+name: vemaybay
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    container_name: vemaybay_sqlserver
+    ports:
+      - "${SQL_PORT:-1433}:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: "${SA_PASSWORD:?SA_PASSWORD must be set}"
+      DB_NAME: "${DB_NAME:-VeMayBayDB}"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./database:/database:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "SQLCMD=/opt/mssql-tools18/bin/sqlcmd; [ -x \"$$SQLCMD\" ] || SQLCMD=/opt/mssql-tools/bin/sqlcmd; \"$$SQLCMD\" -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    restart: unless-stopped
+
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      SA_PASSWORD: "${SA_PASSWORD:?SA_PASSWORD must be set}"
+      DB_NAME: "${DB_NAME:-VeMayBayDB}"
+      APP_DB_USER: "${APP_DB_USER:-vemaybay_app}"
+      APP_DB_PASSWORD: "${APP_DB_PASSWORD:?APP_DB_PASSWORD must be set}"
+    volumes:
+      - ./database:/database:ro
+    entrypoint: ["/bin/bash", "/database/init/run-init.sh"]
+    restart: "no"
+
+volumes:
+  sqlserver_data:
