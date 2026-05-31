@@ -42,4 +42,8 @@ sqlcmd_admin \
   -v "DB_NAME=${DB_NAME}" \
   -i /database/init/01_create_database.sql
 
+if [[ -x /database/schema/run-schema.sh ]]; then
+  /database/schema/run-schema.sh
+fi
+
 echo "Database initialization completed."
