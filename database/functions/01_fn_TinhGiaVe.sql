@@ -1,0 +1,23 @@
+USE [$(DB_NAME)];
+GO
+
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
+-- Usage: SELECT dbo.fn_TinhGiaVe(500000, @MaHangVe)
+-- Returns GiaCoBan * HeSoGia; NULL if MaHangVe does not exist.
+CREATE OR ALTER FUNCTION dbo.fn_TinhGiaVe
+(
+    @GiaCoBan  DECIMAL(18,2),
+    @MaHangVe  INT
+)
+RETURNS DECIMAL(18,2)
+WITH SCHEMABINDING, RETURNS NULL ON NULL INPUT
+AS
+BEGIN
+    DECLARE @HeSoGia DECIMAL(8,2);
+    SELECT @HeSoGia = HeSoGia FROM dbo.HANGVE WHERE MaHangVe = @MaHangVe;
+    RETURN CASE WHEN @HeSoGia IS NULL THEN NULL ELSE @GiaCoBan * @HeSoGia END;
+END;
+GO

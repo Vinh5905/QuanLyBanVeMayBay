@@ -75,4 +75,8 @@ if [[ -x /database/views/run-views.sh ]]; then
   /database/views/run-views.sh
 fi
 
+if [[ -x /database/functions/run-functions.sh ]]; then
+  /database/functions/run-functions.sh
+fi
+
 echo "Database initialization completed."
