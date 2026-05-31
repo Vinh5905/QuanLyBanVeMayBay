@@ -71,4 +71,8 @@ if [[ -x /database/triggers/run-triggers.sh ]]; then
   /database/triggers/run-triggers.sh
 fi
 
+if [[ -x /database/views/run-views.sh ]]; then
+  /database/views/run-views.sh
+fi
+
 echo "Database initialization completed."
