@@ -4,6 +4,19 @@ set -euo pipefail
 SQLSERVER_HOST="${SQLSERVER_HOST:-sqlserver}"
 SQLCMD="/opt/mssql-tools18/bin/sqlcmd"
 
+validate_identifier() {
+  local name="$1"
+  local value="$2"
+
+  if [[ ! "${value}" =~ ^[A-Za-z][A-Za-z0-9_]*$ ]]; then
+    echo "${name} must start with a letter and contain only letters, numbers or underscores." >&2
+    exit 1
+  fi
+}
+
+validate_identifier "DB_NAME" "${DB_NAME}"
+validate_identifier "APP_DB_USER" "${APP_DB_USER}"
+
 if [[ ! -x "${SQLCMD}" ]]; then
   SQLCMD="/opt/mssql-tools/bin/sqlcmd"
 fi
@@ -44,6 +57,10 @@ sqlcmd_admin \
 
 if [[ -x /database/schema/run-schema.sh ]]; then
   /database/schema/run-schema.sh
+fi
+
+if [[ -x /database/security/run-security.sh ]]; then
+  /database/security/run-security.sh
 fi
 
 echo "Database initialization completed."

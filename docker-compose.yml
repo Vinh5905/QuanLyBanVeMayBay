@@ -12,6 +12,7 @@ services:
       MSSQL_PID: "Developer"
       MSSQL_SA_PASSWORD: "${SA_PASSWORD:?SA_PASSWORD must be set}"
       DB_NAME: "${DB_NAME:-VeMayBayDB}"
+      APP_DB_USER: "${APP_DB_USER:-vemaybay_app}"
     volumes:
       - sqlserver_data:/var/opt/mssql
       - ./database:/database:ro

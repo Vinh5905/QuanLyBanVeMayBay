@@ -33,6 +33,7 @@ make db-verify
 ```
 
 `make db-up` khởi động SQL Server, chờ healthcheck PASS và chạy các script init idempotent.
+Init runner tạo schema và login least-privilege cho backend sau khi database sẵn sàng.
 
 Có thể chạy Docker Compose trực tiếp:
 
@@ -70,6 +71,7 @@ Trust server certificate: true
 ```
 
 Tài khoản `sa` chỉ dùng cho local bootstrap và quản trị. Backend phải dùng `APP_DB_USER`.
+Chi tiết quyền ứng dụng nằm tại `database/security/README.md`.
 
 ## Cấu trúc thư mục
 
