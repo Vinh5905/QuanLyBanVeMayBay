@@ -63,4 +63,8 @@ if [[ -x /database/security/run-security.sh ]]; then
   /database/security/run-security.sh
 fi
 
+if [[ -x /database/stored_procedures/run-sp.sh ]]; then
+  /database/stored_procedures/run-sp.sh
+fi
+
 echo "Database initialization completed."
