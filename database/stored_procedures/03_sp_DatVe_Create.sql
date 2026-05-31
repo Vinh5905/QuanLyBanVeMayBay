@@ -14,6 +14,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_DatVe_Create
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @OuterTranCount INT = @@TRANCOUNT;
 
     DECLARE @GiaVe           DECIMAL(18,2);
     DECLARE @SoLuong         INT;
@@ -26,7 +27,7 @@ BEGIN
     DECLARE @MaVe            INT;
 
     BEGIN TRY
-        BEGIN TRANSACTION;
+        IF @OuterTranCount = 0 BEGIN TRANSACTION;
 
         -- Validate chuyến bay
         SELECT @NgayGioBay = NgayGioBay
@@ -37,7 +38,7 @@ BEGIN
 
         IF @NgayGioBay IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 2001 AS ErrorCode, N'Chuyến bay không tồn tại hoặc đã bị hủy' AS Message;
             RETURN;
         END;
@@ -49,7 +50,7 @@ BEGIN
 
         IF DATEADD(HOUR, -@TGDongBan, @NgayGioBay) < SYSUTCDATETIME()
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 2002 AS ErrorCode, N'Đã quá thời gian đặt vé cho chuyến bay này' AS Message;
             RETURN;
         END;
@@ -60,7 +61,7 @@ BEGIN
             WHERE MaKhachHang = @MaKhachHang AND IsDeleted = 0
         )
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 2003 AS ErrorCode, N'Khách hàng không tồn tại' AS Message;
             RETURN;
         END;
@@ -72,14 +73,14 @@ BEGIN
 
         IF @GiaVe IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 2004 AS ErrorCode, N'Hạng vé không tồn tại cho chuyến bay' AS Message;
             RETURN;
         END;
 
         IF @SoLuong - @SoGheDaDat <= 0
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 2005 AS ErrorCode, N'Hết ghế cho hạng vé này' AS Message;
             RETURN;
         END;
@@ -114,7 +115,7 @@ BEGIN
         SET SoGheDaDat = SoGheDaDat + 1
         WHERE MaChuyenBay = @MaChuyenBay AND MaHangVe = @MaHangVe;
 
-        COMMIT TRANSACTION;
+        IF @OuterTranCount = 0 COMMIT TRANSACTION;
 
         SELECT 0 AS ErrorCode, N'Đặt vé thành công' AS Message,
                @MaPhieuDat   AS MaPhieuDat,
@@ -123,7 +124,7 @@ BEGIN
                @HanThanhToan AS HanThanhToan;
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 AND @OuterTranCount = 0 ROLLBACK TRANSACTION;
         SELECT ERROR_NUMBER() AS ErrorCode, ERROR_MESSAGE() AS Message;
     END CATCH
 END;

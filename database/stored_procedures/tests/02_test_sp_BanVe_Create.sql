@@ -1,6 +1,10 @@
 USE [$(DB_NAME)];
 GO
 
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
 PRINT N'=== TEST: sp_BanVe_Create ===';
 GO
 
@@ -28,8 +32,8 @@ VALUES ('TSU', N'Test Airport 2', N'Test City 2', N'VN');
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'TEST_ECONOMY', 1.0);
 DECLARE @MaHV INT = SCOPE_IDENTITY();
 
--- Flight 10 hours from now (well within the 24h selling window)
-DECLARE @NgayBay DATETIME2(0) = DATEADD(HOUR, 10, SYSUTCDATETIME());
+-- Flight 48 hours from now (well outside the 24h selling window)
+DECLARE @NgayBay DATETIME2(0) = DATEADD(HOUR, 48, SYSUTCDATETIME());
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('TST001', 'TST', 'TSU', @NgayBay, 90, 500000);
 DECLARE @MaCB INT = SCOPE_IDENTITY();
@@ -63,7 +67,7 @@ IF @GheDaDat <> 1
 
 PRINT N'PASS [sp_BanVe_Create] Happy path';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 2: Flight does not exist → ErrorCode 1001
@@ -85,7 +89,7 @@ IF @MaVe2 IS NOT NULL
 
 PRINT N'PASS [sp_BanVe_Create] Non-existent flight returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 3: No seats available → ErrorCode 1005
@@ -102,7 +106,7 @@ INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia)
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'TEST_FULL_CLASS', 1.0);
 DECLARE @MaHV3 INT = SCOPE_IDENTITY();
 
-DECLARE @NgayBay3 DATETIME2(0) = DATEADD(HOUR, 10, SYSUTCDATETIME());
+DECLARE @NgayBay3 DATETIME2(0) = DATEADD(HOUR, 48, SYSUTCDATETIME());
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('FULL01', 'TS3', 'TS4', @NgayBay3, 90, 500000);
 DECLARE @MaCB3 INT = SCOPE_IDENTITY();
@@ -124,7 +128,7 @@ IF @MaVe3 IS NOT NULL
 
 PRINT N'PASS [sp_BanVe_Create] No seats available returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 4: Flight departure already past selling window → ErrorCode 1002
@@ -163,7 +167,7 @@ IF @MaVe4 IS NOT NULL
 
 PRINT N'PASS [sp_BanVe_Create] Selling window closed returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 PRINT N'=== sp_BanVe_Create: all tests passed ===';

@@ -13,6 +13,8 @@ CREATE OR ALTER PROCEDURE dbo.sp_BanVe_Create
 AS
 BEGIN
     SET NOCOUNT ON;
+    -- Capture nesting level so we can avoid killing an outer transaction on error.
+    DECLARE @OuterTranCount INT = @@TRANCOUNT;
 
     DECLARE @GiaVe          DECIMAL(18,2);
     DECLARE @SoLuong        INT;
@@ -22,7 +24,7 @@ BEGIN
     DECLARE @MaVeCode       VARCHAR(30);
 
     BEGIN TRY
-        BEGIN TRANSACTION;
+        IF @OuterTranCount = 0 BEGIN TRANSACTION;
 
         -- Validate chuyến bay với shared intent lock để đọc nhất quán
         SELECT @NgayGioBay = NgayGioBay
@@ -31,7 +33,7 @@ BEGIN
 
         IF @NgayGioBay IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 1001 AS ErrorCode, N'Chuyến bay không tồn tại hoặc đã bị xóa' AS Message;
             RETURN;
         END;
@@ -43,7 +45,7 @@ BEGIN
 
         IF DATEADD(HOUR, -@ThoiGianDong, @NgayGioBay) < SYSUTCDATETIME()
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 1002 AS ErrorCode, N'Đã quá thời gian bán vé cho chuyến bay này' AS Message;
             RETURN;
         END;
@@ -54,7 +56,7 @@ BEGIN
             WHERE MaKhachHang = @MaKhachHang AND IsDeleted = 0
         )
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 1003 AS ErrorCode, N'Khách hàng không tồn tại' AS Message;
             RETURN;
         END;
@@ -66,14 +68,14 @@ BEGIN
 
         IF @GiaVe IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 1004 AS ErrorCode, N'Hạng vé không tồn tại cho chuyến bay này' AS Message;
             RETURN;
         END;
 
         IF @SoLuong - @SoGheDaDat <= 0
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 1005 AS ErrorCode, N'Hết ghế cho hạng vé này' AS Message;
             RETURN;
         END;
@@ -93,7 +95,7 @@ BEGIN
         SET SoGheDaDat = SoGheDaDat + 1
         WHERE MaChuyenBay = @MaChuyenBay AND MaHangVe = @MaHangVe;
 
-        COMMIT TRANSACTION;
+        IF @OuterTranCount = 0 COMMIT TRANSACTION;
 
         SELECT 0 AS ErrorCode, N'Bán vé thành công' AS Message,
                @MaVe    AS MaVe,
@@ -101,7 +103,7 @@ BEGIN
                @GiaVe   AS GiaVe;
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 AND @OuterTranCount = 0 ROLLBACK TRANSACTION;
         SELECT ERROR_NUMBER() AS ErrorCode, ERROR_MESSAGE() AS Message;
     END CATCH
 END;

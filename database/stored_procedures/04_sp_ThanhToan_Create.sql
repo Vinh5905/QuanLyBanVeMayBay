@@ -16,6 +16,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_ThanhToan_Create
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @OuterTranCount INT = @@TRANCOUNT;
 
     DECLARE @MaVeTarget      INT;
     DECLARE @GiaGoc          DECIMAL(18,2);
@@ -36,7 +37,7 @@ BEGIN
     END;
 
     BEGIN TRY
-        BEGIN TRANSACTION;
+        IF @OuterTranCount = 0 BEGIN TRANSACTION;
 
         IF @MaPhieuDatCho IS NOT NULL
         BEGIN
@@ -49,14 +50,14 @@ BEGIN
 
             IF @TrangThaiDatCho IS NULL
             BEGIN
-                ROLLBACK TRANSACTION;
+                IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
                 SELECT 3002 AS ErrorCode, N'Phiếu đặt chỗ không tồn tại' AS Message;
                 RETURN;
             END;
 
             IF @TrangThaiDatCho <> 'DANG_GIU_CHO'
             BEGIN
-                ROLLBACK TRANSACTION;
+                IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
                 SELECT 3003 AS ErrorCode,
                        N'Phiếu đặt chỗ không ở trạng thái chờ thanh toán. Trạng thái hiện tại: '
                        + @TrangThaiDatCho AS Message;
@@ -65,7 +66,7 @@ BEGIN
 
             IF @HanThanhToan < SYSUTCDATETIME()
             BEGIN
-                ROLLBACK TRANSACTION;
+                IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
                 SELECT 3004 AS ErrorCode, N'Đã quá hạn thanh toán' AS Message;
                 RETURN;
             END;
@@ -79,7 +80,7 @@ BEGIN
 
             IF @MaVeTarget IS NULL
             BEGIN
-                ROLLBACK TRANSACTION;
+                IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
                 SELECT 3005 AS ErrorCode,
                        N'Không tìm thấy vé giữ chỗ liên kết với phiếu đặt chỗ' AS Message;
                 RETURN;
@@ -94,14 +95,14 @@ BEGIN
 
             IF @GiaGoc IS NULL
             BEGIN
-                ROLLBACK TRANSACTION;
+                IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
                 SELECT 3006 AS ErrorCode, N'Vé không tồn tại' AS Message;
                 RETURN;
             END;
 
             IF @TrangThaiVe NOT IN ('HOP_LE', 'DANG_GIU_CHO')
             BEGIN
-                ROLLBACK TRANSACTION;
+                IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
                 SELECT 3007 AS ErrorCode,
                        N'Vé không hợp lệ để thanh toán. Trạng thái: ' + @TrangThaiVe AS Message;
                 RETURN;
@@ -121,7 +122,7 @@ BEGIN
         -- Kiểm tra số tiền đủ (100%)
         IF @SoTienThanhToan < @GiaSauThue
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 3008 AS ErrorCode,
                    N'Số tiền không đủ. Yêu cầu: ' + CAST(@GiaSauThue AS VARCHAR(30)) AS Message;
             RETURN;
@@ -150,7 +151,7 @@ BEGIN
             WHERE MaPhieuDatCho = @MaPhieuDatCho;
         END;
 
-        COMMIT TRANSACTION;
+        IF @OuterTranCount = 0 COMMIT TRANSACTION;
 
         SELECT 0 AS ErrorCode, N'Thanh toán thành công' AS Message,
                @MaThanhToan  AS MaThanhToan,
@@ -159,7 +160,7 @@ BEGIN
                @MaVeTarget   AS MaVe;
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 AND @OuterTranCount = 0 ROLLBACK TRANSACTION;
         SELECT ERROR_NUMBER() AS ErrorCode, ERROR_MESSAGE() AS Message;
     END CATCH
 END;

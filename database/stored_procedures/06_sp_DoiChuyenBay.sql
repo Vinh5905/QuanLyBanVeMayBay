@@ -14,6 +14,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_DoiChuyenBay
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @OuterTranCount INT = @@TRANCOUNT;
 
     DECLARE @TrangThaiVe     VARCHAR(30);
     DECLARE @MaChuyenBayCu   INT;
@@ -32,7 +33,7 @@ BEGIN
     DECLARE @PhiDoi          DECIMAL(18,2);
 
     BEGIN TRY
-        BEGIN TRANSACTION;
+        IF @OuterTranCount = 0 BEGIN TRANSACTION;
 
         -- Lấy thông tin vé hiện tại với lock
         SELECT @TrangThaiVe   = TrangThaiVe,
@@ -44,14 +45,14 @@ BEGIN
 
         IF @TrangThaiVe IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 5001 AS ErrorCode, N'Vé không tồn tại' AS Message;
             RETURN;
         END;
 
         IF @TrangThaiVe <> 'HOP_LE'
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 5002 AS ErrorCode,
                    N'Chỉ đổi được vé ở trạng thái HOP_LE. Trạng thái hiện tại: '
                    + @TrangThaiVe AS Message;
@@ -70,7 +71,7 @@ BEGIN
 
         IF DATEADD(HOUR, -@ThoiGianChoPhep, @NgayGioBayCu) < SYSUTCDATETIME()
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 5003 AS ErrorCode, N'Đã quá thời gian cho phép đổi chuyến' AS Message;
             RETURN;
         END;
@@ -84,7 +85,7 @@ BEGIN
 
         IF @NgayGioBayMoi IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 5004 AS ErrorCode, N'Chuyến bay mới không tồn tại' AS Message;
             RETURN;
         END;
@@ -92,7 +93,7 @@ BEGIN
         -- Kiểm tra cùng tuyến bay
         IF @SanBayDiMoi <> @SanBayDi OR @SanBayDenMoi <> @SanBayDen
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 5005 AS ErrorCode,
                    N'Chuyến bay mới phải cùng tuyến (sân bay đi - đến)' AS Message;
             RETURN;
@@ -105,7 +106,7 @@ BEGIN
 
         IF @GiaMoi IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 5006 AS ErrorCode,
                    N'Hạng vé không tồn tại trên chuyến bay mới' AS Message;
             RETURN;
@@ -113,7 +114,7 @@ BEGIN
 
         IF @SoLuongMoi - @SoGheDaDatMoi <= 0
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 5007 AS ErrorCode, N'Hết ghế trên chuyến bay mới' AS Message;
             RETURN;
         END;
@@ -148,7 +149,7 @@ BEGIN
 
         SET @MaThanhToanPhi = SCOPE_IDENTITY();
 
-        COMMIT TRANSACTION;
+        IF @OuterTranCount = 0 COMMIT TRANSACTION;
 
         SELECT 0 AS ErrorCode, N'Đổi chuyến bay thành công' AS Message,
                @MaVe            AS MaVe,
@@ -158,7 +159,7 @@ BEGIN
                @MaThanhToanPhi  AS MaThanhToanPhi;
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 AND @OuterTranCount = 0 ROLLBACK TRANSACTION;
         SELECT ERROR_NUMBER() AS ErrorCode, ERROR_MESSAGE() AS Message;
     END CATCH
 END;

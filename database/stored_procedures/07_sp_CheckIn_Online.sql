@@ -13,6 +13,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_CheckIn_Online
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @OuterTranCount INT = @@TRANCOUNT;
 
     DECLARE @TrangThaiVe   VARCHAR(30);
     DECLARE @MaChuyenBay   INT;
@@ -25,7 +26,7 @@ BEGIN
     SET @ThoiDiem = ISNULL(@ThoiDiemCheckIn, SYSUTCDATETIME());
 
     BEGIN TRY
-        BEGIN TRANSACTION;
+        IF @OuterTranCount = 0 BEGIN TRANSACTION;
 
         -- Validate vé
         SELECT @TrangThaiVe = TrangThaiVe, @MaChuyenBay = MaChuyenBay
@@ -34,7 +35,7 @@ BEGIN
 
         IF @TrangThaiVe IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 6001 AS ErrorCode, N'Vé không tồn tại' AS Message;
             RETURN;
         END;
@@ -42,7 +43,7 @@ BEGIN
         -- Chỉ cho phép check-in vé hợp lệ (đã thanh toán)
         IF @TrangThaiVe <> 'HOP_LE'
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 6002 AS ErrorCode,
                    N'Vé không hợp lệ để check-in. Trạng thái: ' + @TrangThaiVe AS Message;
             RETURN;
@@ -51,7 +52,7 @@ BEGIN
         -- Kiểm tra đã check-in chưa (unique constraint trên MaVe)
         IF EXISTS (SELECT 1 FROM dbo.CHECKIN WITH (NOLOCK) WHERE MaVe = @MaVe)
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 6003 AS ErrorCode, N'Vé đã được check-in trước đó' AS Message;
             RETURN;
         END;
@@ -73,7 +74,7 @@ BEGIN
         -- Kiểm tra: chưa đến giờ mở
         IF @ThoiDiem < DATEADD(HOUR, -@TGMoCheckIn, @NgayGioBay)
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 6004 AS ErrorCode,
                    N'Chưa đến giờ mở check-in. Mở lúc: '
                    + CONVERT(VARCHAR(30), DATEADD(HOUR, -@TGMoCheckIn, @NgayGioBay), 120) AS Message;
@@ -83,7 +84,7 @@ BEGIN
         -- Kiểm tra: đã qua giờ đóng
         IF @ThoiDiem > DATEADD(MINUTE, -@TGDongCheckIn, @NgayGioBay)
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 6005 AS ErrorCode, N'Đã đóng cửa check-in' AS Message;
             RETURN;
         END;
@@ -98,7 +99,7 @@ BEGIN
 
         SET @MaCheckIn = SCOPE_IDENTITY();
 
-        COMMIT TRANSACTION;
+        IF @OuterTranCount = 0 COMMIT TRANSACTION;
 
         SELECT 0 AS ErrorCode, N'Check-in thành công' AS Message,
                @MaCheckIn        AS MaCheckIn,
@@ -107,7 +108,7 @@ BEGIN
                @NgayGioBay       AS NgayGioBay;
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 AND @OuterTranCount = 0 ROLLBACK TRANSACTION;
         SELECT ERROR_NUMBER() AS ErrorCode, ERROR_MESSAGE() AS Message;
     END CATCH
 END;

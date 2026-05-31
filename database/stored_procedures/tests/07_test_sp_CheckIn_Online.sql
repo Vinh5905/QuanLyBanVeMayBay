@@ -1,6 +1,10 @@
 USE [$(DB_NAME)];
 GO
 
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
 PRINT N'=== TEST: sp_CheckIn_Online ===';
 GO
 
@@ -22,9 +26,13 @@ DECLARE @MaCB INT = SCOPE_IDENTITY();
 INSERT INTO dbo.CT_HANGVE (MaChuyenBay, MaHangVe, SoLuong, SoGheDaDat, DonGia)
 VALUES (@MaCB, @MaHV, 10, 0, 500000);
 
-DECLARE @MaVe INT;
-EXEC dbo.sp_BanVe_Create @MaChuyenBay=@MaCB, @MaKhachHang=@MaKH, @MaHangVe=@MaHV,
-     @NgayGiaoDich='2024-01-01', @MaVe=@MaVe OUTPUT;
+-- Direct insert bypasses BanVe time-window (selling closes 24h before departure,
+-- but check-in window opens 24h before — the two windows don't overlap for this flight)
+DECLARE @MaVeCode1 VARCHAR(30) = 'VE_CI_T1_' + CAST(@@SPID AS VARCHAR(10));
+INSERT INTO dbo.VE (MaVeCode, MaChuyenBay, MaHangVe, MaKhachHang, GiaVe, TrangThaiVe)
+VALUES (@MaVeCode1, @MaCB, @MaHV, @MaKH, 500000, 'HOP_LE');
+DECLARE @MaVe INT = SCOPE_IDENTITY();
+UPDATE dbo.CT_HANGVE SET SoGheDaDat = 1 WHERE MaChuyenBay=@MaCB AND MaHangVe=@MaHV;
 
 DECLARE @MaCheckIn INT;
 EXEC dbo.sp_CheckIn_Online
@@ -43,7 +51,7 @@ IF @BPCode IS NULL OR LEN(@BPCode) < 10
 
 PRINT N'PASS [sp_CheckIn_Online] Happy path';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 2: Check-in before window opens → error
@@ -81,7 +89,7 @@ IF @MaCI2 IS NOT NULL
 
 PRINT N'PASS [sp_CheckIn_Online] Before check-in window returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 3: Check-in after window closes → error
@@ -121,7 +129,7 @@ IF @MaCI3 IS NOT NULL
 
 PRINT N'PASS [sp_CheckIn_Online] After check-in window closes returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 4: Duplicate check-in → error
@@ -140,9 +148,12 @@ DECLARE @MaCB4 INT = SCOPE_IDENTITY();
 INSERT INTO dbo.CT_HANGVE (MaChuyenBay, MaHangVe, SoLuong, SoGheDaDat, DonGia)
 VALUES (@MaCB4, @MaHV4, 10, 0, 500000);
 
-DECLARE @MaVe4 INT;
-EXEC dbo.sp_BanVe_Create @MaChuyenBay=@MaCB4, @MaKhachHang=@MaKH4, @MaHangVe=@MaHV4,
-     @NgayGiaoDich='2024-01-01', @MaVe=@MaVe4 OUTPUT;
+-- Direct insert bypasses BanVe time-window (same reason as Test 1)
+DECLARE @MaVeCode4 VARCHAR(30) = 'VE_CI_T4_' + CAST(@@SPID AS VARCHAR(10));
+INSERT INTO dbo.VE (MaVeCode, MaChuyenBay, MaHangVe, MaKhachHang, GiaVe, TrangThaiVe)
+VALUES (@MaVeCode4, @MaCB4, @MaHV4, @MaKH4, 500000, 'HOP_LE');
+DECLARE @MaVe4 INT = SCOPE_IDENTITY();
+UPDATE dbo.CT_HANGVE SET SoGheDaDat = 1 WHERE MaChuyenBay=@MaCB4 AND MaHangVe=@MaHV4;
 
 -- First check-in
 DECLARE @MaCI4a INT;
@@ -157,7 +168,7 @@ IF @MaCI4b IS NOT NULL
 
 PRINT N'PASS [sp_CheckIn_Online] Duplicate check-in returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 PRINT N'=== sp_CheckIn_Online: all tests passed ===';

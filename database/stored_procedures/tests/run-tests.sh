@@ -40,7 +40,7 @@ run_sql() {
 }
 
 # Load test helpers (APP_CONFIG values) first
-run_sql "${SCRIPT_DIR}/00_test_helpers.sql"
+run_sql "${SCRIPT_DIR}/00_helpers.sql"
 
 # Run all numbered test files
 for script in "${SCRIPT_DIR}"/[0-9][0-9]_test_*.sql; do

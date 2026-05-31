@@ -1,6 +1,10 @@
 USE [$(DB_NAME)];
 GO
 
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
 PRINT N'=== TEST: sp_Report_DoanhThuThang & sp_Report_DoanhThuNam ===';
 GO
 
@@ -109,11 +113,12 @@ CREATE TABLE #MonthReport (
 INSERT INTO #MonthReport
 EXEC dbo.sp_Report_DoanhThuThang @Nam = 2025, @Thang = 1;
 
-DECLARE @Revenue DECIMAL(18,2);
+DECLARE @Revenue    DECIMAL(18,2);
+DECLARE @RevenueMsg VARCHAR(50);
 SELECT @Revenue = DoanhThuVe FROM #MonthReport WHERE MaChuyenBay = @MaCB;
+SET @RevenueMsg = CAST(@Revenue AS VARCHAR(50));
 IF @Revenue <> 550000
-    RAISERROR(N'FAIL [sp_Report_DoanhThuThang] Revenue should be 550000, got: %s',
-              16, 1, CAST(@Revenue AS VARCHAR(30)));
+    RAISERROR(N'FAIL [sp_Report_DoanhThuThang] Revenue should be 550000, got: %s', 16, 1, @RevenueMsg);
 
 DROP TABLE #MonthReport;
 

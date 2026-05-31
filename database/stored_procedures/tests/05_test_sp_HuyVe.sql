@@ -1,6 +1,10 @@
 USE [$(DB_NAME)];
 GO
 
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
 PRINT N'=== TEST: sp_HuyVe ===';
 GO
 
@@ -14,7 +18,7 @@ INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('HV1', N
 INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('HV2', N'HV B', N'City', N'VN');
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'HV_ECO', 1.0);
 DECLARE @MaHV INT = SCOPE_IDENTITY();
-DECLARE @NgayBay DATETIME2(0) = DATEADD(HOUR, 10, SYSUTCDATETIME());
+DECLARE @NgayBay DATETIME2(0) = DATEADD(HOUR, 48, SYSUTCDATETIME());
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('HVC001', 'HV1', 'HV2', @NgayBay, 90, 500000);
 DECLARE @MaCB INT = SCOPE_IDENTITY();
@@ -57,7 +61,7 @@ IF @SoTienHoan <> 400000
 
 PRINT N'PASS [sp_HuyVe] Happy path';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 2: Cancel non-existent ticket → error
@@ -71,7 +75,7 @@ IF @Ph2 IS NOT NULL
 
 PRINT N'PASS [sp_HuyVe] Non-existent ticket returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 3: Cancel already-cancelled ticket → error
@@ -83,7 +87,7 @@ INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('HV3', N
 INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('HV4', N'HV D', N'City', N'VN');
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'HV_ECO3', 1.0);
 DECLARE @MaHV3 INT = SCOPE_IDENTITY();
-DECLARE @NgayBay3 DATETIME2(0) = DATEADD(HOUR, 10, SYSUTCDATETIME());
+DECLARE @NgayBay3 DATETIME2(0) = DATEADD(HOUR, 48, SYSUTCDATETIME());
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('HVC003', 'HV3', 'HV4', @NgayBay3, 90, 500000);
 DECLARE @MaCB3 INT = SCOPE_IDENTITY();
@@ -107,7 +111,7 @@ IF @Ph3b IS NOT NULL
 
 PRINT N'PASS [sp_HuyVe] Double cancellation returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 PRINT N'=== sp_HuyVe: all tests passed ===';

@@ -10,6 +10,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_HuyVe
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @OuterTranCount INT = @@TRANCOUNT;
 
     DECLARE @TrangThaiVe   VARCHAR(30);
     DECLARE @GiaVe         DECIMAL(18,2);
@@ -20,7 +21,7 @@ BEGIN
     DECLARE @PhiHuyConfig  DECIMAL(18,2);
 
     BEGIN TRY
-        BEGIN TRANSACTION;
+        IF @OuterTranCount = 0 BEGIN TRANSACTION;
 
         -- Lấy thông tin vé với lock
         SELECT @TrangThaiVe   = TrangThaiVe,
@@ -33,14 +34,14 @@ BEGIN
 
         IF @TrangThaiVe IS NULL
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 4001 AS ErrorCode, N'Vé không tồn tại' AS Message;
             RETURN;
         END;
 
         IF @TrangThaiVe <> 'HOP_LE'
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 4002 AS ErrorCode,
                    N'Chỉ có thể hủy vé ở trạng thái HOP_LE. Trạng thái hiện tại: '
                    + @TrangThaiVe AS Message;
@@ -54,7 +55,7 @@ BEGIN
 
         IF @NgayGioBay <= SYSUTCDATETIME()
         BEGIN
-            ROLLBACK TRANSACTION;
+            IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 4003 AS ErrorCode,
                    N'Không thể hủy vé sau khi chuyến bay đã khởi hành' AS Message;
             RETURN;
@@ -88,14 +89,14 @@ BEGIN
             WHERE MaPhieuDatCho = @MaPhieuDatCho;
         END;
 
-        COMMIT TRANSACTION;
+        IF @OuterTranCount = 0 COMMIT TRANSACTION;
 
         SELECT 0 AS ErrorCode, N'Hủy vé thành công' AS Message,
                @PhiHuy      AS PhiHuy,
                @SoTienHoan  AS SoTienHoanLai;
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 AND @OuterTranCount = 0 ROLLBACK TRANSACTION;
         SELECT ERROR_NUMBER() AS ErrorCode, ERROR_MESSAGE() AS Message;
     END CATCH
 END;

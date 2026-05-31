@@ -1,6 +1,10 @@
 USE [$(DB_NAME)];
 GO
 
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
 PRINT N'=== TEST: sp_DoiChuyenBay ===';
 GO
 
@@ -15,8 +19,8 @@ INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('DC2', N
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'DC_ECO', 1.0);
 DECLARE @MaHV INT = SCOPE_IDENTITY();
 
-DECLARE @NgayBay1 DATETIME2(0) = DATEADD(HOUR, 10, SYSUTCDATETIME());
-DECLARE @NgayBay2 DATETIME2(0) = DATEADD(HOUR, 20, SYSUTCDATETIME());
+DECLARE @NgayBay1 DATETIME2(0) = DATEADD(HOUR, 48, SYSUTCDATETIME());
+DECLARE @NgayBay2 DATETIME2(0) = DATEADD(HOUR, 72, SYSUTCDATETIME());
 
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('DCC001', 'DC1', 'DC2', @NgayBay1, 90, 500000);
@@ -68,7 +72,7 @@ IF @NewSeats <> 1
 
 PRINT N'PASS [sp_DoiChuyenBay] Happy path';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 2: New flight on different route → error (SanBayDen differs)
@@ -83,8 +87,8 @@ INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('DC5', N
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'DC_ECO2', 1.0);
 DECLARE @MaHV2 INT = SCOPE_IDENTITY();
 
-DECLARE @NgayBay2a DATETIME2(0) = DATEADD(HOUR, 10, SYSUTCDATETIME());
-DECLARE @NgayBay2b DATETIME2(0) = DATEADD(HOUR, 20, SYSUTCDATETIME());
+DECLARE @NgayBay2a DATETIME2(0) = DATEADD(HOUR, 48, SYSUTCDATETIME());
+DECLARE @NgayBay2b DATETIME2(0) = DATEADD(HOUR, 72, SYSUTCDATETIME());
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('DCC003', 'DC3', 'DC4', @NgayBay2a, 90, 500000);
 DECLARE @MaCB2a INT = SCOPE_IDENTITY();
@@ -109,7 +113,7 @@ IF @MaTTPhi2 IS NOT NULL
 
 PRINT N'PASS [sp_DoiChuyenBay] Different route returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 PRINT N'=== sp_DoiChuyenBay: all tests passed ===';

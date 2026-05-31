@@ -1,6 +1,10 @@
 USE [$(DB_NAME)];
 GO
 
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
 PRINT N'=== TEST: sp_HuyDatCho_Auto ===';
 GO
 
@@ -57,7 +61,7 @@ IF @Seats <> 0
 
 PRINT N'PASS [sp_HuyDatCho_Auto] Expired reservations cancelled and seats returned';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 2: No expired reservations → returns 0 counts without error
@@ -67,7 +71,7 @@ EXEC dbo.sp_HuyDatCho_Auto;
 -- Just verifying it runs without error
 PRINT N'PASS [sp_HuyDatCho_Auto] No expired reservations runs cleanly';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 PRINT N'=== sp_HuyDatCho_Auto: all tests passed ===';

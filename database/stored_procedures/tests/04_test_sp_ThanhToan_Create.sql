@@ -1,6 +1,10 @@
 USE [$(DB_NAME)];
 GO
 
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
 PRINT N'=== TEST: sp_ThanhToan_Create ===';
 GO
 
@@ -17,7 +21,7 @@ INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('TT2', N
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'TT_ECO', 1.0);
 DECLARE @MaHV INT = SCOPE_IDENTITY();
 
-DECLARE @NgayBay DATETIME2(0) = DATEADD(HOUR, 10, SYSUTCDATETIME());
+DECLARE @NgayBay DATETIME2(0) = DATEADD(HOUR, 48, SYSUTCDATETIME());
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('TTC001', 'TT1', 'TT2', @NgayBay, 90, 500000);
 DECLARE @MaCB INT = SCOPE_IDENTITY();
@@ -53,7 +57,7 @@ IF @PDCStatus <> 'DA_THANH_TOAN'
 
 PRINT N'PASS [sp_ThanhToan_Create] Via MaPhieuDatCho happy path';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 2: Insufficient payment amount → error
@@ -65,7 +69,7 @@ INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('TT3', N
 INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('TT4', N'TT D', N'City', N'VN');
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'TT_ECO2', 1.0);
 DECLARE @MaHV2 INT = SCOPE_IDENTITY();
-DECLARE @NgayBay2 DATETIME2(0) = DATEADD(HOUR, 10, SYSUTCDATETIME());
+DECLARE @NgayBay2 DATETIME2(0) = DATEADD(HOUR, 48, SYSUTCDATETIME());
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('TTC002', 'TT3', 'TT4', @NgayBay2, 90, 500000);
 DECLARE @MaCB2 INT = SCOPE_IDENTITY();
@@ -95,7 +99,7 @@ IF @VeStatus2 <> 'DANG_GIU_CHO'
 
 PRINT N'PASS [sp_ThanhToan_Create] Insufficient amount returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 3: Both MaPhieuDatCho and MaVe provided → error
@@ -114,7 +118,7 @@ IF @MaTT3 IS NOT NULL
 
 PRINT N'PASS [sp_ThanhToan_Create] Both MaPhieuDatCho and MaVe returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 PRINT N'=== sp_ThanhToan_Create: all tests passed ===';

@@ -1,6 +1,10 @@
 USE [$(DB_NAME)];
 GO
 
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
 PRINT N'=== TEST: sp_DatVe_Create ===';
 GO
 
@@ -15,7 +19,7 @@ INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('DV2', N
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'DV_ECO', 1.0);
 DECLARE @MaHV INT = SCOPE_IDENTITY();
 
-DECLARE @NgayBay DATETIME2(0) = DATEADD(HOUR, 10, SYSUTCDATETIME());
+DECLARE @NgayBay DATETIME2(0) = DATEADD(HOUR, 48, SYSUTCDATETIME());
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('DVC001', 'DV1', 'DV2', @NgayBay, 90, 600000);
 DECLARE @MaCB INT = SCOPE_IDENTITY();
@@ -56,7 +60,7 @@ IF @GheDaDat <> 1
 
 PRINT N'PASS [sp_DatVe_Create] Happy path';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 2: Non-existent flight → error, no data inserted
@@ -77,7 +81,7 @@ IF @MaPhieuDat2 IS NOT NULL
 
 PRINT N'PASS [sp_DatVe_Create] Non-existent flight returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 -- Test 3: No seats left → error
@@ -91,7 +95,7 @@ INSERT INTO dbo.SANBAY (MaSanBay, TenSanBay, ThanhPho, QuocGia) VALUES ('DV4', N
 INSERT INTO dbo.HANGVE (TenHangVe, HeSoGia) VALUES (N'DV_FULL', 1.0);
 DECLARE @MaHV3 INT = SCOPE_IDENTITY();
 
-DECLARE @NgayBay3 DATETIME2(0) = DATEADD(HOUR, 10, SYSUTCDATETIME());
+DECLARE @NgayBay3 DATETIME2(0) = DATEADD(HOUR, 48, SYSUTCDATETIME());
 INSERT INTO dbo.CHUYENBAY (MaChuyenBayCode, SanBayDi, SanBayDen, NgayGioBay, ThoiGianBay, GiaCoBan)
 VALUES ('DVC003', 'DV3', 'DV4', @NgayBay3, 90, 600000);
 DECLARE @MaCB3 INT = SCOPE_IDENTITY();
@@ -111,7 +115,7 @@ IF @MaPhieuDat3 IS NOT NULL
 
 PRINT N'PASS [sp_DatVe_Create] No seats available returns error';
 
-ROLLBACK;
+IF @@TRANCOUNT > 0 ROLLBACK;
 GO
 
 PRINT N'=== sp_DatVe_Create: all tests passed ===';
