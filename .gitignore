@@ -24,3 +24,7 @@ Thumbs.db
 # Logs and temporary files
 *.log
 tmp/
+
+# Database backups
+backups/
+*.bak
