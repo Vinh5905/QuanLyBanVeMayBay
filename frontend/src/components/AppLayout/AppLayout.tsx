@@ -62,7 +62,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ role: propRole, children }
       <aside className={`ds-sidebar ${isSidebarOpen ? 'ds-sidebar--open' : ''}`}>
         <div className="ds-sidebar__header">
           <div className="ds-sidebar__logo">
-            <span className="ds-sidebar__logo-icon">✈️</span>
+            <div className="ds-sidebar__logo-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21 4 19 2c-2-2-4-2-5.5-.5L10 5 1.8 6.2c-.5.1-.9.5-.9 1.1s.4 1 .9 1l7.1 1.2L7.5 12H4c-.5 0-1 .2-1.4.6l-2 2c-.3.3-.4.8-.2 1.2.2.4.6.7 1 .7l4 .5 1 4c.1.4.4.7.7 1 .4.2.9.1 1.2-.2l2-2c.4-.4.6-.9.6-1.4v-3.5l3.8-1.3 1.2 7.1c.1.5.5.9 1 .9s1-.4 1.1-.9z"/>
+              </svg>
+            </div>
             <span className="ds-sidebar__logo-text">QAirline</span>
           </div>
         </div>
@@ -95,7 +99,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ role: propRole, children }
               className="ds-header__action-btn" 
               onClick={handleLogout}
               title="Đăng xuất"
-              style={{ marginLeft: 'auto', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ds-color-text-secondary)' }}
+              style={{ marginLeft: 'auto', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
