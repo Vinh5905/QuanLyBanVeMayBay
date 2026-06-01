@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiClient } from '../../../api/axios';
 import { Button } from '../../../components/Button/Button';
 import { FormField, Input } from '../../../components/FormField/FormField';
-import type { AuthResponse } from '../../../types/auth';
+import type { AuthResponse, Role } from '../../../types/auth';
 import './LoginPage.css';
 
 const AirlineIcon = () => (
@@ -39,7 +39,15 @@ export const LoginPage: React.FC = () => {
       const response = await apiClient.post<AuthResponse>('/auth/login', { tenDangNhap: username, matKhau: password });
       const { accessToken, refreshToken, userInfo } = response.data.data;
 
-      login(accessToken, refreshToken, userInfo);
+      const mappedUser = {
+        id: String(userInfo.maTaiKhoan),
+        username: userInfo.tenDangNhap,
+        email: userInfo.email,
+        role: userInfo.vaiTro === 'KhachHang' ? 'User' : userInfo.vaiTro as Role,
+        fullName: userInfo.tenDangNhap,
+      };
+
+      login(accessToken, refreshToken, mappedUser);
 
       if (from) {
         navigate(from, { replace: true });
@@ -50,7 +58,7 @@ export const LoginPage: React.FC = () => {
           Agent: '/agent',
           User: '/',
         };
-        navigate(rolePathMap[userInfo.role] || '/', { replace: true });
+        navigate(rolePathMap[mappedUser.role] || '/', { replace: true });
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Thông tin đăng nhập không hợp lệ');

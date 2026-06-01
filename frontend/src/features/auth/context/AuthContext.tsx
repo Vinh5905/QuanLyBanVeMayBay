@@ -5,6 +5,7 @@ interface AuthContextType {
   user: AuthUser | null;
   role: Role | null;
   isAuthenticated: boolean;
+  isInitialized: boolean;
   login: (accessToken: string, refreshToken: string, userInfo: AuthUser) => void;
   logout: () => void;
 }
@@ -13,9 +14,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Check localStorage on mount
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('accessToken');
     if (storedUser && token) {
@@ -26,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('accessToken');
       }
     }
+    setIsInitialized(true);
   }, []);
 
   const login = (accessToken: string, refreshToken: string, userInfo: AuthUser) => {
@@ -46,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     role: user?.role || null,
     isAuthenticated: !!user,
+    isInitialized,
     login,
     logout,
   };

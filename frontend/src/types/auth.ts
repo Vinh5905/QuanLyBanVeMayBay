@@ -8,6 +8,13 @@ export interface AuthUser {
   fullName?: string;
 }
 
+export interface UserInfoResponse {
+  maTaiKhoan: number;
+  tenDangNhap: string;
+  email: string;
+  vaiTro: string;
+}
+
 export interface AuthResponse {
   status: string;
   code: number;
@@ -16,6 +23,6 @@ export interface AuthResponse {
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
-    userInfo: AuthUser;
+    userInfo: UserInfoResponse;
   };
 }
