@@ -36,10 +36,10 @@ export const RegisterPage: React.FC = () => {
     
     try {
       await apiClient.post('/auth/register', {
-        username: formData.username,
+        tenDangNhap: formData.username,
         email: formData.email,
-        fullName: formData.fullName,
-        password: formData.password
+        hoTen: formData.fullName,
+        matKhau: formData.password
       });
       
       // Success, redirect to login

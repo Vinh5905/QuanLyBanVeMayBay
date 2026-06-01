@@ -30,7 +30,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/login', { username, password });
+      const response = await apiClient.post<AuthResponse>('/auth/login', { tenDangNhap: username, matKhau: password });
       const { accessToken, refreshToken, userInfo } = response.data.data;
       
       login(accessToken, refreshToken, userInfo);
