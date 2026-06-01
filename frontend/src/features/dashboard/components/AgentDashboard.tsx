@@ -52,10 +52,10 @@ export const AgentDashboard: React.FC = () => {
           <h3 className="dashboard-chart-title">Hành động nhanh</h3>
           <ul className="dashboard-list">
             <li className="dashboard-list-item" style={{ cursor: 'pointer' }}>
-              <div className="list-item-title" style={{ color: 'var(--ds-color-primary)' }}>+ Đặt vé mới</div>
+              <div className="list-item-title" style={{ color: 'var(--primary)' }}>+ Đặt vé mới</div>
             </li>
             <li className="dashboard-list-item" style={{ cursor: 'pointer' }}>
-              <div className="list-item-title" style={{ color: 'var(--ds-color-primary)' }}>Tra cứu mã đặt chỗ</div>
+              <div className="list-item-title" style={{ color: 'var(--primary)' }}>Tra cứu mã đặt chỗ</div>
             </li>
           </ul>
         </div>

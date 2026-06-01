@@ -38,7 +38,7 @@ export const AdminStaffDashboard: React.FC = () => {
         <StatCard 
           title="Chuyến bay trong ngày" 
           value="42" 
-          icon="✈️" 
+          icon="" 
           trend={{ value: 2.1, isPositive: false }} 
         />
         <StatCard 

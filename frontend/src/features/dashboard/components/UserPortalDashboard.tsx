@@ -15,7 +15,7 @@ export const UserPortalDashboard: React.FC = () => {
         <div className="dashboard-chart-container">
           <h3 className="dashboard-chart-title">Chuyến bay sắp tới</h3>
           <ul className="dashboard-list">
-            <li className="dashboard-list-item" style={{ background: 'rgba(2, 99, 255, 0.05)', border: '1px solid var(--ds-color-primary)' }}>
+            <li className="dashboard-list-item" style={{ background: 'var(--primary-50)', border: '1px solid var(--primary-100)' }}>
               <div>
                 <div className="list-item-title">VN-204 | SGN ✈ HAN</div>
                 <div className="list-item-subtitle">Khởi hành: 10:00 - 15/07/2026 | Tình trạng: Đã xác nhận</div>
@@ -34,7 +34,7 @@ export const UserPortalDashboard: React.FC = () => {
                   <div className="list-item-title">VN-10{i} | HAN ✈ DAD</div>
                   <div className="list-item-subtitle">Hoàn thành: 0{i}/05/2026</div>
                 </div>
-                <div className="list-item-action" style={{ color: 'var(--ds-color-text-secondary)' }}>Đã bay</div>
+                <div className="list-item-action" style={{ color: 'var(--text-muted)' }}>Đã bay</div>
               </li>
             ))}
           </ul>
