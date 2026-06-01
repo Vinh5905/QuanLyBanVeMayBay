@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../features/auth/context/AuthContext';
 import './AppLayout.css';
 
 export interface AppLayoutProps {
-  role: 'Admin' | 'Staff' | 'Agent' | 'User';
+  role?: 'Admin' | 'Staff' | 'Agent' | 'User';
   children: React.ReactNode;
 }
 
@@ -33,10 +34,19 @@ const MENU_ITEMS = {
   ]
 };
 
-export const AppLayout: React.FC<AppLayoutProps> = ({ role, children }) => {
+export const AppLayout: React.FC<AppLayoutProps> = ({ role: propRole, children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
-  const menus = MENU_ITEMS[role] || [];
+  const navigate = useNavigate();
+  const { role: authRole, logout, user } = useAuth();
+  
+  const currentRole = propRole || authRole || 'User';
+  const menus = MENU_ITEMS[currentRole] || [];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div className="ds-layout">
@@ -76,11 +86,23 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ role, children }) => {
         </nav>
         <div className="ds-sidebar__footer">
           <div className="ds-sidebar__user">
-            <div className="ds-avatar">{role.charAt(0)}</div>
+            <div className="ds-avatar">{user?.fullName?.charAt(0) || currentRole.charAt(0)}</div>
             <div className="ds-user-info">
-              <div className="ds-user-name">{role} User</div>
-              <div className="ds-user-role">{role}</div>
+              <div className="ds-user-name">{user?.fullName || user?.username || `${currentRole} User`}</div>
+              <div className="ds-user-role">{currentRole}</div>
             </div>
+            <button 
+              className="ds-header__action-btn" 
+              onClick={handleLogout}
+              title="Đăng xuất"
+              style={{ marginLeft: 'auto', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--ds-color-text-secondary)' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+            </button>
           </div>
         </div>
       </aside>
