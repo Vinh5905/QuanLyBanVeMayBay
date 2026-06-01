@@ -18,6 +18,7 @@ frontend/coverage/
 # IDE and OS files
 .idea/
 .vscode/
+.metals/
 .DS_Store
 Thumbs.db
 
