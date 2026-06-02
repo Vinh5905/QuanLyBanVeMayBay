@@ -1,14 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '../../../components/Button/Button';
 import { DataTable } from '../../../components/DataTable/DataTable';
-import { Pagination } from '../../../components/Pagination/Pagination';
 import { Badge } from '../../../components/Badge/Badge';
 import { LoadingState } from '../../../components/LoadingState/LoadingState';
 import { ErrorState } from '../../../components/ErrorState/ErrorState';
 import { EmptyState } from '../../../components/EmptyState/EmptyState';
 import { AirportSelect } from '../components/AirportSelect';
 import { flightApi } from '../../../api/flightApi';
-import type { FlightResponse, PaginationInfo } from '../../../types/flight';
+import type { FlightResponse } from '../../../types/flight';
 
 const statusBadge: Record<string, { variant: 'success' | 'error' | 'info' | 'neutral'; label: string }> = {
   SCHEDULED: { variant: 'success', label: 'Đang hoạt động' },
@@ -26,10 +25,8 @@ export const FlightSearchPage: React.FC = () => {
   const [sanBayDi, setSanBayDi] = useState('');
   const [sanBayDen, setSanBayDen] = useState('');
   const [ngayBay, setNgayBay] = useState('');
-  const [page, setPage] = useState(1);
 
   const [results, setResults] = useState<FlightResponse[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
@@ -39,33 +36,38 @@ export const FlightSearchPage: React.FC = () => {
     setError(null);
     setHasSearched(true);
     try {
-      const res = await flightApi.searchFlights({
-        sanBayDi: sanBayDi || undefined,
-        sanBayDen: sanBayDen || undefined,
-        ngayBay: ngayBay || undefined,
-        page: page - 1,
-        size: 20,
-      });
+      const params: any = {};
+      if (sanBayDi) params.sanBayDi = sanBayDi;
+      if (sanBayDen) params.sanBayDen = sanBayDen;
+      if (ngayBay) params.ngayBay = ngayBay;
+      params.page = 0;
+      params.size = 20;
+      console.log('>>> FlightSearchPage calling /flights/search with params:', params);
+      const res = await flightApi.searchFlights(params);
+      console.log('>>> FlightSearchPage response URL:', res.config?.url);
+      console.log('>>> FlightSearchPage response data:', res.data);
       if (res.data.status === 'success') {
         setResults(res.data.data);
-        setPagination(res.data.pagination);
       } else {
         setError(res.data.message || 'Lỗi tìm kiếm');
       }
     } catch (err: any) {
+      console.error('>>> FlightSearchPage error:', err.response?.data || err.message);
       setError(err.response?.data?.message || err.message || 'Không thể kết nối đến máy chủ');
     } finally {
       setIsLoading(false);
     }
-  }, [sanBayDi, sanBayDen, ngayBay, page]);
+  }, [sanBayDi, sanBayDen, ngayBay]);
+
+  useEffect(() => {
+    handleSearch();
+  }, [handleSearch]);
 
   const handleReset = () => {
     setSanBayDi('');
     setSanBayDen('');
     setNgayBay('');
-    setPage(1);
     setResults([]);
-    setPagination(null);
     setHasSearched(false);
     setError(null);
   };
@@ -138,14 +140,7 @@ export const FlightSearchPage: React.FC = () => {
       )}
 
       {!isLoading && results.length > 0 && (
-        <>
-          <DataTable columns={columns} data={results as any} />
-          {pagination && pagination.totalPages > 1 && (
-            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
-              <Pagination currentPage={page} totalPages={pagination.totalPages} onPageChange={setPage} />
-            </div>
-          )}
-        </>
+        <DataTable columns={columns} data={results as any} />
       )}
     </div>
   );

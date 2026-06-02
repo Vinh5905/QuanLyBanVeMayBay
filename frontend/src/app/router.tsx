@@ -17,6 +17,13 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
   </ProtectedRoute>
 );
 
+const PlaceholderPage = ({ title }: { title: string }) => (
+  <div style={{ padding: 40, textAlign: 'center' }}>
+    <h2>{title}</h2>
+    <p style={{ color: '#64748B', marginTop: 8 }}>Tính năng đang được phát triển.</p>
+  </div>
+);
+
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
@@ -34,6 +41,15 @@ export const router = createBrowserRouter([
   { path: "/staff/flights/:id", element: <ProtectedLayout><FlightDetailPage /></ProtectedLayout> },
   { path: "/staff/flights/:id/edit", element: <ProtectedLayout><FlightFormPage /></ProtectedLayout> },
   { path: "/agent/search", element: <ProtectedLayout><FlightSearchPage /></ProtectedLayout> },
+  { path: "/admin/users", element: <ProtectedLayout><PlaceholderPage title="Quản lý người dùng" /></ProtectedLayout> },
+  { path: "/admin/reports", element: <ProtectedLayout><PlaceholderPage title="Báo cáo doanh thu" /></ProtectedLayout> },
+  { path: "/admin/settings", element: <ProtectedLayout><PlaceholderPage title="Cài đặt" /></ProtectedLayout> },
+  { path: "/staff/tickets", element: <ProtectedLayout><PlaceholderPage title="Quản lý vé" /></ProtectedLayout> },
+  { path: "/staff/pos", element: <ProtectedLayout><PlaceholderPage title="Bán vé tại quầy" /></ProtectedLayout> },
+  { path: "/staff/baggage", element: <ProtectedLayout><PlaceholderPage title="Quản lý hành lý" /></ProtectedLayout> },
+  { path: "/agent/bookings", element: <ProtectedLayout><PlaceholderPage title="Đặt chỗ của tôi" /></ProtectedLayout> },
+  { path: "/bookings", element: <ProtectedLayout><PlaceholderPage title="Đặt chỗ của tôi" /></ProtectedLayout> },
+  { path: "/check-in", element: <ProtectedLayout><PlaceholderPage title="Check-in trực tuyến" /></ProtectedLayout> },
   { path: "/health", element: <HealthPage /> },
   { path: "/demo", element: <ComponentsDemo /> },
 ]);

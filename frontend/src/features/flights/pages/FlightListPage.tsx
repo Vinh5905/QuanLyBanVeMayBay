@@ -44,11 +44,13 @@ export const FlightListPage: React.FC = () => {
   const [page, setPage] = useState(1);
 
   const apiPage = page - 1;
-  const { flights, pagination, isLoading, error, refetch } = useFlights({
-    ...appliedFilters,
-    page: apiPage,
-    size: 20,
-  });
+  const cleanedFilters: Record<string, any> = {};
+  for (const [key, value] of Object.entries(appliedFilters)) {
+    if (value !== '' && value !== undefined) cleanedFilters[key] = value;
+  }
+  cleanedFilters.page = apiPage;
+  cleanedFilters.size = 20;
+  const { flights, pagination, isLoading, error, refetch } = useFlights(cleanedFilters);
 
   const handleSearch = useCallback(() => {
     setAppliedFilters({ ...filters });
