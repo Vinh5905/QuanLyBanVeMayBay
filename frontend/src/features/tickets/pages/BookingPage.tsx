@@ -151,7 +151,7 @@ export function BookingPage() {
                   {f.danhSachHangVe?.map(hv => (
                     <label
                       key={hv.maHangVe}
-                      className={`class-tag ${selectedHangVe === hv.maHangVe ? 'selected' : ''}`}
+                      className={`class-tag ${selectedFlightId === f.maChuyenBay && selectedHangVe === hv.maHangVe ? 'selected' : ''}`}
                       onClick={e => { e.stopPropagation(); setSelectedHangVe(hv.maHangVe) }}
                     >
                       {hv.tenHangVe} - {(hv.donGia || 0).toLocaleString('vi-VN')}đ
