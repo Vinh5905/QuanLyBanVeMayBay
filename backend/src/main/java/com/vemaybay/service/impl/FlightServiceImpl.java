@@ -26,6 +26,7 @@ public class FlightServiceImpl implements FlightService {
     private final ChuyenBayRepository chuyenBayRepository;
     private final SanBayRepository sanBayRepository;
     private final ChiTietHangVeRepository chiTietHangVeRepository;
+    private final VeRepository veRepository;
 
     @Override
     @Transactional
@@ -178,6 +179,10 @@ public class FlightServiceImpl implements FlightService {
 
         if ("CANCELLED".equals(cb.getTrangThaiChuyenBay())) {
             throw new BusinessException("ALREADY_CANCELLED", "Chuyến bay đã bị hủy trước đó");
+        }
+
+        if (veRepository.existsByMaChuyenBayAndIsDeletedFalse(id)) {
+            throw new BusinessException("FLIGHT_HAS_TICKETS", "Không thể hủy chuyến bay đã có vé. Vui lòng xử lý vé trước.");
         }
 
         cb.setTrangThaiChuyenBay("CANCELLED");
