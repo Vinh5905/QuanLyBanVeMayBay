@@ -1,0 +1,58 @@
+.ds-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  text-align: center;
+  border-radius: var(--radius-lg);
+  background-color: var(--error-bg);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.ds-error-state__icon {
+  color: var(--error);
+  margin-bottom: var(--space-4);
+  width: 48px;
+  height: 48px;
+}
+
+.ds-error-state__title {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--error);
+  margin-bottom: var(--space-2);
+}
+
+.ds-error-state__message {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-main);
+  max-width: 400px;
+  margin-bottom: var(--space-6);
+  opacity: 0.9;
+}
+
+.ds-error-state__retry {
+  background-color: var(--bg-surface);
+  color: var(--error);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.ds-error-state__retry:hover {
+  background-color: var(--error);
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ds-error-state__retry {
+    background-color: transparent;
+  }
+}
