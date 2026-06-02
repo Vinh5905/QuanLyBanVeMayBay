@@ -1,0 +1,138 @@
+.ds-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+  white-space: nowrap;
+}
+
+.ds-button:focus-visible {
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.ds-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Sizes */
+.ds-button--sm {
+  height: 32px;
+  padding: 0 var(--space-3);
+  font-size: 13px;
+}
+
+.ds-button--md {
+  height: 40px;
+  padding: 0 var(--space-4);
+  font-size: 14px;
+}
+
+.ds-button--lg {
+  height: 48px;
+  padding: 0 var(--space-6);
+  font-size: 16px;
+  border-radius: var(--radius-lg);
+}
+
+.ds-button--full-width {
+  width: 100%;
+}
+
+/* Variants */
+.ds-button--primary {
+  background-color: var(--primary);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.ds-button--primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.ds-button--primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ds-button--secondary {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.ds-button--secondary:hover:not(:disabled) {
+  background-color: var(--bg-main);
+}
+
+.ds-button--outline {
+  background-color: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.ds-button--outline:hover:not(:disabled) {
+  background-color: var(--primary-light);
+}
+
+.ds-button--ghost {
+  background-color: transparent;
+  color: var(--text-muted);
+}
+
+.ds-button--ghost:hover:not(:disabled) {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
+.ds-button--danger {
+  background-color: var(--error);
+  color: #fff;
+}
+
+.ds-button--danger:hover:not(:disabled) {
+  background-color: #DC2626; /* darker red */
+}
+
+/* Loading State */
+.ds-button--loading {
+  position: relative;
+  cursor: wait;
+}
+
+.ds-button__spinner {
+  display: flex;
+  align-items: center;
+}
+
+.ds-spinner-icon {
+  width: 1.25em;
+  height: 1.25em;
+  animation: spin 1s linear infinite;
+}
+
+.ds-spinner-circle {
+  opacity: 0.25;
+}
+
+.ds-spinner-path {
+  opacity: 0.75;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

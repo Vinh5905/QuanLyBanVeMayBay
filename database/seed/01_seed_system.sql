@@ -55,7 +55,7 @@ IF NOT EXISTS (SELECT 1 FROM dbo.TAIKHOAN WHERE TenDangNhap = 'admin')
 BEGIN
     DECLARE @MaVT_Admin INT = (SELECT MaVaiTro FROM dbo.VAITRO WHERE TenVaiTro = N'Admin');
     INSERT INTO dbo.TAIKHOAN (TenDangNhap, MatKhauHash, MaVaiTro, Email, TrangThai)
-    VALUES ('admin', '$2b$10$oGksCtG5X/a0nl8r68BQk.cm9gbws24VV2nJypV5kJPxxlkZwWg7W',
+    VALUES ('admin', '$2a$12$NJzXHT9bH4iIVDp3Ym1Wt.8F5O.LZk8v4ahDF3ehMDzt5h.j1XFne',
             @MaVT_Admin, 'admin@airline.vn', 1);
 END;
 GO
@@ -64,7 +64,7 @@ IF NOT EXISTS (SELECT 1 FROM dbo.TAIKHOAN WHERE TenDangNhap = 'staff')
 BEGIN
     DECLARE @MaVT_NV INT = (SELECT MaVaiTro FROM dbo.VAITRO WHERE TenVaiTro = N'NhanVien');
     INSERT INTO dbo.TAIKHOAN (TenDangNhap, MatKhauHash, MaVaiTro, Email, TrangThai)
-    VALUES ('staff', '$2b$10$ICSCkPViy.QyuHZBTBkMEeq179FIaBO10HwvrLf2EBX6t.LMWPEJS',
+    VALUES ('staff', '$2a$12$NJzXHT9bH4iIVDp3Ym1Wt.8F5O.LZk8v4ahDF3ehMDzt5h.j1XFne',
             @MaVT_NV, 'staff@airline.vn', 1);
 END;
 GO
@@ -73,7 +73,7 @@ IF NOT EXISTS (SELECT 1 FROM dbo.TAIKHOAN WHERE TenDangNhap = 'agent')
 BEGIN
     DECLARE @MaVT_DL INT = (SELECT MaVaiTro FROM dbo.VAITRO WHERE TenVaiTro = N'DaiLy');
     INSERT INTO dbo.TAIKHOAN (TenDangNhap, MatKhauHash, MaVaiTro, Email, TrangThai)
-    VALUES ('agent', '$2b$10$CqrezJEjtevwSv8m.jsgfONYjTebKVk2.eWpOVQX5vOg8qm9elW3W',
+    VALUES ('agent', '$2a$12$NJzXHT9bH4iIVDp3Ym1Wt.8F5O.LZk8v4ahDF3ehMDzt5h.j1XFne',
             @MaVT_DL, 'agent@airline.vn', 1);
 END;
 GO
@@ -82,7 +82,7 @@ IF NOT EXISTS (SELECT 1 FROM dbo.TAIKHOAN WHERE TenDangNhap = 'user1')
 BEGIN
     DECLARE @MaVT_KH1 INT = (SELECT MaVaiTro FROM dbo.VAITRO WHERE TenVaiTro = N'KhachHang');
     INSERT INTO dbo.TAIKHOAN (TenDangNhap, MatKhauHash, MaVaiTro, Email, TrangThai)
-    VALUES ('user1', '$2b$10$fGKJESrDGnAVYb6PdFB33u4lVfMg65qx0Ii68aYDE7boxjrwkRNvG',
+    VALUES ('user1', '$2a$12$NJzXHT9bH4iIVDp3Ym1Wt.8F5O.LZk8v4ahDF3ehMDzt5h.j1XFne',
             @MaVT_KH1, 'user1@example.com', 1);
 END;
 GO
@@ -91,7 +91,7 @@ IF NOT EXISTS (SELECT 1 FROM dbo.TAIKHOAN WHERE TenDangNhap = 'user2')
 BEGIN
     DECLARE @MaVT_KH2 INT = (SELECT MaVaiTro FROM dbo.VAITRO WHERE TenVaiTro = N'KhachHang');
     INSERT INTO dbo.TAIKHOAN (TenDangNhap, MatKhauHash, MaVaiTro, Email, TrangThai)
-    VALUES ('user2', '$2b$10$fGKJESrDGnAVYb6PdFB33u4lVfMg65qx0Ii68aYDE7boxjrwkRNvG',
+    VALUES ('user2', '$2a$12$NJzXHT9bH4iIVDp3Ym1Wt.8F5O.LZk8v4ahDF3ehMDzt5h.j1XFne',
             @MaVT_KH2, 'user2@example.com', 1);
 END;
 GO

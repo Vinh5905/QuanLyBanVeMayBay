@@ -26,6 +26,7 @@ public class FlightServiceImpl implements FlightService {
     private final ChuyenBayRepository chuyenBayRepository;
     private final SanBayRepository sanBayRepository;
     private final ChiTietHangVeRepository chiTietHangVeRepository;
+    private final VeRepository veRepository;
 
     @Override
     @Transactional
@@ -139,17 +140,30 @@ public class FlightServiceImpl implements FlightService {
         }
 
         if (request.getDanhSachHangVe() != null) {
-            chiTietHangVeRepository.deleteAll(chiTietHangVeRepository.findByMaChuyenBay(id));
+            List<ChiTietHangVe> existingList = chiTietHangVeRepository.findByMaChuyenBay(id);
             for (CreateFlightRequest.HangVeInput hv : request.getDanhSachHangVe()) {
-                ChiTietHangVe ct = ChiTietHangVe.builder()
-                        .maChuyenBay(id)
-                        .maHangVe(hv.getMaHangVe())
-                        .soLuong(hv.getSoLuong())
-                        .soGheDaDat(0)
-                        .donGia(hv.getDonGia())
-                        .build();
-                chiTietHangVeRepository.save(ct);
+                ChiTietHangVe ct = existingList.stream()
+                        .filter(e -> e.getMaHangVe().equals(hv.getMaHangVe()))
+                        .findFirst().orElse(null);
+                if (ct != null) {
+                    ct.setSoLuong(hv.getSoLuong());
+                    ct.setSoGheDaDat(0);
+                    ct.setDonGia(hv.getDonGia());
+                } else {
+                    chiTietHangVeRepository.save(ChiTietHangVe.builder()
+                            .maChuyenBay(id)
+                            .maHangVe(hv.getMaHangVe())
+                            .soLuong(hv.getSoLuong())
+                            .soGheDaDat(0)
+                            .donGia(hv.getDonGia())
+                            .build());
+                }
             }
+            var requestIds = request.getDanhSachHangVe().stream()
+                    .map(CreateFlightRequest.HangVeInput::getMaHangVe).toList();
+            existingList.stream()
+                    .filter(e -> !requestIds.contains(e.getMaHangVe()))
+                    .forEach(chiTietHangVeRepository::delete);
         }
 
         chuyenBayRepository.save(cb);
@@ -165,6 +179,10 @@ public class FlightServiceImpl implements FlightService {
 
         if ("CANCELLED".equals(cb.getTrangThaiChuyenBay())) {
             throw new BusinessException("ALREADY_CANCELLED", "Chuyến bay đã bị hủy trước đó");
+        }
+
+        if (veRepository.existsByMaChuyenBayAndIsDeletedFalse(id)) {
+            throw new BusinessException("FLIGHT_HAS_TICKETS", "Không thể hủy chuyến bay đã có vé. Vui lòng xử lý vé trước.");
         }
 
         cb.setTrangThaiChuyenBay("CANCELLED");

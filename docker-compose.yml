@@ -56,7 +56,7 @@ services:
       DB_USER: "${APP_DB_USER:-vemaybay_app}"
       DB_PASSWORD: "${APP_DB_PASSWORD:?APP_DB_PASSWORD must be set}"
       JWT_SECRET: "${JWT_SECRET:-change-this-in-production-min-256-bits-long-secret-key!!}"
-      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost}"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -66,6 +66,15 @@ services:
       timeout: 5s
       retries: 5
       start_period: 60s
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: vemaybay_frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
     restart: unless-stopped
 
 volumes:

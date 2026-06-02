@@ -1,0 +1,48 @@
+.ds-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-surface);
+}
+
+.ds-empty-state__icon {
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+  background-color: var(--bg-main);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ds-empty-state__icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.ds-empty-state__title {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: var(--space-2);
+}
+
+.ds-empty-state__description {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 400px;
+  margin-bottom: var(--space-6);
+}
+
+.ds-empty-state__action {
+  margin-top: var(--space-2);
+}
