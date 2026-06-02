@@ -180,12 +180,12 @@ export function BookingPage() {
           {!bookingsLoading && !bookingsError && bookings.length > 0 && (
             <DataTable
               columns={[
-                { key: 'maPhieuDatCho', label: 'Mã phiếu' },
-                { key: 'tongTien', label: 'Tổng tiền', render: (r: BookingResponse) => `${(r.tongTien || 0).toLocaleString('vi-VN')}đ` },
-                { key: 'trangThaiDatCho', label: 'Trạng thái', render: (r: BookingResponse) => <Badge>{r.trangThaiDatCho}</Badge> },
-                { key: 'hanThanhToan', label: 'Hạn thanh toán', render: (r: BookingResponse) => r.hanThanhToan ? new Date(r.hanThanhToan).toLocaleString('vi-VN') : '' },
-                { key: 'createdAt', label: 'Ngày đặt', render: (r: BookingResponse) => r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : '' },
-                { key: 'actions', label: '', render: (r: BookingResponse) => (
+                { key: 'maPhieuDatCho', header: 'Mã phiếu' },
+                { key: 'tongTien', header: 'Tổng tiền', render: (r: BookingResponse) => `${(r.tongTien || 0).toLocaleString('vi-VN')}đ` },
+                { key: 'trangThaiDatCho', header: 'Trạng thái', render: (r: BookingResponse) => <Badge>{r.trangThaiDatCho}</Badge> },
+                { key: 'hanThanhToan', header: 'Hạn thanh toán', render: (r: BookingResponse) => r.hanThanhToan ? new Date(r.hanThanhToan).toLocaleString('vi-VN') : '' },
+                { key: 'createdAt', header: 'Ngày đặt', render: (r: BookingResponse) => r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : '' },
+                { key: 'actions', header: '', render: (r: BookingResponse) => (
                   <Button variant="ghost" size="sm" onClick={() => handleCancelBooking(r.maPhieuDatCho)}>Hủy</Button>
                 )},
               ]}

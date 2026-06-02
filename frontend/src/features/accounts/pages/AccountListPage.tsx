@@ -107,17 +107,17 @@ export function AccountListPage() {
   }
 
   const columns = [
-    { key: 'tenDangNhap', label: 'Tên đăng nhập' },
-    { key: 'email', label: 'Email' },
-    { key: 'vaiTro', label: 'Vai trò', render: (r: AccountResponse) => (
+    { key: 'tenDangNhap', header: 'Tên đăng nhập' },
+    { key: 'email', header: 'Email' },
+    { key: 'vaiTro', header: 'Vai trò', render: (r: AccountResponse) => (
       <Badge variant={(roleColors[r.vaiTro] || 'neutral') as any}>{r.vaiTro}</Badge>
     )},
-    { key: 'trangThai', label: 'Trạng thái', render: (r: AccountResponse) => (
+    { key: 'trangThai', header: 'Trạng thái', render: (r: AccountResponse) => (
       <Badge variant={r.trangThai === 1 ? 'success' : 'error'}>{r.trangThai === 1 ? 'Hoạt động' : 'Đã khóa'}</Badge>
     )},
-    { key: 'createdAt', label: 'Ngày tạo', render: (r: AccountResponse) => r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : '' },
-    { key: 'lastLogin', label: 'Lần cuối', render: (r: AccountResponse) => r.lastLogin ? new Date(r.lastLogin).toLocaleDateString('vi-VN') : 'Chưa đăng nhập' },
-    { key: 'actions', label: '', render: (r: AccountResponse) => (
+    { key: 'createdAt', header: 'Ngày tạo', render: (r: AccountResponse) => r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : '' },
+    { key: 'lastLogin', header: 'Lần cuối', render: (r: AccountResponse) => r.lastLogin ? new Date(r.lastLogin).toLocaleDateString('vi-VN') : 'Chưa đăng nhập' },
+    { key: 'actions', header: '', render: (r: AccountResponse) => (
       <div className="action-buttons">
         <Button variant="ghost" size="sm" onClick={() => setSelectedAccount(r)}>Xem</Button>
         <Button variant="ghost" size="sm" onClick={() => handleToggleStatus(r)}>
@@ -141,11 +141,11 @@ export function AccountListPage() {
             value={filterVaiTro}
             onChange={setFilterVaiTro}
             options={[
-              { value: '', label: 'Tất cả' },
-              { value: 'QuanTriVien', label: 'Quản trị viên' },
-              { value: 'NhanVien', label: 'Nhân viên' },
-              { value: 'DaiLy', label: 'Đại lý' },
-              { value: 'KhachHang', label: 'Khách hàng' },
+              { value: '', header: 'Tất cả' },
+              { value: 'QuanTriVien', header: 'Quản trị viên' },
+              { value: 'NhanVien', header: 'Nhân viên' },
+              { value: 'DaiLy', header: 'Đại lý' },
+              { value: 'KhachHang', header: 'Khách hàng' },
             ]}
           />
         </FormField>

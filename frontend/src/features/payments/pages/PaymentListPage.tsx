@@ -48,15 +48,15 @@ export function PaymentListPage() {
   useEffect(() => { fetchPayments() }, [fetchPayments])
 
   const columns = [
-    { key: 'maThanhToan', label: 'Mã HD' },
-    { key: 'maVe', label: 'Mã vé', render: (r: PaymentResponse) => r.maVe ?? r.maPhieuDatCho ?? 'N/A' },
-    { key: 'soTien', label: 'Tổng tiền', render: (r: PaymentResponse) => `${((r.soTien || 0) + (r.thueVAT || 0)).toLocaleString('vi-VN')}đ` },
-    { key: 'phuongThuc', label: 'Hình thức' },
-    { key: 'trangThaiThanhToan', label: 'Trạng thái', render: (r: PaymentResponse) => (
+    { key: 'maThanhToan', header: 'Mã HD' },
+    { key: 'maVe', header: 'Mã vé', render: (r: PaymentResponse) => r.maVe ?? r.maPhieuDatCho ?? 'N/A' },
+    { key: 'soTien', header: 'Tổng tiền', render: (r: PaymentResponse) => `${((r.soTien || 0) + (r.thueVAT || 0)).toLocaleString('vi-VN')}đ` },
+    { key: 'phuongThuc', header: 'Hình thức' },
+    { key: 'trangThaiThanhToan', header: 'Trạng thái', render: (r: PaymentResponse) => (
       <Badge variant={(trangThaiColors[r.trangThaiThanhToan] || 'neutral') as any}>{r.trangThaiThanhToan}</Badge>
     )},
-    { key: 'thoiGianThanhToan', label: 'Ngày TT', render: (r: PaymentResponse) => r.thoiGianThanhToan ? new Date(r.thoiGianThanhToan).toLocaleDateString('vi-VN') : '' },
-    { key: 'actions', label: '', render: (r: PaymentResponse) => (
+    { key: 'thoiGianThanhToan', header: 'Ngày TT', render: (r: PaymentResponse) => r.thoiGianThanhToan ? new Date(r.thoiGianThanhToan).toLocaleDateString('vi-VN') : '' },
+    { key: 'actions', header: '', render: (r: PaymentResponse) => (
       <Button variant="ghost" size="sm" onClick={() => setSelectedPayment(r)}>Chi tiết</Button>
     )},
   ]

@@ -55,10 +55,10 @@ export function AgentDashboard() {
         ) : (
           <DataTable
             columns={[
-              { key: 'maChuyenBayCode', label: 'Mã CB' },
-              { key: 'sanBayDi', label: 'Sân bay đi' },
-              { key: 'sanBayDen', label: 'Sân bay đến' },
-              { key: 'ngayGioBay', label: 'Giờ bay', render: (r: any) => r.ngayGioBay ? new Date(r.ngayGioBay).toLocaleString('vi-VN') : '' },
+              { key: 'maChuyenBayCode', header: 'Mã CB' },
+              { key: 'sanBayDi', header: 'Sân bay đi' },
+              { key: 'sanBayDen', header: 'Sân bay đến' },
+              { key: 'ngayGioBay', header: 'Giờ bay', render: (r: any) => r.ngayGioBay ? new Date(r.ngayGioBay).toLocaleString('vi-VN') : '' },
             ]}
             data={flights.slice(0, 10)}
           />

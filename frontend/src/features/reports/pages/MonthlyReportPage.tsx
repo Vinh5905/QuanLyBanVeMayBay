@@ -92,13 +92,13 @@ export function MonthlyReportPage() {
       {!loading && !error && rows.length > 0 && (
         <DataTable
           columns={[
-            { key: 'maChuyenBayCode', label: 'Mã CB' },
-            { key: 'sanBayDi', label: 'Sân bay đi' },
-            { key: 'sanBayDen', label: 'Sân bay đến' },
-            { key: 'soVeBan', label: 'Số vé' },
-            { key: 'doanhThuVe', label: 'DT vé', render: (r: MonthlyReportRow) => `${(r.doanhThuVe || 0).toLocaleString('vi-VN')}đ` },
-            { key: 'doanhThuHanhLy', label: 'DT hành lý', render: (r: MonthlyReportRow) => `${(r.doanhThuHanhLy || 0).toLocaleString('vi-VN')}đ` },
-            { key: 'phanTramTrenTong', label: '%', render: (r: MonthlyReportRow) => `${(r.phanTramTrenTong || 0).toFixed(1)}%` },
+            { key: 'maChuyenBayCode', header: 'Mã CB' },
+            { key: 'sanBayDi', header: 'Sân bay đi' },
+            { key: 'sanBayDen', header: 'Sân bay đến' },
+            { key: 'soVeBan', header: 'Số vé' },
+            { key: 'doanhThuVe', header: 'DT vé', render: (r: MonthlyReportRow) => `${(r.doanhThuVe || 0).toLocaleString('vi-VN')}đ` },
+            { key: 'doanhThuHanhLy', header: 'DT hành lý', render: (r: MonthlyReportRow) => `${(r.doanhThuHanhLy || 0).toLocaleString('vi-VN')}đ` },
+            { key: 'phanTramTrenTong', header: '%', render: (r: MonthlyReportRow) => `${(r.phanTramTrenTong || 0).toFixed(1)}%` },
           ]}
           data={rows}
         />

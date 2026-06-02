@@ -60,9 +60,9 @@ export function UserPortalDashboard() {
         ) : (
           <DataTable
             columns={[
-              { key: 'maPhieuDatCho', label: 'Mã phiếu' },
-              { key: 'tongTien', label: 'Tổng tiền', render: (r: any) => `${(r.tongTien || 0).toLocaleString('vi-VN')}đ` },
-              { key: 'hanThanhToan', label: 'Hạn TT', render: (r: any) => r.hanThanhToan ? new Date(r.hanThanhToan).toLocaleString('vi-VN') : '' },
+              { key: 'maPhieuDatCho', header: 'Mã phiếu' },
+              { key: 'tongTien', header: 'Tổng tiền', render: (r: any) => `${(r.tongTien || 0).toLocaleString('vi-VN')}đ` },
+              { key: 'hanThanhToan', header: 'Hạn TT', render: (r: any) => r.hanThanhToan ? new Date(r.hanThanhToan).toLocaleString('vi-VN') : '' },
             ]}
             data={upcomingBookings}
           />

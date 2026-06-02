@@ -84,11 +84,11 @@ export function YearlyReportPage() {
       {!loading && !error && rows.length > 0 && (
         <DataTable
           columns={[
-            { key: 'thang', label: 'Tháng', render: (r: YearlyReportRow) => `Tháng ${r.thang}` },
-            { key: 'soChuyenBay', label: 'Số chuyến bay' },
-            { key: 'soVe', label: 'Số vé' },
-            { key: 'doanhThu', label: 'Doanh thu', render: (r: YearlyReportRow) => `${(r.doanhThu || 0).toLocaleString('vi-VN')}đ` },
-            { key: 'phanTram', label: '%', render: (r: YearlyReportRow) => `${(r.phanTram || 0).toFixed(1)}%` },
+            { key: 'thang', header: 'Tháng', render: (r: YearlyReportRow) => `Tháng ${r.thang}` },
+            { key: 'soChuyenBay', header: 'Số chuyến bay' },
+            { key: 'soVe', header: 'Số vé' },
+            { key: 'doanhThu', header: 'Doanh thu', render: (r: YearlyReportRow) => `${(r.doanhThu || 0).toLocaleString('vi-VN')}đ` },
+            { key: 'phanTram', header: '%', render: (r: YearlyReportRow) => `${(r.phanTram || 0).toFixed(1)}%` },
           ]}
           data={rows}
         />
