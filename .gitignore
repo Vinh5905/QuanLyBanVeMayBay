@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 !.env.test
+.tools/
 
 # Java / Spring Boot
 backend/target/
@@ -25,6 +26,7 @@ Thumbs.db
 # Logs and temporary files
 *.log
 tmp/
+temp/
 
 # Database backups
 backups/

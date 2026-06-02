@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import './Toast.css';
-export { toast } from './toast';
+export { toast } from './toastBus';
 
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 

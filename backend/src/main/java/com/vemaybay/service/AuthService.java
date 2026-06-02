@@ -14,5 +14,11 @@ public interface AuthService {
 
     void register(RegisterRequest request);
 
+    void requestPasswordReset(ForgotPasswordRequest request);
+
+    VerifyResetOtpResponse verifyResetOtp(VerifyResetOtpRequest request);
+
+    void resetPassword(ResetPasswordRequest request);
+
     void changePassword(Integer userId, ChangePasswordRequest request);
 }

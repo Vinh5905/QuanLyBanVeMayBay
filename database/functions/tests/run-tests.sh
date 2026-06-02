@@ -21,7 +21,7 @@ FAIL=0
 
 run_sql() {
   local file="$1"
-  echo "─── Running: $(basename "${file}") ───"
+  echo "--- Running: $(basename "${file}") ---"
   if "${SQLCMD}" \
       -S "${SQLSERVER_HOST}" \
       -U sa \
@@ -47,8 +47,8 @@ for script in "${SCRIPT_DIR}"/[0-9][0-9]_test_*.sql; do
 done
 
 echo ""
-echo "═══════════════════════════════════"
+echo "==================================="
 echo " Test results: ${PASS} passed, ${FAIL} failed"
-echo "═══════════════════════════════════"
+echo "==================================="
 
 [[ ${FAIL} -eq 0 ]]
