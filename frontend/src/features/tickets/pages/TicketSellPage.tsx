@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { StepIndicator } from '../components/StepIndicator'
 import { flightApi } from '../../../api/flightApi'
 import { ticketApi } from '../../../api/ticketApi'
+import { customerApi } from '../../../api/customerApi'
 import { getErrorMessage } from '../../../api/adapter'
 import { Button } from '../../../components/Button/Button'
 import { Input, FormField } from '../../../components/FormField/FormField'
@@ -11,6 +12,7 @@ import { ErrorState } from '../../../components/ErrorState/ErrorState'
 import { toast } from '../../../components/Toast/Toast'
 import type { FlightResponse } from '../../../types/flight'
 import type { SellTicketRequest } from '../../../types/ticket'
+import type { CustomerResponse } from '../../../types/customer'
 
 const STEPS = [
   { label: 'Chọn chuyến bay', description: 'Tìm và chọn chuyến bay' },
@@ -22,18 +24,12 @@ interface FormState {
   maChuyenBay: number | null
   maKhachHang: number | null
   maHangVe: number | null
-  khachHangSearch: string
-  khachHangName: string
-  khachHangCccd: string
-  khachHangEmail: string
-  khachHangPhone: string
 }
 
 interface FormErrors {
   maChuyenBay?: string
   maKhachHang?: string
   maHangVe?: string
-  khachHangSearch?: string
 }
 
 export function TicketSellPage() {
@@ -46,10 +42,14 @@ export function TicketSellPage() {
 
   const [form, setForm] = useState<FormState>({
     maChuyenBay: null, maKhachHang: null, maHangVe: null,
-    khachHangSearch: '', khachHangName: '', khachHangCccd: '',
-    khachHangEmail: '', khachHangPhone: '',
   })
   const [errors, setErrors] = useState<FormErrors>({})
+
+  const [searchCccd, setSearchCccd] = useState('')
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [foundCustomer, setFoundCustomer] = useState<CustomerResponse | null>(null)
+  const [newCustomer, setNewCustomer] = useState({ hoTen: '', email: '', soDienThoai: '' })
+  const [createLoading, setCreateLoading] = useState(false)
 
   const searchFlights = useCallback(async () => {
     setFlightLoading(true)
@@ -76,12 +76,60 @@ export function TicketSellPage() {
 
   const validateStep1 = (): boolean => {
     const e: FormErrors = {}
-    if (!form.maKhachHang) {
-      if (!form.khachHangName.trim()) e.khachHangSearch = 'Vui lòng nhập thông tin khách hàng'
-      if (!form.khachHangCccd.trim()) e.khachHangSearch = 'Vui lòng nhập CCCD'
-    }
+    if (!form.maKhachHang) e.maKhachHang = 'Vui lòng tìm hoặc tạo khách hàng'
     setErrors(e)
     return Object.keys(e).length === 0
+  }
+
+  const handleSearchCustomer = async () => {
+    if (!searchCccd.trim()) {
+      toast.warning('Vui lòng nhập CCCD')
+      return
+    }
+    setSearchLoading(true)
+    setFoundCustomer(null)
+    try {
+      const res = await customerApi.searchByCccd(searchCccd.trim())
+      const customers = res.data || []
+      if (customers.length > 0) {
+        const c = customers[0]
+        setFoundCustomer(c)
+        setForm(p => ({ ...p, maKhachHang: c.maKhachHang }))
+        toast.success('Đã tìm thấy khách hàng')
+      } else {
+        setFoundCustomer(null)
+        setForm(p => ({ ...p, maKhachHang: null }))
+        toast.info('Không tìm thấy khách hàng. Vui lòng nhập thông tin để tạo mới.')
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Tìm kiếm thất bại'))
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  const handleCreateCustomer = async () => {
+    if (!newCustomer.hoTen.trim()) {
+      toast.warning('Vui lòng nhập họ tên')
+      return
+    }
+    setCreateLoading(true)
+    try {
+      const res = await customerApi.createCustomer({
+        hoTen: newCustomer.hoTen.trim(),
+        cccd: searchCccd.trim(),
+        email: newCustomer.email.trim() || undefined,
+        soDienThoai: newCustomer.soDienThoai.trim() || undefined,
+      })
+      const c = res.data
+      setFoundCustomer(c)
+      setForm(p => ({ ...p, maKhachHang: c.maKhachHang }))
+      toast.success('Tạo khách hàng thành công')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Tạo khách hàng thất bại'))
+    } finally {
+      setCreateLoading(false)
+    }
   }
 
   const handleNext = () => {
@@ -91,18 +139,21 @@ export function TicketSellPage() {
   }
 
   const handleSubmit = async () => {
-    if (!form.maChuyenBay || !form.maHangVe) return
+    if (!form.maChuyenBay || !form.maHangVe || !form.maKhachHang) return
     setSubmitting(true)
     try {
       const req: SellTicketRequest = {
         maChuyenBay: form.maChuyenBay,
-        maKhachHang: form.maKhachHang || 0,
+        maKhachHang: form.maKhachHang,
         maHangVe: form.maHangVe,
       }
       await ticketApi.sellTicket(req)
       toast.success('Bán vé thành công!')
       setStep(0)
-      setForm({ maChuyenBay: null, maKhachHang: null, maHangVe: null, khachHangSearch: '', khachHangName: '', khachHangCccd: '', khachHangEmail: '', khachHangPhone: '' })
+      setForm({ maChuyenBay: null, maKhachHang: null, maHangVe: null })
+      setFoundCustomer(null)
+      setSearchCccd('')
+      setNewCustomer({ hoTen: '', email: '', soDienThoai: '' })
     } catch (err) {
       toast.error(getErrorMessage(err, 'Bán vé thất bại'))
     } finally {
@@ -184,35 +235,47 @@ export function TicketSellPage() {
       {step === 1 && (
         <div className="step-content">
           <h2>Bước 2: Thông tin khách hàng</h2>
-          <FormField label="Tên khách hàng" error={errors.khachHangSearch}>
-            <Input
-              placeholder="Nhập tên khách hàng"
-              value={form.khachHangName}
-              onChange={e => setForm(p => ({ ...p, khachHangName: e.target.value }))}
-            />
-          </FormField>
-          <FormField label="CCCD" error={errors.khachHangSearch}>
-            <Input
-              placeholder="Số CCCD"
-              value={form.khachHangCccd}
-              onChange={e => setForm(p => ({ ...p, khachHangCccd: e.target.value }))}
-            />
-          </FormField>
-          <FormField label="Email">
-            <Input
-              type="email"
-              placeholder="Email (không bắt buộc)"
-              value={form.khachHangEmail}
-              onChange={e => setForm(p => ({ ...p, khachHangEmail: e.target.value }))}
-            />
-          </FormField>
-          <FormField label="Số điện thoại">
-            <Input
-              placeholder="Số điện thoại"
-              value={form.khachHangPhone}
-              onChange={e => setForm(p => ({ ...p, khachHangPhone: e.target.value }))}
-            />
-          </FormField>
+          {errors.maKhachHang && <div className="field-error">{errors.maKhachHang}</div>}
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginBottom: 12 }}>
+            <div style={{ flex: 1 }}>
+              <FormField label="Tìm CCCD">
+                <Input
+                  placeholder="Nhập CCCD khách hàng"
+                  value={searchCccd}
+                  onChange={e => { setSearchCccd(e.target.value); setFoundCustomer(null); setForm(p => ({ ...p, maKhachHang: null })) }}
+                />
+              </FormField>
+            </div>
+            <div style={{ paddingBottom: 1 }}>
+              <Button variant="primary" onClick={handleSearchCustomer} isLoading={searchLoading}>Tìm kiếm</Button>
+            </div>
+          </div>
+
+          {foundCustomer && (
+            <div style={{ padding: '12px 16px', background: '#F0FDF4', borderRadius: 8, marginBottom: 12, border: '1px solid #BBF7D0' }}>
+              <p><strong>Họ tên:</strong> {foundCustomer.hoTen}</p>
+              <p><strong>CCCD:</strong> {foundCustomer.cccd}</p>
+              <p><strong>Email:</strong> {foundCustomer.email || 'N/A'}</p>
+              <p><strong>SĐT:</strong> {foundCustomer.soDienThoai || 'N/A'}</p>
+            </div>
+          )}
+
+          {!foundCustomer && searchCccd.trim() && !searchLoading && (
+            <div style={{ padding: 16, background: '#FFFBEB', borderRadius: 8, border: '1px solid #FDE68A' }}>
+              <p style={{ fontWeight: 500, marginBottom: 8 }}>Khách hàng chưa tồn tại — tạo mới:</p>
+              <FormField label="Họ tên">
+                <Input placeholder="Nhập họ tên" value={newCustomer.hoTen} onChange={e => setNewCustomer(p => ({ ...p, hoTen: e.target.value }))} />
+              </FormField>
+              <FormField label="Email">
+                <Input type="email" placeholder="Email (không bắt buộc)" value={newCustomer.email} onChange={e => setNewCustomer(p => ({ ...p, email: e.target.value }))} />
+              </FormField>
+              <FormField label="Số điện thoại">
+                <Input placeholder="SĐT (không bắt buộc)" value={newCustomer.soDienThoai} onChange={e => setNewCustomer(p => ({ ...p, soDienThoai: e.target.value }))} />
+              </FormField>
+              <Button onClick={handleCreateCustomer} isLoading={createLoading}>Tạo khách hàng</Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -225,8 +288,10 @@ export function TicketSellPage() {
             <p>Giờ bay: {selectedFlight?.ngayGioBay ? new Date(selectedFlight.ngayGioBay).toLocaleString('vi-VN') : ''}</p>
             <p>Thời gian bay: {selectedFlight?.thoiGianBay} phút</p>
             <h3>Thông tin khách hàng</h3>
-            <p>Họ tên: {form.khachHangName || 'Chưa nhập'}</p>
-            <p>CCCD: {form.khachHangCccd || 'Chưa nhập'}</p>
+            <p>Họ tên: {foundCustomer?.hoTen || 'Chưa nhập'}</p>
+            <p>CCCD: {foundCustomer?.cccd || 'Chưa nhập'}</p>
+            <p>Email: {foundCustomer?.email || 'N/A'}</p>
+            <p>SĐT: {foundCustomer?.soDienThoai || 'N/A'}</p>
           </div>
         </div>
       )}
