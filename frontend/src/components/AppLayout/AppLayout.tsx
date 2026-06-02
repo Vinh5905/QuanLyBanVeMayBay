@@ -28,7 +28,6 @@ const MENU_ITEMS: Record<string, { label: string; path: string }[]> = {
     { label: 'Hóa đơn', path: '/admin/payments' },
     { label: 'Hành lý', path: '/staff/baggage' },
     { label: 'Báo cáo', path: '/admin/reports' },
-    { label: 'Quy định', path: '/admin/settings' },
   ],
   Agent: [
     { label: 'Tổng quan', path: '/agent' },

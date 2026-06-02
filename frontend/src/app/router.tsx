@@ -58,7 +58,7 @@ export const router = createBrowserRouter([
   { path: "/admin/users", element: <RoleProtected roles={['Admin']}><AccountListPage /></RoleProtected> },
   { path: "/admin/reports", element: <RoleProtected roles={['Admin', 'Staff']}><MonthlyReportPage /></RoleProtected> },
   { path: "/admin/reports/yearly", element: <RoleProtected roles={['Admin', 'Staff']}><YearlyReportPage /></RoleProtected> },
-  { path: "/admin/settings", element: <RoleProtected roles={['Admin', 'Staff']}><ConfigPage /></RoleProtected> },
+  { path: "/admin/settings", element: <RoleProtected roles={['Admin']}><ConfigPage /></RoleProtected> },
   { path: "/admin/payments", element: <RoleProtected roles={['Admin', 'Staff']}><PaymentListPage /></RoleProtected> },
   { path: "/admin/payments/new", element: <RoleProtected roles={['Admin', 'Staff']}><CreatePaymentPage /></RoleProtected> },
   { path: "/staff/tickets", element: <ProtectedLayout><TicketListPage /></ProtectedLayout> },
