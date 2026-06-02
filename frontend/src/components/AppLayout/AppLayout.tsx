@@ -8,31 +8,38 @@ export interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-const MENU_ITEMS = {
+const MENU_ITEMS: Record<string, { label: string; path: string }[]> = {
   Admin: [
-    { label: 'Dashboard', path: '/admin' },
-    { label: 'Flights', path: '/admin/flights' },
-    { label: 'User Management', path: '/admin/users' },
-    { label: 'Revenue Reports', path: '/admin/reports' },
-    { label: 'Settings', path: '/admin/settings' },
+    { label: 'Tổng quan', path: '/admin' },
+    { label: 'Chuyến bay', path: '/admin/flights' },
+    { label: 'Bán vé', path: '/staff/pos' },
+    { label: 'Danh sách vé', path: '/staff/tickets' },
+    { label: 'Hóa đơn', path: '/admin/payments' },
+    { label: 'Hành lý', path: '/staff/baggage' },
+    { label: 'Báo cáo', path: '/admin/reports' },
+    { label: 'Tài khoản', path: '/admin/users' },
+    { label: 'Quy định', path: '/admin/settings' },
   ],
   Staff: [
-    { label: 'Dashboard', path: '/staff' },
-    { label: 'Flights', path: '/staff/flights' },
-    { label: 'Tickets', path: '/staff/tickets' },
-    { label: 'POS', path: '/staff/pos' },
-    { label: 'Baggage', path: '/staff/baggage' },
+    { label: 'Tổng quan', path: '/staff' },
+    { label: 'Chuyến bay', path: '/staff/flights' },
+    { label: 'Bán vé', path: '/staff/pos' },
+    { label: 'Danh sách vé', path: '/staff/tickets' },
+    { label: 'Hóa đơn', path: '/admin/payments' },
+    { label: 'Hành lý', path: '/staff/baggage' },
+    { label: 'Báo cáo', path: '/admin/reports' },
   ],
   Agent: [
-    { label: 'Dashboard', path: '/agent' },
-    { label: 'Search Flights', path: '/agent/search' },
-    { label: 'My Bookings', path: '/agent/bookings' },
+    { label: 'Tổng quan', path: '/agent' },
+    { label: 'Tra cứu chuyến bay', path: '/agent/search' },
+    { label: 'Bán vé', path: '/staff/pos' },
+    { label: 'Đặt chỗ của tôi', path: '/agent/bookings' },
   ],
   User: [
-    { label: 'Home', path: '/' },
-    { label: 'Search Flights', path: '/flights/search' },
-    { label: 'My Bookings', path: '/bookings' },
-    { label: 'Online Check-in', path: '/check-in' },
+    { label: 'Trang chủ', path: '/' },
+    { label: 'Tra cứu chuyến bay', path: '/flights/search' },
+    { label: 'Đặt vé', path: '/bookings' },
+    { label: 'Check-in', path: '/check-in' },
   ]
 };
 

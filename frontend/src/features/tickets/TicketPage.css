@@ -1,0 +1,111 @@
+/* === Ticket Sell Wizard === */
+.ticket-sell-page { padding: 24px; }
+.ticket-sell-page h1 { font-size: 24px; font-weight: 700; color: #0F172A; margin-bottom: 24px; }
+.step-content { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
+.step-content h2 { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #0F172A; }
+.filter-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; }
+.flight-list-select { display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; }
+.flight-card-select { padding: 16px; border: 2px solid #E2E8F0; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+.flight-card-select:hover { border-color: #3B82F6; background: #F8FAFC; }
+.flight-card-select.selected { border-color: #1D4ED8; background: #EFF6FF; }
+.flight-route { font-size: 16px; margin-bottom: 4px; }
+.flight-time { font-size: 13px; color: #64748B; margin-bottom: 8px; }
+.flight-price { font-size: 14px; color: #0F172A; margin-bottom: 8px; }
+.flight-classes { display: flex; gap: 8px; flex-wrap: wrap; }
+.class-tag { display: inline-flex; padding: 4px 12px; border-radius: 4px; font-size: 13px; cursor: pointer; border: 1px solid #E2E8F0; transition: all 0.2s; }
+.class-tag:hover { border-color: #3B82F6; }
+.class-tag.selected { border-color: #1D4ED8; background: #1D4ED8; color: #fff; }
+.step-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+.confirm-card { background: #F8FAFC; padding: 20px; border-radius: 8px; }
+.confirm-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; margin-top: 16px; color: #0F172A; }
+.confirm-card h3:first-child { margin-top: 0; }
+.confirm-card p { font-size: 14px; color: #475569; margin-bottom: 4px; }
+.sticky-bottom { position: sticky; bottom: 0; background: #fff; padding: 16px 0; border-top: 1px solid #E2E8F0; margin-top: 16px; }
+
+/* === Ticket List === */
+.ticket-list-page { padding: 24px; }
+.ticket-list-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.page-header h1 { margin-bottom: 0; }
+.action-buttons { display: flex; gap: 4px; }
+.table-footer { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; }
+.total-count { font-size: 13px; color: #64748B; }
+
+/* === Ticket Detail === */
+.ticket-detail-page { padding: 24px; }
+.detail-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; }
+.detail-section h3 { font-size: 15px; font-weight: 600; color: #0F172A; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #F1F5F9; }
+.detail-section p { font-size: 14px; color: #475569; margin-bottom: 6px; }
+.action-bar { display: flex; gap: 12px; }
+.form-select { width: 100%; height: 40px; padding: 0 12px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 14px; background: #fff; }
+.modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+.field-error { font-size: 13px; color: #DC2626; margin-top: 4px; }
+
+/* === Booking === */
+.booking-page { padding: 24px; }
+.booking-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+.tab-bar { display: flex; gap: 8px; }
+
+/* === Baggage === */
+.baggage-page { padding: 24px; }
+.baggage-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+.pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.pricing-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; padding: 16px; }
+.pricing-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: #0F172A; }
+.pricing-card p { font-size: 13px; color: #64748B; margin-bottom: 4px; }
+.baggage-form { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 600px; }
+.kien-section { margin: 20px 0; }
+.kien-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.kien-header h3 { font-size: 15px; font-weight: 600; color: #0F172A; }
+.kien-row { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #F1F5F9; }
+.baggage-summary { background: #F8FAFC; padding: 16px; border-radius: 8px; margin: 16px 0; }
+.baggage-summary p { margin-bottom: 4px; font-size: 14px; }
+
+/* === Check-in === */
+.checkin-page { padding: 24px; }
+.checkin-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+.checkin-form { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 400px; margin-bottom: 24px; }
+.boarding-pass { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); max-width: 500px; border: 2px solid #1D4ED8; }
+.bp-header { text-align: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px dashed #E2E8F0; }
+.bp-header h2 { font-size: 20px; color: #1D4ED8; margin-bottom: 8px; }
+.bp-code { font-size: 14px; color: #64748B; letter-spacing: 2px; font-family: monospace; }
+.bp-body { margin-bottom: 20px; }
+.bp-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #F1F5F9; }
+.bp-label { font-size: 13px; color: #64748B; }
+.bp-value { font-size: 14px; font-weight: 600; color: #0F172A; }
+.bp-seat { font-size: 18px; color: #1D4ED8; }
+.bp-footer { text-align: center; }
+@media print { .checkin-form, .checkin-page h1, .ds-sidebar, .ds-header, .bp-footer { display: none; } .boarding-pass { border: none; box-shadow: none; } }
+
+/* === Payments === */
+.payment-list-page { padding: 24px; }
+.payment-list-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+.payment-detail p { margin-bottom: 8px; font-size: 14px; }
+.create-payment-page { padding: 24px; }
+.create-payment-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+.payment-form { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 500px; }
+
+/* === Reports === */
+.report-page { padding: 24px; }
+.report-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+.summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.summary-card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.summary-label { font-size: 13px; color: #64748B; margin-bottom: 4px; }
+.summary-value { font-size: 24px; font-weight: 700; color: #0F172A; }
+
+/* === Accounts === */
+.account-list-page { padding: 24px; }
+.account-list-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+.form-input { width: 100%; height: 40px; padding: 0 12px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 14px; }
+.form-input:focus { outline: none; border-color: #1D4ED8; box-shadow: 0 0 0 3px rgba(29,78,216,0.1); }
+
+/* === Config === */
+.config-page { padding: 24px; }
+.config-page h1 { font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+.config-list { display: flex; flex-direction: column; gap: 8px; }
+.config-item { background: #fff; border-radius: 8px; padding: 16px; border: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.config-info { flex: 1; }
+.config-key { font-size: 14px; font-weight: 600; color: #0F172A; margin-bottom: 4px; }
+.config-desc { font-size: 12px; color: #64748B; }
+.config-edit { display: flex; gap: 8px; align-items: flex-end; min-width: 200px; }

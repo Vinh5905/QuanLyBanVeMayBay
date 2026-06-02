@@ -1,65 +1,69 @@
-import React from 'react';
-import { StatCard } from './StatCard';
-import './Dashboard.css';
+import { useState, useEffect } from 'react'
+import { ticketApi } from '../../../api/ticketApi'
+import { flightApi } from '../../../api/flightApi'
+import { getErrorMessage } from '../../../api/adapter'
+import { StatCard } from './StatCard'
+import { LoadingState } from '../../../components/LoadingState/LoadingState'
+import { ErrorState } from '../../../components/ErrorState/ErrorState'
+import { DataTable } from '../../../components/DataTable/DataTable'
+import { EmptyState } from '../../../components/EmptyState/EmptyState'
 
-export const AgentDashboard: React.FC = () => {
+export function AgentDashboard() {
+  const [tickets, setTickets] = useState<any[]>([])
+  const [flights, setFlights] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true)
+      try {
+        const [tRes, fRes] = await Promise.all([
+          ticketApi.getMyTickets().catch(() => ({ data: [] })),
+          flightApi.searchFlights({}).catch(() => ({ data: [] })),
+        ])
+        setTickets(tRes?.data || [])
+        setFlights(fRes?.data?.data || [])
+      } catch (err) {
+        setError(getErrorMessage(err))
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetch()
+  }, [])
+
+  if (loading) return <LoadingState text="Đang tải..." />
+  if (error) return <ErrorState message={error} />
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <div>
-          <h1 className="dashboard-title">Đại lý bán vé</h1>
-          <p className="dashboard-subtitle">Quản lý đặt chỗ và doanh số của bạn.</p>
-        </div>
+        <h1 className="dashboard-title">Dashboard Đại lý</h1>
+        <p className="dashboard-subtitle">Quản lý vé và tra cứu chuyến bay.</p>
       </div>
 
       <div className="stat-grid">
-        <StatCard 
-          title="Doanh số tháng này" 
-          value="12.500.000 ₫" 
-          icon="💳" 
-          trend={{ value: 4.2, isPositive: true }} 
-        />
-        <StatCard 
-          title="Vé đã đặt" 
-          value="45" 
-          icon="🎫" 
-          trend={{ value: 1.5, isPositive: true }} 
-        />
-        <StatCard 
-          title="Vé chờ thanh toán" 
-          value="3" 
-          icon="⏳" 
-        />
+        <StatCard title="Vé đã bán" value={String(tickets.length)} icon="🎫" />
+        <StatCard title="Chuyến bay có sẵn" value={String(flights.length)} icon="" />
       </div>
 
-      <div className="dashboard-grid-2">
-        <div className="dashboard-chart-container">
-          <h3 className="dashboard-chart-title">Vé đặt gần đây</h3>
-          <ul className="dashboard-list">
-            {[1, 2, 3, 4].map((i) => (
-              <li key={i} className="dashboard-list-item">
-                <div>
-                  <div className="list-item-title">PNR: {Math.random().toString(36).substring(2, 8).toUpperCase()}</div>
-                  <div className="list-item-subtitle">SGN ✈ DAD | Ngày bay: 15/07/2026</div>
-                </div>
-                <div className="list-item-action">Chi tiết</div>
-              </li>
-            ))}
-          </ul>
-        </div>
-        
-        <div className="dashboard-chart-container">
-          <h3 className="dashboard-chart-title">Hành động nhanh</h3>
-          <ul className="dashboard-list">
-            <li className="dashboard-list-item" style={{ cursor: 'pointer' }}>
-              <div className="list-item-title" style={{ color: 'var(--primary)' }}>+ Đặt vé mới</div>
-            </li>
-            <li className="dashboard-list-item" style={{ cursor: 'pointer' }}>
-              <div className="list-item-title" style={{ color: 'var(--primary)' }}>Tra cứu mã đặt chỗ</div>
-            </li>
-          </ul>
-        </div>
+      <div className="dashboard-chart-container">
+        <h3>Chuyến bay đang bán</h3>
+        {flights.length === 0 ? (
+          <EmptyState title="Không có chuyến bay" description="" />
+        ) : (
+          <DataTable
+            columns={[
+              { key: 'maChuyenBayCode', header: 'Mã CB' },
+              { key: 'sanBayDi', header: 'Sân bay đi' },
+              { key: 'sanBayDen', header: 'Sân bay đến' },
+              { key: 'ngayGioBay', header: 'Giờ bay', render: (r: any) => r.ngayGioBay ? new Date(r.ngayGioBay).toLocaleString('vi-VN') : '' },
+            ]}
+            data={flights.slice(0, 10)}
+          />
+        )}
       </div>
     </div>
-  );
-};
+  )
+}

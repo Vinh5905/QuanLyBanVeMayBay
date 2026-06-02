@@ -3,6 +3,7 @@ import { RouterProvider } from "react-router-dom";
 import { router } from "./app/router";
 import { AppProviders } from "./app/providers";
 import "./index.css";
+import "./features/tickets/TicketPage.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <AppProviders>

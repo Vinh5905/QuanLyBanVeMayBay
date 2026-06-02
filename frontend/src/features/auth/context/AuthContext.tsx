@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { AuthUser, Role } from '../../../types/auth';
 
+const ROLE_MAP: Record<string, Role> = {
+  Admin: 'Admin',
+  QuanTriVien: 'Admin',
+  NhanVien: 'Staff',
+  DaiLy: 'Agent',
+  KhachHang: 'User',
+};
+
 interface AuthContextType {
   user: AuthUser | null;
   role: Role | null;
@@ -21,7 +29,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const token = localStorage.getItem('accessToken');
     if (storedUser && token) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser) as AuthUser;
+        if (parsed.role && ROLE_MAP[parsed.role]) {
+          parsed.role = ROLE_MAP[parsed.role];
+          localStorage.setItem('user', JSON.stringify(parsed));
+        }
+        setUser(parsed);
       } catch (e) {
         localStorage.removeItem('user');
         localStorage.removeItem('accessToken');
