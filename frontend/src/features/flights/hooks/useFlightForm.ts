@@ -140,6 +140,7 @@ export function useFlightForm(flightId?: number) {
           ngayGioBay: formState.ngayGioBay + ':00',
           thoiGianBay: Number(formState.thoiGianBay),
           giaCoBan: Number(formState.giaCoBan),
+          danhSachHangVe: formState.danhSachHangVe,
           danhSachTrungGian: formState.danhSachTrungGian.length > 0 ? formState.danhSachTrungGian : undefined,
         });
       } else {
