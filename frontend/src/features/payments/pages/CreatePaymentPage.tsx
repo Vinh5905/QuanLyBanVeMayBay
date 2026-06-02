@@ -18,9 +18,11 @@ export function CreatePaymentPage() {
 
   const validate = (): boolean => {
     const e: Record<string, string> = {}
-    if (!maVe.trim() && !maPhieuDat.trim()) e.maVe = 'Vui lòng nhập mã vé hoặc mã phiếu đặt'
+    if (!maVe.trim() && !maPhieuDat.trim())
+      e.maVe = 'Vui lòng nhập mã vé hoặc mã phiếu đặt'
     const st = parseFloat(soTien)
-    if (!soTien.trim() || isNaN(st) || st <= 0) e.soTien = 'Số tiền không hợp lệ'
+    if (!soTien.trim() || isNaN(st) || st <= 0)
+      e.soTien = 'Số tiền không hợp lệ'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -50,21 +52,40 @@ export function CreatePaymentPage() {
       <h1>Tạo thanh toán</h1>
       <div className="payment-form">
         <FormField label="Mã vé" error={errors.maVe}>
-          <Input placeholder="Nhập mã vé" value={maVe} onChange={setMaVe} />
+          <Input
+            placeholder="Nhập mã vé"
+            value={maVe}
+            onChange={(e) => setMaVe(e.target.value)}
+          />
         </FormField>
         <FormField label="Mã phiếu đặt (nếu có)">
-          <Input placeholder="Nhập mã phiếu đặt" value={maPhieuDat} onChange={setMaPhieuDat} />
+          <Input
+            placeholder="Nhập mã phiếu đặt"
+            value={maPhieuDat}
+            onChange={(e) => setMaPhieuDat(e.target.value)}
+          />
         </FormField>
         <FormField label="Số tiền thanh toán" error={errors.soTien}>
-          <Input type="number" placeholder="Nhập số tiền" value={soTien} onChange={setSoTien} />
+          <Input
+            type="number"
+            placeholder="Nhập số tiền"
+            value={soTien}
+            onChange={(e) => setSoTien(e.target.value)}
+          />
         </FormField>
         <FormField label="Hình thức thanh toán">
-          <select className="form-select" value={hinhThuc} onChange={e => setHinhThuc(e.target.value)}>
+          <select
+            className="form-select"
+            value={hinhThuc}
+            onChange={(e) => setHinhThuc(e.target.value)}
+          >
             <option value="TIEN_MAT">Tiền mặt</option>
             <option value="CHUYEN_KHOAN">Chuyển khoản</option>
           </select>
         </FormField>
-        <Button onClick={handleSubmit} isLoading={submitting} fullWidth>Xác nhận thanh toán</Button>
+        <Button onClick={handleSubmit} isLoading={submitting} fullWidth>
+          Xác nhận thanh toán
+        </Button>
       </div>
     </div>
   )
