@@ -49,7 +49,7 @@ export const FlightListPage: React.FC = () => {
     if (value !== '' && value !== undefined) cleanedFilters[key] = value;
   }
   cleanedFilters.page = apiPage;
-  cleanedFilters.size = 20;
+  cleanedFilters.size = 10;
   const { flights, pagination, isLoading, error, refetch } = useFlights(cleanedFilters);
 
   const handleSearch = useCallback(() => {

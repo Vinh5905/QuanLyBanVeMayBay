@@ -42,17 +42,13 @@ export const FlightSearchPage: React.FC = () => {
       if (ngayBay) params.ngayBay = ngayBay;
       params.page = 0;
       params.size = 20;
-      console.log('>>> FlightSearchPage calling /flights/search with params:', params);
       const res = await flightApi.searchFlights(params);
-      console.log('>>> FlightSearchPage response URL:', res.config?.url);
-      console.log('>>> FlightSearchPage response data:', res.data);
       if (res.data.status === 'success') {
         setResults(res.data.data);
       } else {
         setError(res.data.message || 'Lỗi tìm kiếm');
       }
     } catch (err: any) {
-      console.error('>>> FlightSearchPage error:', err.response?.data || err.message);
       setError(err.response?.data?.message || err.message || 'Không thể kết nối đến máy chủ');
     } finally {
       setIsLoading(false);
