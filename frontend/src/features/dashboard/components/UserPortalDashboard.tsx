@@ -1,45 +1,72 @@
-import React from 'react';
-import './Dashboard.css';
+import { useState, useEffect } from 'react'
+import { bookingApi } from '../../../api/bookingApi'
+import { ticketApi } from '../../../api/ticketApi'
+import { getErrorMessage } from '../../../api/adapter'
+import { StatCard } from './StatCard'
+import { LoadingState } from '../../../components/LoadingState/LoadingState'
+import { ErrorState } from '../../../components/ErrorState/ErrorState'
+import { DataTable } from '../../../components/DataTable/DataTable'
+import { EmptyState } from '../../../components/EmptyState/EmptyState'
+import { Badge } from '../../../components/Badge/Badge'
 
-export const UserPortalDashboard: React.FC = () => {
+export function UserPortalDashboard() {
+  const [bookings, setBookings] = useState<any[]>([])
+  const [tickets, setTickets] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true)
+      try {
+        const [bRes, tRes] = await Promise.all([
+          bookingApi.getMyBookings().catch(() => ({ data: [] })),
+          ticketApi.getMyTickets().catch(() => ({ data: [] })),
+        ])
+        setBookings(bRes.data || [])
+        setTickets(tRes.data || [])
+      } catch (err) {
+        setError(getErrorMessage(err))
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetch()
+  }, [])
+
+  if (loading) return <LoadingState text="Đang tải..." />
+  if (error) return <ErrorState message={error} />
+
+  const upcomingBookings = bookings.filter((b: any) => b.trangThaiDatCho === 'DANG_GIU_CHO')
+  const activeTickets = tickets.filter((t: any) => t.trangThaiVe === 'HOP_LE')
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <div>
-          <h1 className="dashboard-title">Hành trình của tôi</h1>
-          <p className="dashboard-subtitle">Quản lý các chuyến bay bạn đã đặt.</p>
-        </div>
+        <h1 className="dashboard-title">Trang cá nhân</h1>
+        <p className="dashboard-subtitle">Quản lý đặt chỗ và vé của bạn.</p>
       </div>
 
-      <div className="dashboard-grid-2" style={{ gridTemplateColumns: '1fr' }}>
-        <div className="dashboard-chart-container">
-          <h3 className="dashboard-chart-title">Chuyến bay sắp tới</h3>
-          <ul className="dashboard-list">
-            <li className="dashboard-list-item" style={{ background: 'var(--primary-50)', border: '1px solid var(--primary-100)' }}>
-              <div>
-                <div className="list-item-title">VN-204 | SGN ✈ HAN</div>
-                <div className="list-item-subtitle">Khởi hành: 10:00 - 15/07/2026 | Tình trạng: Đã xác nhận</div>
-              </div>
-              <div className="list-item-action">Check-in Online</div>
-            </li>
-          </ul>
-        </div>
-        
-        <div className="dashboard-chart-container">
-          <h3 className="dashboard-chart-title">Lịch sử đặt vé</h3>
-          <ul className="dashboard-list">
-            {[1, 2].map((i) => (
-              <li key={i} className="dashboard-list-item">
-                <div>
-                  <div className="list-item-title">VN-10{i} | HAN ✈ DAD</div>
-                  <div className="list-item-subtitle">Hoàn thành: 0{i}/05/2026</div>
-                </div>
-                <div className="list-item-action" style={{ color: 'var(--text-muted)' }}>Đã bay</div>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div className="stat-grid">
+        <StatCard title="Đặt chờ thanh toán" value={String(upcomingBookings.length)} icon="📋" />
+        <StatCard title="Vé hợp lệ" value={String(activeTickets.length)} icon="🎫" />
+      </div>
+
+      <div className="dashboard-chart-container">
+        <h3>Đặt chỗ đang chờ thanh toán</h3>
+        {upcomingBookings.length === 0 ? (
+          <EmptyState title="Không có đặt chỗ" description="Bạn chưa có đặt chỗ nào đang chờ" action={{ label: 'Đặt vé ngay', onClick: () => window.location.href = '/bookings' }} />
+        ) : (
+          <DataTable
+            columns={[
+              { key: 'maPhieuDatCho', label: 'Mã phiếu' },
+              { key: 'tongTien', label: 'Tổng tiền', render: (r: any) => `${(r.tongTien || 0).toLocaleString('vi-VN')}đ` },
+              { key: 'hanThanhToan', label: 'Hạn TT', render: (r: any) => r.hanThanhToan ? new Date(r.hanThanhToan).toLocaleString('vi-VN') : '' },
+            ]}
+            data={upcomingBookings}
+          />
+        )}
       </div>
     </div>
-  );
-};
+  )
+}
