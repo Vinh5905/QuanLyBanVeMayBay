@@ -24,6 +24,7 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const from = (location.state as any)?.from?.pathname;
+  const stateMessage = (location.state as any)?.message as string | undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +127,11 @@ export const LoginPage: React.FC = () => {
           <p className="auth-subtitle">Nhập thông tin tài khoản để tiếp tục</p>
 
           {error && <div className="auth-error-banner">{error}</div>}
+          {stateMessage && !error && (
+            <div className="auth-error-banner" style={{ background: '#ECFDF5', color: '#047857', borderColor: '#A7F3D0' }}>
+              {stateMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="auth-form">
             <FormField label="Tên đăng nhập" required>

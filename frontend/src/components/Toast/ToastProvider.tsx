@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { ToastContainer } from './Toast'
-import { setToastHandler } from './toast'
+import { setToastHandler } from './toastBus'
 import type { ToastVariant } from './Toast'
 
 interface ToastItem {

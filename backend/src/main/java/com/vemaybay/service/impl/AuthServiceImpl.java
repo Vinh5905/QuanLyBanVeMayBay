@@ -15,6 +15,10 @@ import com.vemaybay.security.JwtTokenProvider;
 import com.vemaybay.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -37,8 +42,24 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender mailSender;
+
+    @Value("${spring.mail.username}")
+    private String mailUsername;
+
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
+
+    @Value("${app.password-reset.otp-expiration-minutes:10}")
+    private long otpExpirationMinutes;
+
+    @Value("${app.password-reset.token-expiration-minutes:15}")
+    private long resetTokenExpirationMinutes;
 
     private final Map<String, LoginAttempt> loginAttempts = new ConcurrentHashMap<>();
+    private final Map<String, PasswordResetOtp> passwordResetOtps = new ConcurrentHashMap<>();
+    private final Map<String, PasswordResetToken> passwordResetTokens = new ConcurrentHashMap<>();
+    private final SecureRandom secureRandom = new SecureRandom();
     private static final int MAX_ATTEMPTS = 5;
     private static final long LOCK_DURATION_MINUTES = 15;
 
@@ -175,6 +196,71 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public void requestPasswordReset(ForgotPasswordRequest request) {
+        String email = normalizeEmail(request.getEmail());
+        TaiKhoan taiKhoan = taiKhoanRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản với email này"));
+
+        if (!taiKhoan.isActive()) {
+            throw new BusinessException("ACCOUNT_LOCKED", "Tài khoản đã bị khóa");
+        }
+
+        if (mailPassword == null || mailPassword.isBlank()) {
+            throw new BusinessException("MAIL_NOT_CONFIGURED",
+                    "Chưa cấu hình MAIL_PASSWORD cho Gmail SMTP");
+        }
+
+        String otp = String.format("%06d", secureRandom.nextInt(1_000_000));
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(otpExpirationMinutes);
+        passwordResetOtps.put(email, new PasswordResetOtp(taiKhoan.getMaTaiKhoan(), otp, expiresAt));
+
+        sendPasswordResetEmail(email, otp, expiresAt);
+    }
+
+    @Override
+    public VerifyResetOtpResponse verifyResetOtp(VerifyResetOtpRequest request) {
+        String email = normalizeEmail(request.getEmail());
+        PasswordResetOtp storedOtp = passwordResetOtps.get(email);
+
+        if (storedOtp == null || storedOtp.isExpired()) {
+            passwordResetOtps.remove(email);
+            throw new BusinessException("OTP_EXPIRED", "Mã OTP không tồn tại hoặc đã hết hạn");
+        }
+
+        if (!storedOtp.otp().equals(request.getOtp())) {
+            throw new BusinessException("INVALID_OTP", "Mã OTP không đúng");
+        }
+
+        passwordResetOtps.remove(email);
+        String resetToken = UUID.randomUUID().toString();
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(resetTokenExpirationMinutes);
+        passwordResetTokens.put(resetToken, new PasswordResetToken(storedOtp.maTaiKhoan(), expiresAt));
+
+        return VerifyResetOtpResponse.builder()
+                .resetToken(resetToken)
+                .expiresInSeconds(resetTokenExpirationMinutes * 60)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        PasswordResetToken token = passwordResetTokens.remove(request.getResetToken());
+
+        if (token == null || token.isExpired()) {
+            throw new BusinessException("RESET_TOKEN_EXPIRED", "Phiên đặt lại mật khẩu đã hết hạn");
+        }
+
+        TaiKhoan taiKhoan = taiKhoanRepository.findById(token.maTaiKhoan())
+                .orElseThrow(() -> new ResourceNotFoundException("Tài khoản", "id", token.maTaiKhoan()));
+
+        taiKhoan.setMatKhauHash(passwordEncoder.encode(request.getMatKhauMoi()));
+        taiKhoanRepository.save(taiKhoan);
+        refreshTokenRepository.revokeAllByMaTaiKhoan(taiKhoan.getMaTaiKhoan());
+    }
+
+    @Override
     @Transactional
     public void changePassword(Integer userId, ChangePasswordRequest request) {
         TaiKhoan taiKhoan = taiKhoanRepository.findById(userId)
@@ -244,6 +330,45 @@ public class AuthServiceImpl implements AuthService {
 
     private void clearLoginAttempts(String username) {
         loginAttempts.remove(username);
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase();
+    }
+
+    private void sendPasswordResetEmail(String email, String otp, LocalDateTime expiresAt) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailUsername);
+        message.setTo(email);
+        message.setSubject("QAirline - Mã OTP đặt lại mật khẩu");
+        message.setText("""
+                Bạn đang yêu cầu đặt lại mật khẩu QAirline.
+
+                Mã OTP của bạn là: %s
+
+                Mã này sẽ hết hạn lúc: %s
+                Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.
+                """.formatted(otp, expiresAt));
+
+        try {
+            mailSender.send(message);
+        } catch (MailException ex) {
+            log.error("Could not send password reset OTP to {}", email, ex);
+            throw new BusinessException("MAIL_SEND_FAILED",
+                    "Không thể gửi email OTP. Vui lòng kiểm tra cấu hình Gmail SMTP");
+        }
+    }
+
+    private record PasswordResetOtp(Integer maTaiKhoan, String otp, LocalDateTime expiresAt) {
+        boolean isExpired() {
+            return LocalDateTime.now().isAfter(expiresAt);
+        }
+    }
+
+    private record PasswordResetToken(Integer maTaiKhoan, LocalDateTime expiresAt) {
+        boolean isExpired() {
+            return LocalDateTime.now().isAfter(expiresAt);
+        }
     }
 
     private static class LoginAttempt {

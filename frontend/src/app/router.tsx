@@ -3,6 +3,8 @@ import HealthPage from "../pages/HealthPage";
 import ComponentsDemo from "../pages/ComponentsDemo";
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { RegisterPage } from "../features/auth/pages/RegisterPage";
+import { ForgotPasswordPage } from "../features/auth/pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "../features/auth/pages/ResetPasswordPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { RoleRoute } from "./routes/RoleRoute";
 import { AppLayout } from "../components/AppLayout/AppLayout";
@@ -41,6 +43,8 @@ const RoleProtected = ({ roles, children }: { roles: string[]; children: React.R
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/register", element: <RegisterPage /> },
+  { path: "/forgot-password", element: <ForgotPasswordPage /> },
+  { path: "/reset-password", element: <ResetPasswordPage /> },
   { path: "/", element: <ProtectedLayout><DashboardPage /></ProtectedLayout> },
   { path: "/admin", element: <ProtectedLayout><DashboardPage /></ProtectedLayout> },
   { path: "/staff", element: <ProtectedLayout><DashboardPage /></ProtectedLayout> },

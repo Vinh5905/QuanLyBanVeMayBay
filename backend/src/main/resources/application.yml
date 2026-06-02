@@ -4,9 +4,23 @@ spring:
 
   datasource:
     url: jdbc:sqlserver://${DB_HOST:localhost}:${DB_PORT:1433};databaseName=${DB_NAME:VeMayBayDB};encrypt=true;trustServerCertificate=true
-    username: ${DB_USER:vemaybay_app}
-    password: ${DB_PASSWORD:}
+    username: ${DB_USER:${APP_DB_USER:vemaybay_app}}
+    password: ${DB_PASSWORD:${APP_DB_PASSWORD:VeMayBayApp@Test123}}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:uit.gohcmc@gmail.com}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 
   jpa:
     show-sql: false
@@ -31,6 +45,9 @@ app:
     refresh-token-expiration: 2592000000
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
+  password-reset:
+    otp-expiration-minutes: ${PASSWORD_RESET_OTP_MINUTES:10}
+    token-expiration-minutes: ${PASSWORD_RESET_TOKEN_MINUTES:15}
 
 springdoc:
   api-docs:
