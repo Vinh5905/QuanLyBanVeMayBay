@@ -4,7 +4,6 @@ import { useAuth } from '../../auth/context/AuthContext';
 import { Button } from '../../../components/Button/Button';
 import { FormField, Input } from '../../../components/FormField/FormField';
 import { LoadingState } from '../../../components/LoadingState/LoadingState';
-import { ErrorState } from '../../../components/ErrorState/ErrorState';
 import { AirportSelect } from '../components/AirportSelect';
 import { useFlightForm } from '../hooks/useFlightForm';
 
@@ -13,7 +12,6 @@ export const FlightFormPage: React.FC = () => {
   const navigate = useNavigate();
   const { role } = useAuth();
   const flightId = id ? Number(id) : undefined;
-  const isEdit = !!flightId;
   const rolePrefix = role?.toLowerCase();
 
   const {

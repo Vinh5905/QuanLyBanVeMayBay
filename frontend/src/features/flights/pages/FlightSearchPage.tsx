@@ -1,6 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/context/AuthContext';
 import { Button } from '../../../components/Button/Button';
 import { DataTable } from '../../../components/DataTable/DataTable';
 import { Pagination } from '../../../components/Pagination/Pagination';
@@ -25,9 +23,6 @@ function formatDate(dateStr: string) {
 }
 
 export const FlightSearchPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, role } = useAuth();
-
   const [sanBayDi, setSanBayDi] = useState('');
   const [sanBayDen, setSanBayDen] = useState('');
   const [ngayBay, setNgayBay] = useState('');

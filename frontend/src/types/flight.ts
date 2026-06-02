@@ -24,6 +24,7 @@ export interface TrungGianInfo {
 }
 
 export interface FlightResponse {
+  id?: number;
   maChuyenBay: number;
   maChuyenBayCode: string;
   sanBayDi: SanBayResponse;

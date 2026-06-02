@@ -11,6 +11,7 @@ import { EmptyState } from '../../../components/EmptyState/EmptyState';
 import { FlightFilterBar } from '../components/FlightFilterBar';
 import type { FilterValues } from '../components/FlightFilterBar';
 import { useFlights } from '../hooks/useFlights';
+import { flightApi } from '../../../api/flightApi';
 import type { FlightResponse } from '../../../types/flight';
 
 const statusBadge: Record<string, { variant: 'success' | 'error' | 'info' | 'neutral'; label: string }> = {
@@ -63,7 +64,6 @@ export const FlightListPage: React.FC = () => {
   const handleCancel = async (id: number, code: string) => {
     if (!window.confirm(`Xác nhận hủy chuyến bay ${code}?`)) return;
     try {
-      const { flightApi } = await import('../../../api/flightApi');
       await flightApi.cancelFlight(id);
       refetch();
     } catch (err: any) {
