@@ -11,6 +11,7 @@ export interface AppLayoutProps {
 const MENU_ITEMS = {
   Admin: [
     { label: 'Dashboard', path: '/admin' },
+    { label: 'Flights', path: '/admin/flights' },
     { label: 'User Management', path: '/admin/users' },
     { label: 'Revenue Reports', path: '/admin/reports' },
     { label: 'Settings', path: '/admin/settings' },
@@ -29,6 +30,7 @@ const MENU_ITEMS = {
   ],
   User: [
     { label: 'Home', path: '/' },
+    { label: 'Search Flights', path: '/flights/search' },
     { label: 'My Bookings', path: '/bookings' },
     { label: 'Online Check-in', path: '/check-in' },
   ]
