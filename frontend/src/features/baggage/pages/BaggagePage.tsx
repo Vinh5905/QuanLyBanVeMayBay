@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react'
 import { baggageApi } from '../../../api/baggageApi'
+import { ticketApi } from '../../../api/ticketApi'
 import { getErrorMessage } from '../../../api/adapter'
 import { Button } from '../../../components/Button/Button'
 import { Input, FormField } from '../../../components/FormField/FormField'
-import { DataTable } from '../../../components/DataTable/DataTable'
 import { LoadingState } from '../../../components/LoadingState/LoadingState'
 import { ErrorState } from '../../../components/ErrorState/ErrorState'
 import { toast } from '../../../components/Toast/Toast'
 import type { BaggagePricingResponse } from '../../../types/baggage'
+import type { TicketResponse } from '../../../types/ticket'
 
 export function BaggagePage() {
   const [pricing, setPricing] = useState<BaggagePricingResponse[]>([])
   const [pricingLoading, setPricingLoading] = useState(true)
   const [pricingError, setPricingError] = useState<string | null>(null)
-  const [maVe, setMaVe] = useState('')
+  const [tickets, setTickets] = useState<TicketResponse[]>([])
+  const [ticketsLoading, setTicketsLoading] = useState(true)
+  const [searchCode, setSearchCode] = useState('')
+  const [selectedTicket, setSelectedTicket] = useState<TicketResponse | null>(null)
   const [maBangGia, setMaBangGia] = useState<number | null>(null)
   const [kienList, setKienList] = useState<{ trongLuong: string; ghiChu: string }[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -23,7 +27,16 @@ export function BaggagePage() {
     baggageApi.getPricing()
       .then(r => { setPricing(r.data || []); setPricingLoading(false) })
       .catch(err => { setPricingError(getErrorMessage(err)); setPricingLoading(false) })
+
+    ticketApi.getTickets({ trangThaiVe: 'HOP_LE', size: 100 })
+      .then(r => { setTickets(r.data || []); setTicketsLoading(false) })
+      .catch(() => setTicketsLoading(false))
   }, [])
+
+  const filteredTickets = tickets.filter(t =>
+    t.maVeCode.toLowerCase().includes(searchCode.toLowerCase()) ||
+    (t.khachHang?.hoTen || '').toLowerCase().includes(searchCode.toLowerCase())
+  )
 
   const addKien = () => {
     setKienList(prev => [...prev, { trongLuong: '', ghiChu: '' }])
@@ -39,7 +52,7 @@ export function BaggagePage() {
 
   const validate = (): boolean => {
     const e: Record<string, string> = {}
-    if (!maVe.trim()) e.maVe = 'Vui lòng nhập mã vé'
+    if (!selectedTicket) e.maVe = 'Vui lòng chọn vé'
     if (!maBangGia) e.maBangGia = 'Vui lòng chọn gói hành lý'
     if (kienList.length === 0) e.kienList = 'Vui lòng thêm ít nhất 1 kiện'
     kienList.forEach((k, i) => {
@@ -52,16 +65,16 @@ export function BaggagePage() {
   }
 
   const handleSubmit = async () => {
-    if (!validate()) return
+    if (!validate() || !selectedTicket) return
     setSubmitting(true)
     try {
       await baggageApi.register({
-        maVe: Number(maVe),
+        maVe: selectedTicket.maVe,
         maBangGia: maBangGia!,
         danhSachKien: kienList.map(k => ({ trongLuong: parseFloat(k.trongLuong), ghiChu: k.ghiChu })),
       })
       toast.success('Đăng ký hành lý thành công')
-      setMaVe(''); setMaBangGia(null); setKienList([])
+      setSelectedTicket(null); setMaBangGia(null); setKienList([])
     } catch (err) {
       toast.error(getErrorMessage(err, 'Đăng ký hành lý thất bại'))
     } finally {
@@ -93,9 +106,40 @@ export function BaggagePage() {
       )}
 
       <div className="baggage-form">
-        <FormField label="Mã vé" error={errors.maVe}>
-          <Input placeholder="Nhập mã vé" value={maVe} onChange={e => setMaVe(e.target.value)} />
+        <FormField label="Tìm vé" error={errors.maVe}>
+          <Input
+            placeholder="Nhập mã vé hoặc tên khách hàng..."
+            value={searchCode}
+            onChange={e => { setSearchCode(e.target.value); setSelectedTicket(null) }}
+          />
+          {ticketsLoading && <LoadingState text="Đang tải danh sách vé..." />}
+          {!ticketsLoading && searchCode && filteredTickets.length > 0 && !selectedTicket && (
+            <div style={{ marginTop: 4, border: '1px solid #E2E8F0', borderRadius: 8, maxHeight: 200, overflowY: 'auto' }}>
+              {filteredTickets.slice(0, 20).map(t => (
+                <div
+                  key={t.maVe}
+                  className="ticket-search-item"
+                  style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #F1F5F9' }}
+                  onClick={() => { setSelectedTicket(t); setSearchCode('') }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#F8FAFC')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '')}
+                >
+                  <strong>{t.maVeCode}</strong> — {t.khachHang?.hoTen || 'N/A'} ({t.chuyenBay.sanBayDi} → {t.chuyenBay.sanBayDen})
+                </div>
+              ))}
+            </div>
+          )}
+          {!ticketsLoading && searchCode && filteredTickets.length === 0 && !selectedTicket && (
+            <div style={{ marginTop: 4, padding: '8px 12px', color: '#94A3B8', fontSize: 13 }}>Không tìm thấy vé</div>
+          )}
         </FormField>
+
+        {selectedTicket && (
+          <div className="selected-ticket" style={{ padding: '12px 16px', background: '#F0FDF4', borderRadius: 8, marginBottom: 12, border: '1px solid #BBF7D0' }}>
+            <strong>Đã chọn: {selectedTicket.maVeCode}</strong> — {selectedTicket.khachHang?.hoTen} ({selectedTicket.chuyenBay.sanBayDi} → {selectedTicket.chuyenBay.sanBayDen})
+            <Button variant="ghost" size="sm" style={{ marginLeft: 8 }} onClick={() => setSelectedTicket(null)}>Đổi</Button>
+          </div>
+        )}
 
         <FormField label="Chọn gói hành lý" error={errors.maBangGia}>
           <select

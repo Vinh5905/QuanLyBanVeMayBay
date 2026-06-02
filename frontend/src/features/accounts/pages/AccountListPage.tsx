@@ -139,7 +139,7 @@ export function AccountListPage() {
         <FormField label="Vai trò">
           <Select
             value={filterVaiTro}
-            onChange={setFilterVaiTro}
+            onChange={e => setFilterVaiTro(e.target.value)}
             options={[
               { value: '', label: 'Tất cả' },
               { value: 'QuanTriVien', label: 'Quản trị viên' },
