@@ -41,6 +41,7 @@ export function TicketListPage() {
     setError(null)
     try {
       const res = await ticketApi.getTickets({
+        maVeCode: searchMaVeCode || undefined,
         trangThaiVe: filterTrangThai || undefined,
         page, size,
       })
@@ -54,7 +55,7 @@ export function TicketListPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, filterTrangThai])
+  }, [page, filterTrangThai, searchMaVeCode])
 
   useEffect(() => { fetchTickets() }, [fetchTickets])
 
@@ -141,7 +142,7 @@ export function TicketListPage() {
         <FormField label="Trạng thái">
           <Select
             value={filterTrangThai}
-            onChange={e => setFilterTrangThai(e.target.value)}
+            onChange={e => { setFilterTrangThai(e.target.value); setPage(0) }}
             options={[
               { value: '', label: 'Tất cả' },
               { value: 'HOP_LE', label: 'Hợp lệ' },
@@ -150,6 +151,7 @@ export function TicketListPage() {
             ]}
           />
         </FormField>
+        <Button variant="secondary" onClick={() => { setPage(0); fetchTickets() }} style={{ marginTop: 24 }}>Tìm kiếm</Button>
       </div>
 
       {loading && <LoadingState text="Đang tải danh sách vé..." />}
