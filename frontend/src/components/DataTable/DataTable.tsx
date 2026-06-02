@@ -1,20 +1,20 @@
-import React from 'react';
-import './DataTable.css';
+import React from 'react'
+import './DataTable.css'
 
 export interface Column<T> {
-  key: string;
-  header: string;
-  render?: (item: T) => React.ReactNode;
+  key: string
+  header: string
+  render?: (item: T) => React.ReactNode
 }
 
 export interface DataTableProps<T> {
-  columns: Column<T>[];
-  data: T[];
-  isLoading?: boolean;
-  emptyMessage?: string;
+  columns: Column<T>[]
+  data: T[]
+  isLoading?: boolean
+  emptyMessage?: string
 }
 
-export function DataTable<T extends { id?: string | number }>({
+export function DataTable<T extends Record<string, any>>({
   columns,
   data,
   isLoading,
@@ -45,10 +45,18 @@ export function DataTable<T extends { id?: string | number }>({
             </tr>
           ) : (
             data.map((item, index) => (
-              <tr key={item.id ?? index}>
+              <tr
+                key={
+                  item.id ??
+                  item.maTaiKhoan ??
+                  item.maChuyenBay ??
+                  item.maVe ??
+                  index
+                }
+              >
                 {columns.map((col) => (
                   <td key={col.key}>
-                    {col.render ? col.render(item) : (item as any)[col.key]}
+                    {col.render ? col.render(item) : item[col.key]}
                   </td>
                 ))}
               </tr>
@@ -57,5 +65,5 @@ export function DataTable<T extends { id?: string | number }>({
         </tbody>
       </table>
     </div>
-  );
+  )
 }

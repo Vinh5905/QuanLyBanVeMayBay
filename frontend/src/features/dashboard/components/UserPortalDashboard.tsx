@@ -8,7 +8,6 @@ import { ErrorState } from '../../../components/ErrorState/ErrorState'
 import { DataTable } from '../../../components/DataTable/DataTable'
 import { Button } from '../../../components/Button/Button'
 import { EmptyState } from '../../../components/EmptyState/EmptyState'
-import { Badge } from '../../../components/Badge/Badge'
 
 export function UserPortalDashboard() {
   const [bookings, setBookings] = useState<any[]>([])
