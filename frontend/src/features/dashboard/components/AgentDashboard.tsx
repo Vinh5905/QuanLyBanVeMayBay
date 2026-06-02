@@ -22,8 +22,8 @@ export function AgentDashboard() {
           ticketApi.getMyTickets().catch(() => ({ data: [] })),
           flightApi.searchFlights({}).catch(() => ({ data: [] })),
         ])
-        setTickets(tRes.data || [])
-        setFlights(fRes.data || [])
+        setTickets(tRes?.data || [])
+        setFlights(fRes?.data?.data || [])
       } catch (err) {
         setError(getErrorMessage(err))
       } finally {

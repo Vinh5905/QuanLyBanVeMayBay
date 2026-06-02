@@ -36,7 +36,7 @@ export function BookingPage() {
     setValidationError(null)
     try {
       const res = await flightApi.searchFlights(searchParams)
-      setFlights(res.data || [])
+      setFlights(res.data?.data || [])
     } catch (err) {
       setFlightError(getErrorMessage(err))
     } finally {
