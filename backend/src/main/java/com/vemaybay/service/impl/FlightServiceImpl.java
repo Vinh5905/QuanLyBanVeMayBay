@@ -140,6 +140,7 @@ public class FlightServiceImpl implements FlightService {
 
         if (request.getDanhSachHangVe() != null) {
             chiTietHangVeRepository.deleteAll(chiTietHangVeRepository.findByMaChuyenBay(id));
+            chiTietHangVeRepository.flush();
             for (CreateFlightRequest.HangVeInput hv : request.getDanhSachHangVe()) {
                 ChiTietHangVe ct = ChiTietHangVe.builder()
                         .maChuyenBay(id)
