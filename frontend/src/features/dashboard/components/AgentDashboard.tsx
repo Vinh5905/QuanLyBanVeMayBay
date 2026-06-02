@@ -19,11 +19,14 @@ export function AgentDashboard() {
       setLoading(true)
       try {
         const [tRes, fRes] = await Promise.all([
-          ticketApi.getMyTickets().catch(() => ({ data: [] })),
-          flightApi.searchFlights({}).catch(() => ({ data: [] })),
+          ticketApi.getMyTickets().catch(() => null),
+          flightApi
+            .searchFlights({})
+            .then((r) => r.data)
+            .catch(() => null),
         ])
         setTickets(tRes?.data || [])
-        setFlights(fRes?.data?.data || [])
+        setFlights(fRes?.data || [])
       } catch (err) {
         setError(getErrorMessage(err))
       } finally {
@@ -45,7 +48,11 @@ export function AgentDashboard() {
 
       <div className="stat-grid">
         <StatCard title="Vé đã bán" value={String(tickets.length)} icon="🎫" />
-        <StatCard title="Chuyến bay có sẵn" value={String(flights.length)} icon="" />
+        <StatCard
+          title="Chuyến bay có sẵn"
+          value={String(flights.length)}
+          icon=""
+        />
       </div>
 
       <div className="dashboard-chart-container">
@@ -58,7 +65,14 @@ export function AgentDashboard() {
               { key: 'maChuyenBayCode', header: 'Mã CB' },
               { key: 'sanBayDi', header: 'Sân bay đi' },
               { key: 'sanBayDen', header: 'Sân bay đến' },
-              { key: 'ngayGioBay', header: 'Giờ bay', render: (r: any) => r.ngayGioBay ? new Date(r.ngayGioBay).toLocaleString('vi-VN') : '' },
+              {
+                key: 'ngayGioBay',
+                header: 'Giờ bay',
+                render: (r: any) =>
+                  r.ngayGioBay
+                    ? new Date(r.ngayGioBay).toLocaleString('vi-VN')
+                    : '',
+              },
             ]}
             data={flights.slice(0, 10)}
           />

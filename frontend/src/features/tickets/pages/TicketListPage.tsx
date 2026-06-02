@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { ticketApi } from '../../../api/ticketApi'
 import { getErrorMessage } from '../../../api/adapter'
 import { Button } from '../../../components/Button/Button'
-import { Input, Select, FormField } from '../../../components/FormField/FormField'
+import {
+  Input,
+  Select,
+  FormField,
+} from '../../../components/FormField/FormField'
 import { DataTable } from '../../../components/DataTable/DataTable'
 import { LoadingState } from '../../../components/LoadingState/LoadingState'
 import { ErrorState } from '../../../components/ErrorState/ErrorState'
@@ -43,7 +47,8 @@ export function TicketListPage() {
       const res = await ticketApi.getTickets({
         maVeCode: searchMaVeCode || undefined,
         trangThaiVe: filterTrangThai || undefined,
-        page, size,
+        page,
+        size,
       })
       setTickets(res.data || [])
       if (res.pagination) {
@@ -57,7 +62,9 @@ export function TicketListPage() {
     }
   }, [page, filterTrangThai, searchMaVeCode])
 
-  useEffect(() => { fetchTickets() }, [fetchTickets])
+  useEffect(() => {
+    fetchTickets()
+  }, [fetchTickets])
 
   const handleCancel = async (id: number) => {
     if (!window.confirm('Xác nhận hủy vé này?')) return
@@ -73,27 +80,29 @@ export function TicketListPage() {
     { key: 'maVeCode', header: 'Mã vé' },
     {
       key: 'chuyenBay',
-      label: 'Chuyến bay',
-      render: (row: TicketResponse) => `${row.chuyenBay.sanBayDi} → ${row.chuyenBay.sanBayDen}`,
+      header: 'Chuyến bay',
+      render: (row: TicketResponse) =>
+        `${row.chuyenBay.sanBayDi} → ${row.chuyenBay.sanBayDen}`,
     },
     {
       key: 'khachHang',
-      label: 'Khách hàng',
+      header: 'Khách hàng',
       render: (row: TicketResponse) => row.khachHang?.hoTen || 'N/A',
     },
     {
       key: 'hangVe',
-      label: 'Hạng',
+      header: 'Hạng',
       render: (row: TicketResponse) => row.hangVe?.tenHangVe || '',
     },
     {
       key: 'giaVe',
-      label: 'Giá vé',
-      render: (row: TicketResponse) => `${(row.giaVe || 0).toLocaleString('vi-VN')}đ`,
+      header: 'Giá vé',
+      render: (row: TicketResponse) =>
+        `${(row.giaVe || 0).toLocaleString('vi-VN')}đ`,
     },
     {
       key: 'trangThaiVe',
-      label: 'Trạng thái',
+      header: 'Trạng thái',
       render: (row: TicketResponse) => (
         <Badge variant={(trangThaiColors[row.trangThaiVe] || 'neutral') as any}>
           {trangThaiLabels[row.trangThaiVe] || row.trangThaiVe}
@@ -102,20 +111,30 @@ export function TicketListPage() {
     },
     {
       key: 'createdAt',
-      label: 'Ngày bán',
+      header: 'Ngày bán',
       render: (row: TicketResponse) =>
-        row.createdAt ? new Date(row.createdAt).toLocaleDateString('vi-VN') : '',
+        row.createdAt
+          ? new Date(row.createdAt).toLocaleDateString('vi-VN')
+          : '',
     },
     {
       key: 'actions',
-      label: '',
+      header: '',
       render: (row: TicketResponse) => (
         <div className="action-buttons">
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/staff/tickets/${row.maVe}`)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/staff/tickets/${row.maVe}`)}
+          >
             Xem
           </Button>
           {row.trangThaiVe === 'HOP_LE' && (
-            <Button variant="ghost" size="sm" onClick={() => handleCancel(row.maVe)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleCancel(row.maVe)}
+            >
               Hủy
             </Button>
           )}
@@ -136,13 +155,16 @@ export function TicketListPage() {
           <Input
             placeholder="Tìm theo mã vé"
             value={searchMaVeCode}
-            onChange={e => setSearchMaVeCode(e.target.value)}
+            onChange={(e) => setSearchMaVeCode(e.target.value)}
           />
         </FormField>
         <FormField label="Trạng thái">
           <Select
             value={filterTrangThai}
-            onChange={e => { setFilterTrangThai(e.target.value); setPage(0) }}
+            onChange={(e) => {
+              setFilterTrangThai(e.target.value)
+              setPage(0)
+            }}
             options={[
               { value: '', label: 'Tất cả' },
               { value: 'HOP_LE', label: 'Hợp lệ' },
@@ -152,20 +174,34 @@ export function TicketListPage() {
           />
         </FormField>
         <div style={{ marginBottom: 'var(--space-4)' }}>
-          <Button variant="secondary" onClick={() => { setPage(0); fetchTickets() }}>Tìm kiếm</Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setPage(0)
+              fetchTickets()
+            }}
+          >
+            Tìm kiếm
+          </Button>
         </div>
       </div>
 
       {loading && <LoadingState text="Đang tải danh sách vé..." />}
       {error && <ErrorState message={error} onRetry={fetchTickets} />}
-      {!loading && !error && tickets.length === 0 && <EmptyState title="Không có vé" description="Chưa có vé nào được bán" />}
+      {!loading && !error && tickets.length === 0 && (
+        <EmptyState title="Không có vé" description="Chưa có vé nào được bán" />
+      )}
       {!loading && !error && tickets.length > 0 && (
         <>
           <DataTable columns={columns} data={tickets} />
           <div className="table-footer">
             <span className="total-count">Tổng: {totalElements} vé</span>
             {totalPages > 1 && (
-              <Pagination currentPage={page + 1} totalPages={totalPages} onPageChange={p => setPage(p - 1)} />
+              <Pagination
+                currentPage={page + 1}
+                totalPages={totalPages}
+                onPageChange={(p) => setPage(p - 1)}
+              />
             )}
           </div>
         </>

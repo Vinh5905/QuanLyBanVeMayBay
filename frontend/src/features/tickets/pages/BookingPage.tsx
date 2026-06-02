@@ -1,10 +1,8 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { bookingApi } from '../../../api/bookingApi'
 import { flightApi } from '../../../api/flightApi'
 import { getErrorMessage } from '../../../api/adapter'
 import { Button } from '../../../components/Button/Button'
-import { Input, FormField } from '../../../components/FormField/FormField'
 import { AirportSelect } from '../../flights/components/AirportSelect'
 import { DataTable } from '../../../components/DataTable/DataTable'
 import { LoadingState } from '../../../components/LoadingState/LoadingState'
@@ -16,7 +14,6 @@ import type { FlightResponse } from '../../../types/flight'
 import type { BookingResponse } from '../../../types/ticket'
 
 export function BookingPage() {
-  const navigate = useNavigate()
   const [step, setStep] = useState<'search' | 'bookings'>('search')
   const [flights, setFlights] = useState<FlightResponse[]>([])
   const [flightLoading, setFlightLoading] = useState(false)
