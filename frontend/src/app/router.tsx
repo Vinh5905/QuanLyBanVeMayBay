@@ -31,7 +31,7 @@ export const router = createBrowserRouter([
   { path: "/admin", element: <ProtectedLayout><DashboardPage /></ProtectedLayout> },
   { path: "/staff", element: <ProtectedLayout><DashboardPage /></ProtectedLayout> },
   { path: "/agent", element: <ProtectedLayout><DashboardPage /></ProtectedLayout> },
-  { path: "/flights/search", element: <FlightSearchPage /> },
+  { path: "/flights/search", element: <ProtectedLayout><FlightSearchPage /></ProtectedLayout> },
   { path: "/admin/flights", element: <ProtectedLayout><FlightListPage /></ProtectedLayout> },
   { path: "/admin/flights/new", element: <ProtectedLayout><FlightFormPage /></ProtectedLayout> },
   { path: "/admin/flights/:id", element: <ProtectedLayout><FlightDetailPage /></ProtectedLayout> },
