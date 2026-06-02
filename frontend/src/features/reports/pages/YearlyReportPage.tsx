@@ -7,6 +7,7 @@ import { DataTable } from '../../../components/DataTable/DataTable'
 import { LoadingState } from '../../../components/LoadingState/LoadingState'
 import { ErrorState } from '../../../components/ErrorState/ErrorState'
 import { EmptyState } from '../../../components/EmptyState/EmptyState'
+import { YearlyRevenueChart } from '../components/YearlyRevenueChart'
 import type { YearlyReportRow } from '../../../types/report'
 
 export function YearlyReportPage() {
@@ -31,12 +32,29 @@ export function YearlyReportPage() {
 
   useEffect(() => { fetchReport() }, [fetchReport])
 
+  const handleExport = async () => {
+    try {
+      const blob = await reportApi.exportExcel({ year: Number(year) })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `bao-cao-nam-${year}.xlsx`
+      a.click()
+      window.URL.revokeObjectURL(url)
+    } catch {
+      alert('Không thể xuất báo cáo')
+    }
+  }
+
   const totalRevenue = rows.reduce((s, r) => s + (r.doanhThu || 0), 0)
   const totalTickets = rows.reduce((s, r) => s + (r.soVe || 0), 0)
 
   return (
     <div className="report-page">
-      <h1>Báo cáo doanh thu năm</h1>
+      <div className="page-header">
+        <h1>Báo cáo doanh thu năm</h1>
+        <Button variant="secondary" onClick={handleExport}>Xuất Excel</Button>
+      </div>
 
       <div className="filter-row">
         <FormField label="Năm">
@@ -55,6 +73,8 @@ export function YearlyReportPage() {
           <div className="summary-value">{totalTickets}</div>
         </div>
       </div>
+
+      {rows.length > 0 && <YearlyRevenueChart data={rows} />}
 
       {loading && <LoadingState text="Đang tải báo cáo..." />}
       {error && <ErrorState message={error} onRetry={fetchReport} />}

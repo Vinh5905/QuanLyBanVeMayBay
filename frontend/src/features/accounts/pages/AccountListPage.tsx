@@ -168,13 +168,13 @@ export function AccountListPage() {
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Tạo tài khoản mới">
         <FormField label="Tên đăng nhập" error={createErrors.tenDangNhap}>
-          <Input placeholder="Tên đăng nhập" value={createForm.tenDangNhap} onChange={v => setCreateForm(p => ({ ...p, tenDangNhap: v }))} />
+          <Input placeholder="Tên đăng nhập" value={createForm.tenDangNhap} onChange={e => setCreateForm(p => ({ ...p, tenDangNhap: e.target.value }))} />
         </FormField>
         <FormField label="Mật khẩu" error={createErrors.matKhau}>
-          <Input type="password" placeholder="Mật khẩu (ít nhất 6 ký tự)" value={createForm.matKhau} onChange={v => setCreateForm(p => ({ ...p, matKhau: v }))} />
+          <Input type="password" placeholder="Mật khẩu (ít nhất 6 ký tự)" value={createForm.matKhau} onChange={e => setCreateForm(p => ({ ...p, matKhau: e.target.value }))} />
         </FormField>
         <FormField label="Email" error={createErrors.email}>
-          <Input type="email" placeholder="Email" value={createForm.email} onChange={v => setCreateForm(p => ({ ...p, email: v }))} />
+          <Input type="email" placeholder="Email" value={createForm.email} onChange={e => setCreateForm(p => ({ ...p, email: e.target.value }))} />
         </FormField>
         <FormField label="Vai trò" error={createErrors.vaiTro}>
           <select className="form-select" value={createForm.vaiTro} onChange={e => setCreateForm(p => ({ ...p, vaiTro: e.target.value }))}>

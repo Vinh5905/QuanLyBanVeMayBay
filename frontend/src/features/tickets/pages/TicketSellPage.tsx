@@ -123,20 +123,20 @@ export function TicketSellPage() {
             <Select
               label="Sân bay đi"
               value={searchParams.sanBayDi}
-              onChange={v => setSearchParams(p => ({ ...p, sanBayDi: v }))}
+              onChange={e => setSearchParams(p => ({ ...p, sanBayDi: e.target.value }))}
               options={[{ value: '', label: 'Tất cả' }]}
             />
             <Select
               label="Sân bay đến"
               value={searchParams.sanBayDen}
-              onChange={v => setSearchParams(p => ({ ...p, sanBayDen: v }))}
+              onChange={e => setSearchParams(p => ({ ...p, sanBayDen: e.target.value }))}
               options={[{ value: '', label: 'Tất cả' }]}
             />
             <Input
               label="Ngày bay"
               type="date"
               value={searchParams.ngayBay}
-              onChange={v => setSearchParams(p => ({ ...p, ngayBay: v }))}
+              onChange={e => setSearchParams(p => ({ ...p, ngayBay: e.target.value }))}
             />
             <Button variant="secondary" onClick={searchFlights} style={{ marginTop: 24 }}>Tìm kiếm</Button>
           </div>
@@ -187,14 +187,14 @@ export function TicketSellPage() {
             <Input
               placeholder="Nhập tên khách hàng"
               value={form.khachHangName}
-              onChange={v => setForm(p => ({ ...p, khachHangName: v }))}
+              onChange={e => setForm(p => ({ ...p, khachHangName: e.target.value }))}
             />
           </FormField>
           <FormField label="CCCD" error={errors.khachHangSearch}>
             <Input
               placeholder="Số CCCD"
               value={form.khachHangCccd}
-              onChange={v => setForm(p => ({ ...p, khachHangCccd: v }))}
+              onChange={e => setForm(p => ({ ...p, khachHangCccd: e.target.value }))}
             />
           </FormField>
           <FormField label="Email">
@@ -202,14 +202,14 @@ export function TicketSellPage() {
               type="email"
               placeholder="Email (không bắt buộc)"
               value={form.khachHangEmail}
-              onChange={v => setForm(p => ({ ...p, khachHangEmail: v }))}
+              onChange={e => setForm(p => ({ ...p, khachHangEmail: e.target.value }))}
             />
           </FormField>
           <FormField label="Số điện thoại">
             <Input
               placeholder="Số điện thoại"
               value={form.khachHangPhone}
-              onChange={v => setForm(p => ({ ...p, khachHangPhone: v }))}
+              onChange={e => setForm(p => ({ ...p, khachHangPhone: e.target.value }))}
             />
           </FormField>
         </div>

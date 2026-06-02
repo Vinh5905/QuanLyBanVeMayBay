@@ -94,7 +94,7 @@ export function BaggagePage() {
 
       <div className="baggage-form">
         <FormField label="Mã vé" error={errors.maVe}>
-          <Input placeholder="Nhập mã vé" value={maVe} onChange={v => setMaVe(v)} />
+          <Input placeholder="Nhập mã vé" value={maVe} onChange={e => setMaVe(e.target.value)} />
         </FormField>
 
         <FormField label="Chọn gói hành lý" error={errors.maBangGia}>
@@ -123,11 +123,11 @@ export function BaggagePage() {
                   type="number"
                   placeholder="Kg"
                   value={k.trongLuong}
-                  onChange={v => updateKien(i, 'trongLuong', v)}
+                  onChange={e => updateKien(i, 'trongLuong', e.target.value)}
                 />
               </FormField>
               <FormField label="Ghi chú">
-                <Input placeholder="Ghi chú (không bắt buộc)" value={k.ghiChu} onChange={v => updateKien(i, 'ghiChu', v)} />
+                <Input placeholder="Ghi chú (không bắt buộc)" value={k.ghiChu} onChange={e => updateKien(i, 'ghiChu', e.target.value)} />
               </FormField>
               <Button variant="danger" size="sm" onClick={() => removeKien(i)} style={{ marginTop: 24 }}>Xóa</Button>
             </div>

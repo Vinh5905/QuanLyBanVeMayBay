@@ -6,6 +6,7 @@ import { StatCard } from './StatCard'
 import { LoadingState } from '../../../components/LoadingState/LoadingState'
 import { ErrorState } from '../../../components/ErrorState/ErrorState'
 import { DataTable } from '../../../components/DataTable/DataTable'
+import { Button } from '../../../components/Button/Button'
 import { EmptyState } from '../../../components/EmptyState/EmptyState'
 import { Badge } from '../../../components/Badge/Badge'
 
@@ -55,7 +56,7 @@ export function UserPortalDashboard() {
       <div className="dashboard-chart-container">
         <h3>Đặt chỗ đang chờ thanh toán</h3>
         {upcomingBookings.length === 0 ? (
-          <EmptyState title="Không có đặt chỗ" description="Bạn chưa có đặt chỗ nào đang chờ" action={{ label: 'Đặt vé ngay', onClick: () => window.location.href = '/bookings' }} />
+          <EmptyState title="Không có đặt chỗ" description="Bạn chưa có đặt chỗ nào đang chờ" action={<Button onClick={() => window.location.href = '/bookings'}>Đặt vé ngay</Button>} />
         ) : (
           <DataTable
             columns={[

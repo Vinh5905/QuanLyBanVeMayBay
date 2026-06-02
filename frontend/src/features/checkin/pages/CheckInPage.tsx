@@ -48,10 +48,10 @@ export function CheckInPage() {
 
       <div className="checkin-form">
         <FormField label="Mã vé" error={errors.maVe}>
-          <Input placeholder="Nhập mã vé" value={maVe} onChange={setMaVe} />
+          <Input placeholder="Nhập mã vé" value={maVe} onChange={e => setMaVe(e.target.value)} />
         </FormField>
         <FormField label="Số ghế" error={errors.soGhe}>
-          <Input placeholder="Ví dụ: A12" value={soGhe} onChange={setSoGhe} />
+          <Input placeholder="Ví dụ: A12" value={soGhe} onChange={e => setSoGhe(e.target.value)} />
         </FormField>
         <Button onClick={handleCheckIn} isLoading={loading} fullWidth>Xác nhận Check-in</Button>
       </div>

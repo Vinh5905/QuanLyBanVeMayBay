@@ -76,7 +76,7 @@ export function ConfigPage() {
               <FormField label="">
                 <Input
                   value={editValues[c.tenThamSo] ?? ''}
-                  onChange={v => setEditValues(p => ({ ...p, [c.tenThamSo]: v }))}
+                  onChange={e => setEditValues(p => ({ ...p, [c.tenThamSo]: e.target.value }))}
                 />
               </FormField>
               <Button size="sm" onClick={() => handleSave(c.tenThamSo)}>Lưu</Button>

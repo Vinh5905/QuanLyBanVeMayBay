@@ -4,7 +4,8 @@ import { bookingApi } from '../../../api/bookingApi'
 import { flightApi } from '../../../api/flightApi'
 import { getErrorMessage } from '../../../api/adapter'
 import { Button } from '../../../components/Button/Button'
-import { Input, Select, FormField } from '../../../components/FormField/FormField'
+import { Input, FormField } from '../../../components/FormField/FormField'
+import { AirportSelect } from '../../flights/components/AirportSelect'
 import { DataTable } from '../../../components/DataTable/DataTable'
 import { LoadingState } from '../../../components/LoadingState/LoadingState'
 import { ErrorState } from '../../../components/ErrorState/ErrorState'
@@ -104,17 +105,26 @@ export function BookingPage() {
 
       {step === 'search' && (
         <>
-          <div className="filter-row">
-            <FormField label="Sân bay đi">
-              <Input placeholder="Mã sân bay" value={searchParams.sanBayDi} onChange={v => setSearchParams(p => ({ ...p, sanBayDi: v }))} />
-            </FormField>
-            <FormField label="Sân bay đến">
-              <Input placeholder="Mã sân bay" value={searchParams.sanBayDen} onChange={v => setSearchParams(p => ({ ...p, sanBayDen: v }))} />
-            </FormField>
-            <FormField label="Ngày bay">
-              <Input type="date" value={searchParams.ngayBay} onChange={v => setSearchParams(p => ({ ...p, ngayBay: v }))} />
-            </FormField>
-            <Button variant="secondary" onClick={searchFlights} style={{ marginTop: 24 }}>Tìm</Button>
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end',
+            padding: '16px 20px', background: '#fff', borderRadius: 12,
+            border: '1px solid #E2E8F0', marginBottom: 16,
+          }}>
+            <div style={{ flex: '1 1 200px', minWidth: 160 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#64748B', marginBottom: 4 }}>Sân bay đi</label>
+              <AirportSelect value={searchParams.sanBayDi} onChange={v => setSearchParams(p => ({ ...p, sanBayDi: v }))} placeholder="Chọn sân bay đi" />
+            </div>
+            <div style={{ flex: '1 1 200px', minWidth: 160 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#64748B', marginBottom: 4 }}>Sân bay đến</label>
+              <AirportSelect value={searchParams.sanBayDen} onChange={v => setSearchParams(p => ({ ...p, sanBayDen: v }))} placeholder="Chọn sân bay đến" />
+            </div>
+            <div style={{ flex: '0 1 180px', minWidth: 140 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#64748B', marginBottom: 4 }}>Ngày bay</label>
+              <input className="ds-input" type="date" value={searchParams.ngayBay} onChange={e => setSearchParams(p => ({ ...p, ngayBay: e.target.value }))} />
+            </div>
+            <div style={{ display: 'flex', gap: 8, paddingBottom: 1 }}>
+              <Button variant="primary" onClick={searchFlights} isLoading={flightLoading}>Tìm kiếm</Button>
+            </div>
           </div>
 
           {validationError && <div className="field-error">{validationError}</div>}
@@ -165,7 +175,7 @@ export function BookingPage() {
           {bookingsLoading && <LoadingState text="Đang tải..." />}
           {bookingsError && <ErrorState message={bookingsError} onRetry={loadBookings} />}
           {!bookingsLoading && !bookingsError && bookings.length === 0 && (
-            <EmptyState title="Chưa có đặt chỗ" description="Bạn chưa có phiếu đặt chỗ nào" action={{ label: 'Đặt vé ngay', onClick: () => setStep('search') }} />
+            <EmptyState title="Chưa có đặt chỗ" description="Bạn chưa có phiếu đặt chỗ nào" action={<Button onClick={() => setStep('search')}>Đặt vé ngay</Button>} />
           )}
           {!bookingsLoading && !bookingsError && bookings.length > 0 && (
             <DataTable
