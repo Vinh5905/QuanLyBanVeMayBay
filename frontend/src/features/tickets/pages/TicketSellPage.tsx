@@ -4,7 +4,8 @@ import { flightApi } from '../../../api/flightApi'
 import { ticketApi } from '../../../api/ticketApi'
 import { getErrorMessage } from '../../../api/adapter'
 import { Button } from '../../../components/Button/Button'
-import { Input, Select, FormField } from '../../../components/FormField/FormField'
+import { Input, FormField } from '../../../components/FormField/FormField'
+import { AirportSelect } from '../../flights/components/AirportSelect'
 import { LoadingState } from '../../../components/LoadingState/LoadingState'
 import { ErrorState } from '../../../components/ErrorState/ErrorState'
 import { toast } from '../../../components/Toast/Toast'
@@ -119,26 +120,26 @@ export function TicketSellPage() {
       {step === 0 && (
         <div className="step-content">
           <h2>Bước 1: Chọn chuyến bay</h2>
-          <div className="filter-row">
-            <Select
-              label="Sân bay đi"
-              value={searchParams.sanBayDi}
-              onChange={e => setSearchParams(p => ({ ...p, sanBayDi: e.target.value }))}
-              options={[{ value: '', label: 'Tất cả' }]}
-            />
-            <Select
-              label="Sân bay đến"
-              value={searchParams.sanBayDen}
-              onChange={e => setSearchParams(p => ({ ...p, sanBayDen: e.target.value }))}
-              options={[{ value: '', label: 'Tất cả' }]}
-            />
-            <Input
-              label="Ngày bay"
-              type="date"
-              value={searchParams.ngayBay}
-              onChange={e => setSearchParams(p => ({ ...p, ngayBay: e.target.value }))}
-            />
-            <Button variant="secondary" onClick={searchFlights} style={{ marginTop: 24 }}>Tìm kiếm</Button>
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end',
+            padding: '16px 20px', background: '#fff', borderRadius: 12,
+            border: '1px solid #E2E8F0', marginBottom: 16,
+          }}>
+            <div style={{ flex: '1 1 200px', minWidth: 160 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#64748B', marginBottom: 4 }}>Sân bay đi</label>
+              <AirportSelect value={searchParams.sanBayDi} onChange={v => setSearchParams(p => ({ ...p, sanBayDi: v }))} placeholder="Chọn sân bay đi" />
+            </div>
+            <div style={{ flex: '1 1 200px', minWidth: 160 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#64748B', marginBottom: 4 }}>Sân bay đến</label>
+              <AirportSelect value={searchParams.sanBayDen} onChange={v => setSearchParams(p => ({ ...p, sanBayDen: v }))} placeholder="Chọn sân bay đến" />
+            </div>
+            <div style={{ flex: '0 1 180px', minWidth: 140 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#64748B', marginBottom: 4 }}>Ngày bay</label>
+              <input className="ds-input" type="date" value={searchParams.ngayBay} onChange={e => setSearchParams(p => ({ ...p, ngayBay: e.target.value }))} />
+            </div>
+            <div style={{ display: 'flex', gap: 8, paddingBottom: 1 }}>
+              <Button variant="primary" onClick={searchFlights} isLoading={flightLoading}>Tìm kiếm</Button>
+            </div>
           </div>
 
           {flightLoading && <LoadingState text="Đang tải chuyến bay..." />}

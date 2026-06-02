@@ -135,13 +135,13 @@ export function TicketListPage() {
           <Input
             placeholder="Tìm theo mã vé"
             value={searchMaVeCode}
-            onChange={setSearchMaVeCode}
+            onChange={e => setSearchMaVeCode(e.target.value)}
           />
         </FormField>
         <FormField label="Trạng thái">
           <Select
             value={filterTrangThai}
-            onChange={setFilterTrangThai}
+            onChange={e => setFilterTrangThai(e.target.value)}
             options={[
               { value: '', label: 'Tất cả' },
               { value: 'HOP_LE', label: 'Hợp lệ' },
