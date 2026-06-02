@@ -135,21 +135,24 @@ export function useFlightForm(flightId?: number) {
     setIsSubmitting(true);
     setServerError(null);
     try {
-      const payload = {
-        maChuyenBayCode: formState.maChuyenBayCode,
-        sanBayDi: formState.sanBayDi,
-        sanBayDen: formState.sanBayDen,
-        ngayGioBay: formState.ngayGioBay + ':00',
-        thoiGianBay: Number(formState.thoiGianBay),
-        giaCoBan: Number(formState.giaCoBan),
-        danhSachHangVe: formState.danhSachHangVe,
-        danhSachTrungGian: formState.danhSachTrungGian.length > 0 ? formState.danhSachTrungGian : undefined,
-      };
-
       if (isEditMode && flightId) {
-        await flightApi.updateFlight(flightId, payload);
+        await flightApi.updateFlight(flightId, {
+          ngayGioBay: formState.ngayGioBay + ':00',
+          thoiGianBay: Number(formState.thoiGianBay),
+          giaCoBan: Number(formState.giaCoBan),
+          danhSachTrungGian: formState.danhSachTrungGian.length > 0 ? formState.danhSachTrungGian : undefined,
+        });
       } else {
-        await flightApi.createFlight(payload);
+        await flightApi.createFlight({
+          maChuyenBayCode: formState.maChuyenBayCode,
+          sanBayDi: formState.sanBayDi,
+          sanBayDen: formState.sanBayDen,
+          ngayGioBay: formState.ngayGioBay + ':00',
+          thoiGianBay: Number(formState.thoiGianBay),
+          giaCoBan: Number(formState.giaCoBan),
+          danhSachHangVe: formState.danhSachHangVe,
+          danhSachTrungGian: formState.danhSachTrungGian.length > 0 ? formState.danhSachTrungGian : undefined,
+        });
       }
       return true;
     } catch (err: any) {
