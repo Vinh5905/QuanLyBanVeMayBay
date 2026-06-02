@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { AuthUser, Role } from '../../../types/auth';
 
 const ROLE_MAP: Record<string, Role> = {
+  Admin: 'Admin',
   QuanTriVien: 'Admin',
   NhanVien: 'Staff',
   DaiLy: 'Agent',

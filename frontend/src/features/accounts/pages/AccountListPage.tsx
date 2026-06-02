@@ -14,6 +14,7 @@ import { toast } from '../../../components/Toast/Toast'
 import type { AccountResponse, CreateAccountRequest } from '../../../types/account'
 
 const roleColors: Record<string, string> = {
+  Admin: 'error',
   QuanTriVien: 'error',
   NhanVien: 'primary',
   DaiLy: 'warning',
@@ -142,7 +143,7 @@ export function AccountListPage() {
             onChange={e => setFilterVaiTro(e.target.value)}
             options={[
               { value: '', label: 'Tất cả' },
-              { value: 'QuanTriVien', label: 'Quản trị viên' },
+              { value: 'Admin', label: 'Quản trị viên' },
               { value: 'NhanVien', label: 'Nhân viên' },
               { value: 'DaiLy', label: 'Đại lý' },
               { value: 'KhachHang', label: 'Khách hàng' },

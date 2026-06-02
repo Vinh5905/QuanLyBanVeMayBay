@@ -40,6 +40,7 @@ export const LoginPage: React.FC = () => {
       const { accessToken, refreshToken, userInfo } = response.data.data;
 
       const roleMap: Record<string, Role> = {
+        Admin: 'Admin',
         QuanTriVien: 'Admin',
         NhanVien: 'Staff',
         DaiLy: 'Agent',
