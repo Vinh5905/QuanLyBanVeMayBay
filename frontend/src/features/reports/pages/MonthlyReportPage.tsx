@@ -64,7 +64,9 @@ export function MonthlyReportPage() {
         <FormField label="Tháng">
           <input className="form-input" type="number" min={1} max={12} value={month} onChange={e => setMonth(e.target.value)} />
         </FormField>
-        <Button variant="secondary" onClick={fetchReport} style={{ marginTop: 24 }}>Xem báo cáo</Button>
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <Button variant="secondary" onClick={fetchReport}>Xem báo cáo</Button>
+        </div>
       </div>
 
       <div className="summary-cards">

@@ -144,14 +144,16 @@ export function TicketListPage() {
             value={filterTrangThai}
             onChange={e => { setFilterTrangThai(e.target.value); setPage(0) }}
             options={[
-              { value: '', header: 'Tất cả' },
-              { value: 'HOP_LE', header: 'Hợp lệ' },
-              { value: 'DA_HUY', header: 'Đã hủy' },
-              { value: 'DA_DOI', header: 'Đã đổi' },
+              { value: '', label: 'Tất cả' },
+              { value: 'HOP_LE', label: 'Hợp lệ' },
+              { value: 'DA_HUY', label: 'Đã hủy' },
+              { value: 'DA_DOI', label: 'Đã đổi' },
             ]}
           />
         </FormField>
-        <Button variant="secondary" onClick={() => { setPage(0); fetchTickets() }}>Tìm kiếm</Button>
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <Button variant="secondary" onClick={() => { setPage(0); fetchTickets() }}>Tìm kiếm</Button>
+        </div>
       </div>
 
       {loading && <LoadingState text="Đang tải danh sách vé..." />}

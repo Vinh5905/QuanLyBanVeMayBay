@@ -141,11 +141,11 @@ export function AccountListPage() {
             value={filterVaiTro}
             onChange={setFilterVaiTro}
             options={[
-              { value: '', header: 'Tất cả' },
-              { value: 'QuanTriVien', header: 'Quản trị viên' },
-              { value: 'NhanVien', header: 'Nhân viên' },
-              { value: 'DaiLy', header: 'Đại lý' },
-              { value: 'KhachHang', header: 'Khách hàng' },
+              { value: '', label: 'Tất cả' },
+              { value: 'QuanTriVien', label: 'Quản trị viên' },
+              { value: 'NhanVien', label: 'Nhân viên' },
+              { value: 'DaiLy', label: 'Đại lý' },
+              { value: 'KhachHang', label: 'Khách hàng' },
             ]}
           />
         </FormField>

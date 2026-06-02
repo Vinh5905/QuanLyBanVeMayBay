@@ -60,7 +60,9 @@ export function YearlyReportPage() {
         <FormField label="Năm">
           <input className="form-input" type="number" value={year} onChange={e => setYear(e.target.value)} />
         </FormField>
-        <Button variant="secondary" onClick={fetchReport} style={{ marginTop: 24 }}>Xem báo cáo</Button>
+        <div style={{ marginBottom: 'var(--space-4)' }}>
+          <Button variant="secondary" onClick={fetchReport}>Xem báo cáo</Button>
+        </div>
       </div>
 
       <div className="summary-cards">
