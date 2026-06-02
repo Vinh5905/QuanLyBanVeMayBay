@@ -39,11 +39,17 @@ export const LoginPage: React.FC = () => {
       const response = await apiClient.post<AuthResponse>('/auth/login', { tenDangNhap: username, matKhau: password });
       const { accessToken, refreshToken, userInfo } = response.data.data;
 
+      const roleMap: Record<string, Role> = {
+        QuanTriVien: 'Admin',
+        NhanVien: 'Staff',
+        DaiLy: 'Agent',
+        KhachHang: 'User',
+      }
       const mappedUser = {
         id: String(userInfo.maTaiKhoan),
         username: userInfo.tenDangNhap,
         email: userInfo.email,
-        role: userInfo.vaiTro === 'KhachHang' ? 'User' : userInfo.vaiTro as Role,
+        role: roleMap[userInfo.vaiTro] || 'User',
         fullName: userInfo.tenDangNhap,
       };
 
