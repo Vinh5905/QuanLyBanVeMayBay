@@ -156,9 +156,9 @@ export function TicketSellPage() {
                   className={`flight-card-select ${isSelected ? 'selected' : ''}`}
                   onClick={() => setForm(p => ({ ...p, maChuyenBay: f.maChuyenBay }))}
                 >
-                  <div className="flight-route">
-                    <strong>{f.sanBayDi}</strong> → <strong>{f.sanBayDen}</strong>
-                  </div>
+                    <div className="flight-route">
+                      <strong>{f.sanBayDi.tenSanBay}</strong> → <strong>{f.sanBayDen.tenSanBay}</strong>
+                    </div>
                   <div className="flight-time">
                     {f.ngayGioBay ? new Date(f.ngayGioBay).toLocaleString('vi-VN') : ''} | {f.thoiGianBay} phút
                   </div>
@@ -221,7 +221,7 @@ export function TicketSellPage() {
           <h2>Bước 3: Xác nhận</h2>
           <div className="confirm-card">
             <h3>Thông tin chuyến bay</h3>
-            <p>Tuyến: {selectedFlight?.sanBayDi} → {selectedFlight?.sanBayDen}</p>
+            <p>Tuyến: {selectedFlight?.sanBayDi.tenSanBay} → {selectedFlight?.sanBayDen.tenSanBay}</p>
             <p>Giờ bay: {selectedFlight?.ngayGioBay ? new Date(selectedFlight.ngayGioBay).toLocaleString('vi-VN') : ''}</p>
             <p>Thời gian bay: {selectedFlight?.thoiGianBay} phút</p>
             <h3>Thông tin khách hàng</h3>

@@ -138,9 +138,9 @@ export function BookingPage() {
                 className={`flight-card-select ${selectedFlightId === f.maChuyenBay ? 'selected' : ''}`}
                 onClick={() => { setSelectedFlightId(f.maChuyenBay); setSelectedHangVe(null) }}
               >
-                <div className="flight-route">
-                  <strong>{f.sanBayDi}</strong> → <strong>{f.sanBayDen}</strong>
-                </div>
+                    <div className="flight-route">
+                      <strong>{f.sanBayDi.tenSanBay}</strong> → <strong>{f.sanBayDen.tenSanBay}</strong>
+                    </div>
                 <div className="flight-time">
                   {f.ngayGioBay ? new Date(f.ngayGioBay).toLocaleString('vi-VN') : ''} | {f.thoiGianBay} phút
                 </div>
