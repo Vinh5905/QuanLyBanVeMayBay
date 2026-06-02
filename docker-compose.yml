@@ -56,7 +56,7 @@ services:
       DB_USER: "${APP_DB_USER:-vemaybay_app}"
       DB_PASSWORD: "${APP_DB_PASSWORD:?APP_DB_PASSWORD must be set}"
       JWT_SECRET: "${JWT_SECRET:-change-this-in-production-min-256-bits-long-secret-key!!}"
-      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}"
     depends_on:
       sqlserver:
         condition: service_healthy
