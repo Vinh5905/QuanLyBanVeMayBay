@@ -8,6 +8,9 @@ export const paymentsApi = {
     hinhThucThanhToan: PaymentMethod
     soTienThanhToan: number
     maGiaoDich?: string
+    loaiThanhToan?: 'TICKET' | 'BAGGAGE' | 'UPGRADE' | 'SERVICE'
+    maGoiHanhLyList?: number[]
+    maHangVeMoi?: number
   }): Promise<Payment> => {
     const res = await apiClient.post('/payments', data)
     return unwrap<Payment>(res)

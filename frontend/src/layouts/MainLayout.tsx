@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { Menu, Search, LogOut, User, Bell } from 'lucide-react'
+import { Menu, LogOut, User, Bell } from 'lucide-react'
 import Sidebar from './Sidebar'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -8,15 +8,6 @@ export default function MainLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [search, setSearch] = useState('')
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (search.trim()) {
-      navigate(`/tickets?q=${encodeURIComponent(search.trim())}`)
-      setSearch('')
-    }
-  }
 
   const handleLogout = async () => {
     await logout()
@@ -50,20 +41,6 @@ export default function MainLayout() {
           >
             <Menu size={20} />
           </button>
-
-          {/* Global search */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-md">
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm số vé, tên khách, CCCD, chuyến bay..."
-                className="input pl-9 py-1.5 text-sm"
-              />
-            </div>
-          </form>
 
           <div className="flex items-center gap-2 ml-auto">
             <button className="p-2 rounded hover:bg-gray-100 relative">

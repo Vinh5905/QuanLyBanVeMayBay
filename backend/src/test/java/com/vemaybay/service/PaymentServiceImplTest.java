@@ -2,7 +2,12 @@ package com.vemaybay.service;
 
 import com.vemaybay.dto.payment.PaymentRequest;
 import com.vemaybay.exception.BusinessException;
+import com.vemaybay.repository.ChiTietHangVeRepository;
+import com.vemaybay.repository.GoiHanhLyRepository;
+import com.vemaybay.repository.TaiKhoanRepository;
 import com.vemaybay.repository.ThanhToanRepository;
+import com.vemaybay.repository.ThamSoRepository;
+import com.vemaybay.repository.VeRepository;
 import com.vemaybay.service.impl.PaymentServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,6 +27,11 @@ import static org.assertj.core.api.Assertions.*;
 class PaymentServiceImplTest {
 
     @Mock ThanhToanRepository thanhToanRepository;
+    @Mock VeRepository veRepository;
+    @Mock GoiHanhLyRepository goiHanhLyRepository;
+    @Mock ChiTietHangVeRepository chiTietHangVeRepository;
+    @Mock ThamSoRepository thamSoRepository;
+    @Mock TaiKhoanRepository taiKhoanRepository;
     @Mock JdbcTemplate jdbcTemplate;
 
     @InjectMocks PaymentServiceImpl paymentService;

@@ -4,8 +4,10 @@ import com.vemaybay.dto.checkin.BoardingPassResponse;
 import com.vemaybay.dto.checkin.CheckInRequest;
 import com.vemaybay.entity.*;
 import com.vemaybay.exception.BusinessException;
+import com.vemaybay.exception.ForbiddenException;
 import com.vemaybay.exception.ResourceNotFoundException;
 import com.vemaybay.repository.CheckInRepository;
+import com.vemaybay.repository.TaiKhoanRepository;
 import com.vemaybay.repository.VeRepository;
 import com.vemaybay.security.SecurityUtils;
 import com.vemaybay.service.CheckInService;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +28,7 @@ public class CheckInServiceImpl implements CheckInService {
 
     private final CheckInRepository checkInRepository;
     private final VeRepository veRepository;
+    private final TaiKhoanRepository taiKhoanRepository;
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -33,13 +37,10 @@ public class CheckInServiceImpl implements CheckInService {
         Ve ve = veRepository.findByMaVeAndIsDeletedFalse(request.getMaVe())
                 .orElseThrow(() -> new ResourceNotFoundException("Vé", "id", request.getMaVe()));
 
-        if (SecurityUtils.isUser()) {
-            Integer maKhachHang = SecurityUtils.getCurrentUserId();
-            // For users, verify the ticket belongs to them via principal chain
-            // (simplified: check is already in SecurityUtils context)
-        }
+        ensureCustomerOwnsTicket(ve, "check-in");
 
-        SpResult result = callSpCheckIn(request.getMaVe(), request.getSoGhe());
+        String soGhe = resolveSeat(request.getSoGhe());
+        SpResult result = callSpCheckIn(request.getMaVe(), soGhe);
         if (!result.isSuccess()) {
             throwFromSpError(result.errorCode(), result.message());
         }
@@ -55,6 +56,7 @@ public class CheckInServiceImpl implements CheckInService {
     public BoardingPassResponse getBoardingPass(Integer maVe) {
         Ve ve = veRepository.findByMaVeAndIsDeletedFalse(maVe)
                 .orElseThrow(() -> new ResourceNotFoundException("Vé", "id", maVe));
+        ensureCustomerOwnsTicket(ve, "xem thẻ lên máy bay của");
 
         CheckIn checkIn = checkInRepository.findByMaVe(maVe)
                 .orElseThrow(() -> new BusinessException("NOT_CHECKED_IN",
@@ -79,6 +81,29 @@ public class CheckInServiceImpl implements CheckInService {
                 }
             }
         });
+    }
+
+    private String resolveSeat(String soGhe) {
+        if (soGhe != null && !soGhe.isBlank()) {
+            return soGhe.trim().toUpperCase();
+        }
+
+        int row = ThreadLocalRandom.current().nextInt(1, 31);
+        char column = (char) ('A' + ThreadLocalRandom.current().nextInt(6));
+        return row + String.valueOf(column);
+    }
+
+    private void ensureCustomerOwnsTicket(Ve ve, String action) {
+        if (!SecurityUtils.isUser()) {
+            return;
+        }
+        Integer maTaiKhoan = SecurityUtils.getCurrentUserId();
+        Integer maKhachHang = taiKhoanRepository.findById(maTaiKhoan)
+                .map(tk -> tk.getMaKhachHang())
+                .orElse(null);
+        if (maKhachHang == null || !maKhachHang.equals(ve.getMaKhachHang())) {
+            throw new ForbiddenException("Bạn không có quyền " + action + " vé này");
+        }
     }
 
     private SpResult readSpResult(ResultSet rs, String... dataColumns) throws SQLException {

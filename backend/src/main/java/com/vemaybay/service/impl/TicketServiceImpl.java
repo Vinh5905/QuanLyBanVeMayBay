@@ -128,6 +128,16 @@ public class TicketServiceImpl implements TicketService {
     @Override
     @Transactional
     public TicketResponse changeFlight(Integer id, ChangeFlightRequest request) {
+        Ve currentVe = veRepository.findByMaVeAndIsDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vé", "id", id));
+
+        if (SecurityUtils.isUser()) {
+            Integer maKhachHang = resolveCurrentKhachHang();
+            if (!currentVe.getMaKhachHang().equals(maKhachHang)) {
+                throw new ForbiddenException("Bạn không có quyền đổi chuyến vé này");
+            }
+        }
+
         SpResult result = callSpDoiChuyenBay(id, request.getMaChuyenBayMoi());
         if (!result.isSuccess()) {
             throwFromSpError(result.errorCode(), result.message());
@@ -142,6 +152,13 @@ public class TicketServiceImpl implements TicketService {
     public TicketResponse upgrade(Integer id, UpgradeRequest request) {
         Ve ve = veRepository.findByMaVeAndIsDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vé", "id", id));
+
+        if (SecurityUtils.isUser()) {
+            Integer maKhachHang = resolveCurrentKhachHang();
+            if (!ve.getMaKhachHang().equals(maKhachHang)) {
+                throw new ForbiddenException("Bạn không có quyền nâng hạng vé này");
+            }
+        }
 
         if (!"HOP_LE".equals(ve.getTrangThaiVe())) {
             throw new BusinessException("INVALID_TICKET_STATUS",

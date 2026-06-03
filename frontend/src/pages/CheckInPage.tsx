@@ -1,11 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { checkinApi } from '../api/checkin.api'
 import { ticketsApi } from '../api/tickets.api'
 import { formatCurrency, formatDateTime } from '../utils/format'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Spinner from '../components/ui/Spinner'
-import EmptyState from '../components/ui/EmptyState'
 import { useToast } from '../components/ui/Toast'
 import { useAuth } from '../contexts/AuthContext'
 import { useConfig } from '../contexts/ConfigContext'
@@ -92,7 +91,6 @@ function CheckInForm({ ticket, onComplete }: { ticket: Ticket; onComplete: (bp: 
   const toast = useToast()
   const navigate = useNavigate()
   const { getNum } = useConfig()
-  const [soGhe, setSoGhe] = useState('')
 
   const moCheckIn = getNum('ThoiGianMoCheckInOnline', 24)
   const dongCheckIn = getNum('ThoiGianDongCheckInOnline', 60)
@@ -104,17 +102,17 @@ function CheckInForm({ ticket, onComplete }: { ticket: Ticket; onComplete: (bp: 
     retry: false,
   })
 
-  // If already checked in, show boarding pass
-  if (existingBP) {
-    onComplete(existingBP)
-    return null
-  }
-
   const checkInMutation = useMutation({
-    mutationFn: () => checkinApi.checkIn(ticket.maVe, soGhe),
+    mutationFn: () => checkinApi.checkIn(ticket.maVe),
     onSuccess: (bp) => { onComplete(bp); toast.success('Check-in thành công!') },
     onError: (e: Error) => toast.error(e.message),
   })
+
+  useEffect(() => {
+    if (existingBP) {
+      onComplete(existingBP)
+    }
+  }, [existingBP, onComplete])
 
   // Compute check-in window
   const dep = parseISO(ticket.chuyenBay.ngayGioBay)
@@ -139,45 +137,82 @@ function CheckInForm({ ticket, onComplete }: { ticket: Ticket; onComplete: (bp: 
     statusMessage = `Check-in online đang mở. Đóng lúc ${format(addHours(dep, -dongCheckIn / 60), 'HH:mm')}`
   }
 
+  if (existingBP) {
+    return (
+      <div className="card p-6 text-center text-sm text-gray-500">
+        Đang mở thẻ lên máy bay đã check-in...
+      </div>
+    )
+  }
+
   return (
-    <div className="card p-5 space-y-4">
-      <div className="text-sm">
-        <p className="font-mono font-bold text-blue-600">{ticket.maVeCode}</p>
-        <p className="font-medium text-gray-900 mt-1">{ticket.khachHang.hoTen}</p>
-        <p className="text-gray-500">{ticket.chuyenBay.maChuyenBayCode} · {ticket.chuyenBay.sanBayDi}→{ticket.chuyenBay.sanBayDen}</p>
-        <p className="text-gray-500">{formatDateTime(ticket.chuyenBay.ngayGioBay)}</p>
-      </div>
-
-      {/* Status */}
-      <div className={`flex items-start gap-3 p-3 rounded-lg text-sm ${
-        checkInStatus === 'open' ? 'bg-green-50 text-green-800 border border-green-200' :
-        checkInStatus === 'early' ? 'bg-blue-50 text-blue-800 border border-blue-200' :
-        'bg-red-50 text-red-800 border border-red-200'
-      }`}>
-        <AlertCircle size={16} className="shrink-0 mt-0.5" />
-        <p>{statusMessage}</p>
-      </div>
-
-      {checkInStatus === 'open' && (
-        <>
+    <div className="card overflow-hidden">
+      <div className="border-b bg-white px-5 py-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <label className="label">Số ghế (tùy chọn)</label>
-            <input value={soGhe} onChange={(e) => setSoGhe(e.target.value)} className="input" placeholder="VD: 12A" />
+            <p className="font-mono text-sm font-bold text-blue-600">{ticket.maVeCode}</p>
+            <h2 className="mt-1 text-lg font-semibold text-gray-900">{ticket.khachHang.hoTen}</h2>
+            <p className="mt-0.5 text-sm text-gray-500">{ticket.chuyenBay.maChuyenBayCode} · {ticket.hangVe.tenHangVe}</p>
           </div>
-          <button onClick={() => checkInMutation.mutate()} disabled={checkInMutation.isPending} className="btn-primary w-full justify-center">
-            {checkInMutation.isPending ? <Spinner size="sm" /> : 'Xác nhận check-in'}
-          </button>
-        </>
-      )}
+          <div className="rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-600">
+            <p className="text-xs text-gray-400">Khởi hành</p>
+            <p className="font-medium text-gray-900">{formatDateTime(ticket.chuyenBay.ngayGioBay)}</p>
+          </div>
+        </div>
+      </div>
 
-      {checkInStatus === 'invalid' && ticket.trangThaiVe === 'DANG_GIU_CHO' && (
-        <button
-          onClick={() => navigate(`/tickets/${ticket.maVe}`)}
-          className="btn-primary w-full justify-center"
-        >
-          Thanh toán vé ngay
-        </button>
-      )}
+      <div className="space-y-5 p-5">
+        <div className="grid items-center gap-4 rounded-lg border bg-gray-50 p-4 sm:grid-cols-[1fr_auto_1fr]">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Điểm đi</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900">{ticket.chuyenBay.sanBayDi}</p>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border bg-white text-blue-600">
+            <Plane size={18} />
+          </div>
+          <div className="sm:text-right">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Điểm đến</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900">{ticket.chuyenBay.sanBayDen}</p>
+          </div>
+        </div>
+
+        <div className={`flex items-start gap-3 rounded-lg border p-4 text-sm ${
+          checkInStatus === 'open' ? 'border-green-200 bg-green-50 text-green-800' :
+          checkInStatus === 'early' ? 'border-blue-200 bg-blue-50 text-blue-800' :
+          'border-red-200 bg-red-50 text-red-800'
+        }`}>
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          <p className="leading-relaxed">{statusMessage}</p>
+        </div>
+
+        {checkInStatus === 'open' && (
+          <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-blue-600">
+                <CheckCircle size={17} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-gray-900">Ghế sẽ được cấp tự động</p>
+                <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                  Hệ thống sẽ random mã ghế khi bạn xác nhận check-in và in trên thẻ lên máy bay.
+                </p>
+              </div>
+            </div>
+            <button onClick={() => checkInMutation.mutate()} disabled={checkInMutation.isPending} className="btn-primary mt-4 w-full justify-center">
+              {checkInMutation.isPending ? <Spinner size="sm" /> : 'Check-in và nhận ghế tự động'}
+            </button>
+          </div>
+        )}
+
+        {checkInStatus === 'invalid' && ticket.trangThaiVe === 'DANG_GIU_CHO' && (
+          <button
+            onClick={() => navigate(`/tickets/${ticket.maVe}`)}
+            className="btn-primary w-full justify-center"
+          >
+            Thanh toán vé ngay
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -186,8 +221,6 @@ function CheckInForm({ ticket, onComplete }: { ticket: Ticket; onComplete: (bp: 
 
 export default function CheckInPage() {
   const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const toast = useToast()
   const { user } = useAuth()
   const isKhachHang = user?.vaiTro === 'KhachHang'
 
@@ -206,6 +239,12 @@ export default function CheckInPage() {
 
   // Filter tickets eligible for check-in (HOP_LE)
   const eligibleTickets = myTickets.filter((t) => t.trangThaiVe === 'HOP_LE')
+
+  useEffect(() => {
+    if (isKhachHang && selectedMaVe == null && eligibleTickets.length > 0) {
+      setSelectedMaVe(eligibleTickets[0].maVe)
+    }
+  }, [eligibleTickets, isKhachHang, selectedMaVe])
 
   // Lookup specific ticket if entered manually
   const { data: lookupTicket } = useQuery({
@@ -232,8 +271,21 @@ export default function CheckInPage() {
   }
 
   return (
-    <div className="space-y-5 max-w-xl">
-      <h1 className="text-xl font-bold text-gray-900">Check-in online</h1>
+    <div className="space-y-6">
+      <div className="card p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Check-in online</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Chọn vé hợp lệ, xác nhận check-in và hệ thống sẽ cấp ghế tự động.
+            </p>
+          </div>
+          <div className="rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-600">
+            <p className="text-xs text-gray-400">Cửa sổ online</p>
+            <p className="font-medium text-gray-900">24h đến 60 phút trước bay</p>
+          </div>
+        </div>
+      </div>
 
       {/* KhachHang: auto-show eligible tickets */}
       {isKhachHang && (
@@ -241,80 +293,91 @@ export default function CheckInPage() {
           {loadingTickets ? (
             <div className="flex justify-center py-8"><Spinner size="lg" /></div>
           ) : eligibleTickets.length === 0 ? (
-            <div className="card p-6 text-center text-gray-400 space-y-2">
+            <div className="card p-8 text-center text-gray-400 space-y-2">
               <Plane size={32} className="mx-auto text-gray-300" />
               <p>Bạn chưa có vé hợp lệ nào để check-in</p>
               <p className="text-xs text-gray-400">Vé cần có trạng thái Hợp lệ (đã thanh toán)</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Chọn vé để check-in</p>
-              {eligibleTickets.map((t) => (
-                <div
-                  key={t.maVe}
-                  onClick={() => setSelectedMaVe(t.maVe)}
-                  className={`card p-4 cursor-pointer transition-colors ${
-                    selectedMaVe === t.maVe ? 'border-blue-500 ring-1 ring-blue-300' : 'hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Plane size={16} className="text-blue-500 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-mono font-bold text-blue-600 text-sm">{t.maVeCode}</p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {t.chuyenBay.sanBayDi}→{t.chuyenBay.sanBayDen} · {formatDateTime(t.chuyenBay.ngayGioBay)} · {t.hangVe.tenHangVe}
-                      </p>
-                    </div>
-                    <span className="text-xs text-gray-400">{formatCurrency(t.giaVe)}</span>
+            <div className="grid gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
+              <div className="space-y-4">
+                <div className="card p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Chọn vé để check-in</p>
+                  <div className="mt-3 space-y-2">
+                    {eligibleTickets.map((t) => (
+                      <button
+                        key={t.maVe}
+                        onClick={() => setSelectedMaVe(t.maVe)}
+                        className={`w-full rounded-lg border p-3 text-left transition-colors ${
+                          selectedMaVe === t.maVe ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-200' : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Plane size={16} className="shrink-0 text-blue-500" />
+                          <div className="min-w-0 flex-1">
+                            <p className="font-mono text-sm font-bold text-blue-600">{t.maVeCode}</p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              {t.chuyenBay.sanBayDi}→{t.chuyenBay.sanBayDen} · {formatDateTime(t.chuyenBay.ngayGioBay)}
+                            </p>
+                            <p className="mt-1 text-xs text-gray-400">{t.hangVe.tenHangVe}</p>
+                          </div>
+                          <span className="shrink-0 text-xs font-medium text-gray-500">{formatCurrency(t.giaVe)}</span>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              ))}
+
+              </div>
+
+              <div>
+                {activeTicket ? (
+                  <CheckInForm
+                    key={activeTicket.maVe}
+                    ticket={activeTicket}
+                    onComplete={(bp) => setBoardingPass(bp)}
+                  />
+                ) : (
+                  <div className="card p-8 text-center text-sm text-gray-400">
+                    Chọn một vé hợp lệ để bắt đầu check-in.
+                  </div>
+                )}
+              </div>
             </div>
           )}
+        </>
+      )}
 
-          {/* Manual entry for other tickets */}
-          <details className="text-sm text-gray-500">
-            <summary className="cursor-pointer hover:text-gray-700">Hoặc nhập mã vé thủ công</summary>
-            <div className="flex gap-3 mt-3">
+      {/* Staff / Manual entry */}
+      {!isKhachHang && (
+        <div className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
+          <div className="card p-4">
+            <label className="label">Mã vé (số)</label>
+            <div className="flex gap-3">
               <input
                 value={maVeInput}
                 onChange={(e) => setMaVeInput(e.target.value)}
                 className="input flex-1"
                 placeholder="Nhập mã vé..."
               />
-              <button onClick={() => { setMaVe(Number(maVeInput)); setSelectedMaVe(Number(maVeInput)) }} className="btn-primary">
+              <button onClick={() => { setMaVe(Number(maVeInput)); setBoardingPass(null) }} className="btn-primary">
                 Tìm
               </button>
             </div>
-          </details>
-        </>
-      )}
-
-      {/* Staff / Manual entry */}
-      {!isKhachHang && (
-        <div className="card p-4">
-          <label className="label">Mã vé (số)</label>
-          <div className="flex gap-3">
-            <input
-              value={maVeInput}
-              onChange={(e) => setMaVeInput(e.target.value)}
-              className="input flex-1"
-              placeholder="Nhập mã vé..."
-            />
-            <button onClick={() => { setMaVe(Number(maVeInput)); setBoardingPass(null) }} className="btn-primary">
-              Tìm
-            </button>
           </div>
-        </div>
-      )}
 
-      {/* Show check-in form when a ticket is selected */}
-      {activeTicket && (
-        <CheckInForm
-          key={activeTicket.maVe}
-          ticket={activeTicket}
-          onComplete={(bp) => setBoardingPass(bp)}
-        />
+          {activeTicket ? (
+            <CheckInForm
+              key={activeTicket.maVe}
+              ticket={activeTicket}
+              onComplete={(bp) => setBoardingPass(bp)}
+            />
+          ) : (
+            <div className="card flex min-h-[260px] items-center justify-center p-8 text-center text-sm text-gray-400">
+              Nhập mã vé để kiểm tra điều kiện check-in.
+            </div>
+          )}
+        </div>
       )}
     </div>
   )

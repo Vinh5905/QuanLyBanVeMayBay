@@ -805,7 +805,7 @@ Content-Type: application/json
 
 ```
 PUT /api/tickets/{id}/change-flight
-Authorization: Bearer <token>   (Admin hoặc NhanVien)
+Authorization: Bearer <token>   (mọi role đã đăng nhập; KhachHang chỉ vé của mình)
 Content-Type: application/json
 ```
 
@@ -835,7 +835,7 @@ Content-Type: application/json
 
 ```
 PUT /api/tickets/{id}/upgrade
-Authorization: Bearer <token>   (Admin hoặc NhanVien)
+Authorization: Bearer <token>   (Admin, NhanVien, DaiLy hoặc KhachHang; KhachHang chỉ vé của mình)
 Content-Type: application/json
 ```
 
@@ -1110,7 +1110,7 @@ Content-Type: application/json
 }
 ```
 
-**Trường hợp 2 — Thanh toán vé trực tiếp (mua hành lý, etc.):**
+**Trường hợp 2 — Thanh toán vé bán trực tiếp:**
 ```json
 {
   "maVe": 101,
@@ -1119,6 +1119,20 @@ Content-Type: application/json
   "maGiaoDich": null
 }
 ```
+
+**Trường hợp 3 — Thanh toán dịch vụ phát sinh cho vé HOP_LE (hành lý/nâng hạng):**
+```json
+{
+  "maVe": 101,
+  "hinhThucThanhToan": "CARD",
+  "soTienThanhToan": 550000.00,
+  "loaiThanhToan": "BAGGAGE",
+  "maGoiHanhLyList": [33, 34]
+}
+```
+
+> `loaiThanhToan` hỗ trợ `BAGGAGE`, `UPGRADE`, `SERVICE`. Với `BAGGAGE`, backend đánh dấu các gói trong `maGoiHanhLyList` là đã thanh toán. Nếu không gửi danh sách, backend thanh toán toàn bộ gói hành lý chưa thanh toán của vé.
+> Với `UPGRADE`, gửi thêm `maHangVeMoi`; backend ghi nhận thanh toán và nâng hạng vé trong cùng transaction.
 
 **Hình thức thanh toán hỗ trợ:** `CASH`, `CARD`, `MOMO`, `ZALOPAY`, `BANK_TRANSFER`
 
@@ -1197,10 +1211,11 @@ Content-Type: application/json
 **Request:**
 ```json
 {
-  "maVe": 101,
-  "soGhe": "12A"
+  "maVe": 101
 }
 ```
+
+`soGhe` là tùy chọn. Nếu không truyền, hệ thống tự cấp ngẫu nhiên khi check-in.
 
 **Response (201):**
 ```json
@@ -1777,7 +1792,7 @@ if (body.status === 'error') {
 4. (optional) POST /api/baggage  { maVe, maBangGia, danhSachKien }
    → Thêm hành lý ký gửi
 
-5. POST /api/checkin  { maVe, soGhe }   (trong cửa sổ 24h - 60ph trước bay)
+5. POST /api/checkin  { maVe }   (trong cửa sổ 24h - 60ph trước bay, ghế tự cấp)
    → Nhận boarding pass
 ```
 

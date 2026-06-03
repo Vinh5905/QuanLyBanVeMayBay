@@ -48,7 +48,7 @@ public class TicketController {
     }
 
     @PutMapping("/{id}/change-flight")
-    @PreAuthorize("hasAnyRole('Admin', 'NhanVien')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<TicketResponse>> changeFlight(
             @PathVariable Integer id,
             @Valid @RequestBody ChangeFlightRequest request) {
@@ -57,7 +57,7 @@ public class TicketController {
     }
 
     @PutMapping("/{id}/upgrade")
-    @PreAuthorize("hasAnyRole('Admin', 'NhanVien')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<TicketResponse>> upgrade(
             @PathVariable Integer id,
             @Valid @RequestBody UpgradeRequest request) {

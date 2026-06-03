@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ticketsApi } from '../api/tickets.api'
 import { flightsApi } from '../api/flights.api'
 import { baggageApi } from '../api/baggage.api'
-import { formatCurrency, formatDateTime, formatDuration, TICKET_STATUS_LABEL, TICKET_STATUS_COLOR, PAYMENT_METHOD_LABEL } from '../utils/format'
+import { formatCurrency, formatDateTime, TICKET_STATUS_LABEL, TICKET_STATUS_COLOR, PAYMENT_METHOD_LABEL } from '../utils/format'
 import { ArrowLeft, TrendingUp, RefreshCw, XCircle, Briefcase, LogIn, CreditCard } from 'lucide-react'
 import Spinner from '../components/ui/Spinner'
 import Badge from '../components/ui/Badge'
@@ -43,11 +43,13 @@ export default function TicketDetailPage() {
 
   // Upgrade modal
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [showUpgradePayment, setShowUpgradePayment] = useState(false)
   const [newClass, setNewClass] = useState<number | null>(null)
-  const upgradeMutation = useMutation({
-    mutationFn: () => ticketsApi.upgrade(Number(id), newClass!),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ticket', id] }); toast.success('Nâng hạng thành công'); setShowUpgrade(false) },
-    onError: (e: Error) => toast.error(e.message),
+  const [upgradePayMethod, setUpgradePayMethod] = useState<PaymentMethod>('CASH')
+  const { data: flightDetail, isLoading: loadingUpgradeOptions } = useQuery({
+    queryKey: ['flight', ticket?.chuyenBay.maChuyenBay],
+    queryFn: () => flightsApi.get(ticket!.chuyenBay.maChuyenBay),
+    enabled: showUpgrade && !!ticket,
   })
 
   // Change flight modal
@@ -68,16 +70,49 @@ export default function TicketDetailPage() {
   const [showPayment, setShowPayment] = useState(false)
   const [payMethod, setPayMethod] = useState<PaymentMethod>('CASH')
   const vatRate = getNum('ThueVAT', 10) / 100
+  const ticketAmountWithVAT = ticket ? Math.round(ticket.giaVe * (1 + vatRate)) : 0
+  const ticketVat = ticket ? ticketAmountWithVAT - ticket.giaVe : 0
 
-  const totalBaggage = baggage.reduce((s, b) => s + b.tongPhi, 0)
+  const upgradeOptions = (flightDetail?.danhSachHangVe ?? [])
+    .filter((h) => ticket && h.maHangVe !== ticket.hangVe.maHangVe && h.donGia > ticket.giaVe)
+    .sort((a, b) => a.donGia - b.donGia)
+  const selectedUpgradeClass = upgradeOptions.find((h) => h.maHangVe === newClass)
+  const upgradeBaseAmount = selectedUpgradeClass && ticket
+    ? Math.max(0, selectedUpgradeClass.donGia - ticket.giaVe)
+    : 0
+  const upgradeVat = Math.round(upgradeBaseAmount * vatRate)
+  const upgradeTotal = upgradeBaseAmount + upgradeVat
+
+  const upgradeMutation = useMutation({
+    mutationFn: async () => {
+      if (!newClass || !selectedUpgradeClass || upgradeTotal <= 0) {
+        throw new Error('Vui lòng chọn hạng vé mới hợp lệ')
+      }
+      return paymentsApi.create({
+        maVe: Number(id),
+        hinhThucThanhToan: upgradePayMethod,
+        soTienThanhToan: upgradeTotal,
+        loaiThanhToan: 'UPGRADE',
+        maHangVeMoi: newClass,
+      })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ticket', id] })
+      qc.invalidateQueries({ queryKey: ['my-tickets'] })
+      toast.success('Thanh toán và nâng hạng thành công')
+      setShowUpgradePayment(false)
+      setShowUpgrade(false)
+      setNewClass(null)
+    },
+    onError: (e: Error) => toast.error(e.message),
+  })
 
   const payMutation = useMutation({
     mutationFn: () => {
-      const amountWithVAT = Math.round(ticket!.giaVe * (1 + vatRate))
       // Use maPhieuDatCho if this ticket has an associated booking
       const payload = ticket!.maPhieuDatCho
-        ? { maPhieuDatCho: ticket!.maPhieuDatCho, hinhThucThanhToan: payMethod, soTienThanhToan: amountWithVAT }
-        : { maVe: Number(id), hinhThucThanhToan: payMethod, soTienThanhToan: amountWithVAT }
+        ? { maPhieuDatCho: ticket!.maPhieuDatCho, hinhThucThanhToan: payMethod, soTienThanhToan: ticketAmountWithVAT }
+        : { maVe: Number(id), hinhThucThanhToan: payMethod, soTienThanhToan: ticketAmountWithVAT }
       return paymentsApi.create(payload)
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['ticket', id] }); toast.success('Thanh toán thành công'); setShowPayment(false) },
@@ -220,23 +255,123 @@ export default function TicketDetailPage() {
         footer={
           <>
             <button onClick={() => setShowUpgrade(false)} className="btn-secondary">Hủy</button>
-            <button onClick={() => upgradeMutation.mutate()} disabled={!newClass || upgradeMutation.isPending} className="btn-primary">
-              {upgradeMutation.isPending ? <Spinner size="sm" /> : 'Xác nhận nâng hạng'}
+            <button
+              onClick={() => { setShowUpgrade(false); setShowUpgradePayment(true) }}
+              disabled={!selectedUpgradeClass || selectedUpgradeClass.soGheCon <= 0 || upgradeTotal <= 0}
+              className="btn-primary"
+            >
+              <CreditCard size={16} /> Tiếp tục thanh toán
             </button>
           </>
         }>
-        <div className="space-y-3 text-sm">
-          <p className="text-gray-600">Hạng hiện tại: <strong>{ticket.hangVe.tenHangVe}</strong> — {formatCurrency(ticket.hangVe.donGia)}</p>
-          <p className="label">Chọn hạng mới:</p>
+        <div className="space-y-4 text-sm">
+          <div className="rounded-lg border bg-gray-50 p-3">
+            <p className="text-xs text-gray-500">Hạng hiện tại</p>
+            <div className="mt-1 flex items-center justify-between">
+              <p className="font-semibold text-gray-900">{ticket.hangVe.tenHangVe}</p>
+              <p className="font-bold text-gray-900">{formatCurrency(ticket.giaVe)}</p>
+            </div>
+          </div>
+
+          <div>
+            <p className="label">Chọn hạng mới</p>
+            {loadingUpgradeOptions ? (
+              <div className="flex justify-center py-6"><Spinner /></div>
+            ) : upgradeOptions.length === 0 ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">
+                Không có hạng cao hơn còn mở bán cho chuyến bay này.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {upgradeOptions.map((h) => {
+                  const diff = Math.max(0, h.donGia - ticket.giaVe)
+                  const disabled = h.soGheCon <= 0
+                  return (
+                    <label
+                      key={h.maHangVe}
+                      className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+                        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-50'
+                      } ${newClass === h.maHangVe ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}
+                    >
+                      <input
+                        type="radio"
+                        value={h.maHangVe}
+                        checked={newClass === h.maHangVe}
+                        disabled={disabled}
+                        onChange={() => setNewClass(h.maHangVe)}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-gray-900">{h.tenHangVe}</p>
+                        <p className="text-xs text-gray-500">
+                          {formatCurrency(h.donGia)} · còn {h.soGheCon} ghế
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">Thanh toán thêm</p>
+                        <p className="font-bold text-blue-600">{formatCurrency(diff)}</p>
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {selectedUpgradeClass && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Chênh lệch hạng vé</span>
+                <span className="font-semibold">{formatCurrency(upgradeBaseAmount)}</span>
+              </div>
+              <div className="mt-1 flex justify-between text-xs text-gray-500">
+                <span>VAT ({getNum('ThueVAT', 10)}%)</span>
+                <span>{formatCurrency(upgradeVat)}</span>
+              </div>
+              <div className="mt-2 flex justify-between border-t border-blue-200 pt-2 font-bold">
+                <span>Số tiền cần thanh toán</span>
+                <span className="text-blue-700">{formatCurrency(upgradeTotal)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Upgrade payment modal */}
+      <Modal open={showUpgradePayment} onClose={() => setShowUpgradePayment(false)} title="Thanh toán nâng hạng"
+        footer={
+          <>
+            <button onClick={() => setShowUpgradePayment(false)} className="btn-secondary">Hủy</button>
+            <button onClick={() => upgradeMutation.mutate()} disabled={upgradeMutation.isPending || !selectedUpgradeClass} className="btn-primary">
+              {upgradeMutation.isPending ? <Spinner size="sm" /> : `Thanh toán ${formatCurrency(upgradeTotal)}`}
+            </button>
+          </>
+        }>
+        <div className="space-y-4 text-sm">
+          <div className="rounded-lg border bg-gray-50 p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Dịch vụ</p>
+            <p className="mt-1 font-semibold text-gray-900">
+              Nâng hạng từ {ticket.hangVe.tenHangVe} lên {selectedUpgradeClass?.tenHangVe}
+            </p>
+          </div>
           <div className="space-y-2">
-            {[{ maHangVe: 2, tenHangVe: 'Thương gia' }, { maHangVe: 3, tenHangVe: 'Hạng nhất' }]
-              .filter((h) => h.maHangVe > ticket.hangVe.maHangVe)
-              .map((h) => (
-                <label key={h.maHangVe} className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer ${newClass === h.maHangVe ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}>
-                  <input type="radio" value={h.maHangVe} checked={newClass === h.maHangVe} onChange={() => setNewClass(h.maHangVe)} />
-                  <span>{h.tenHangVe}</span>
-                </label>
-              ))}
+            <div className="flex justify-between">
+              <span className="text-gray-600">Chênh lệch hạng vé</span>
+              <span className="font-medium">{formatCurrency(upgradeBaseAmount)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">VAT ({getNum('ThueVAT', 10)}%)</span>
+              <span className="font-medium">{formatCurrency(upgradeVat)}</span>
+            </div>
+            <div className="flex justify-between border-t pt-2 text-base font-bold">
+              <span>Tổng thanh toán</span>
+              <span className="text-blue-600">{formatCurrency(upgradeTotal)}</span>
+            </div>
+          </div>
+          <div>
+            <label className="label">Hình thức thanh toán</label>
+            <select value={upgradePayMethod} onChange={(e) => setUpgradePayMethod(e.target.value as PaymentMethod)} className="input">
+              {Object.entries(PAYMENT_METHOD_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
           </div>
         </div>
       </Modal>
@@ -279,44 +414,30 @@ export default function TicketDetailPage() {
           <>
             <button onClick={() => setShowPayment(false)} className="btn-secondary">Hủy</button>
             <button onClick={() => payMutation.mutate()} disabled={payMutation.isPending} className="btn-primary">
-              {payMutation.isPending ? <Spinner size="sm" /> : 'Xác nhận thanh toán'}
+              {payMutation.isPending ? <Spinner size="sm" /> : `Thanh toán ${formatCurrency(ticketAmountWithVAT)}`}
             </button>
           </>
         }>
         <div className="space-y-4 text-sm">
-          {/* Ticket price */}
-          <div className="flex justify-between">
-            <span className="text-gray-600">Giá vé ({ticket.hangVe.tenHangVe})</span>
-            <span className="font-bold">{formatCurrency(ticket.giaVe)}</span>
+          <div className="rounded-lg border bg-gray-50 p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Vé cần thanh toán</p>
+            <p className="mt-1 font-semibold text-gray-900">{ticket.maVeCode} · {ticket.hangVe.tenHangVe}</p>
           </div>
 
-          {/* Baggage packages */}
-          {baggage.length > 0 && (
-            <>
-              <div className="border-t pt-3">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Hành lý ký gửi</p>
-                <div className="space-y-1.5">
-                  {baggage.map((b) => (
-                    <div key={b.maGoiHanhLy} className="flex justify-between">
-                      <span className="text-gray-600">
-                        {b.bangGia.tenGoi} · {b.danhSachKien.length} kiện · {b.tongTrongLuong} kg
-                        {b.daThanhToan ? <span className="text-green-600 ml-1">(đã TT)</span> : <span className="text-amber-600 ml-1">(chưa TT)</span>}
-                      </span>
-                      <span className="font-medium">{formatCurrency(b.tongPhi)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Total */}
-          {totalBaggage > 0 && (
-            <div className="flex justify-between font-bold text-base border-t pt-2">
-              <span>Tổng cộng</span>
-              <span className="text-blue-600">{formatCurrency(ticket.giaVe + totalBaggage)}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Giá vé</span>
+              <span className="font-medium">{formatCurrency(ticket.giaVe)}</span>
             </div>
-          )}
+            <div className="flex justify-between">
+              <span className="text-gray-600">VAT ({getNum('ThueVAT', 10)}%)</span>
+              <span className="font-medium">{formatCurrency(ticketVat)}</span>
+            </div>
+            <div className="flex justify-between font-bold text-base border-t pt-2">
+              <span>Tổng thanh toán vé</span>
+              <span className="text-blue-600">{formatCurrency(ticketAmountWithVAT)}</span>
+            </div>
+          </div>
 
           {/* Payment method */}
           <div>
@@ -328,7 +449,7 @@ export default function TicketDetailPage() {
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
             <p className="font-medium mb-0.5">Lưu ý</p>
-            <p>Số tiền thanh toán bao gồm VAT 10%. Hành lý chưa thanh toán sẽ được xử lý sau.</p>
+            <p>Thanh toán vé và thanh toán hành lý là hai khoản riêng biệt.</p>
           </div>
         </div>
       </Modal>

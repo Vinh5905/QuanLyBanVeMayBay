@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { paymentsApi } from '../api/payments.api'
 import { ticketsApi } from '../api/tickets.api'
-import { baggageApi } from '../api/baggage.api'
 import { formatCurrency, formatDateTime, PAYMENT_METHOD_LABEL, TICKET_STATUS_LABEL, TICKET_STATUS_COLOR } from '../utils/format'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
@@ -15,7 +14,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useConfig } from '../contexts/ConfigContext'
 import { CreditCard, ChevronDown, ChevronUp } from 'lucide-react'
 import TicketCard from '../components/TicketCard'
-import type { Ticket, BaggagePackage, PaymentMethod } from '../types'
+import type { Ticket, PaymentMethod } from '../types'
 
 // ─── Customer panel ─────────────────────────────────────────────────────────
 
@@ -26,14 +25,6 @@ function TicketPayPanel({ ticket }: { ticket: Ticket }) {
   const [showModal, setShowModal] = useState(false)
   const [payMethod, setPayMethod] = useState<PaymentMethod>('CASH')
 
-  const { data: baggage = [] } = useQuery({
-    queryKey: ['baggage', ticket.maVe],
-    queryFn: () => baggageApi.byTicket(ticket.maVe),
-  })
-
-  const totalBaggage = baggage.reduce((s, b) => s + b.tongPhi, 0)
-  const total = ticket.giaVe + totalBaggage
-
   const isPendingPayment = ticket.trangThaiVe === 'DANG_GIU_CHO'
 
   // Stored procedure sp_ThanhToan_Create validates:
@@ -42,6 +33,7 @@ function TicketPayPanel({ ticket }: { ticket: Ticket }) {
   // So we must send the VAT-inclusive amount.
   const vatRate = getNum('ThueVAT', 10) / 100
   const ticketAmountWithVAT = Math.round(ticket.giaVe * (1 + vatRate))
+  const ticketVat = ticketAmountWithVAT - ticket.giaVe
 
   const payMutation = useMutation({
     mutationFn: async () => {
@@ -63,7 +55,6 @@ function TicketPayPanel({ ticket }: { ticket: Ticket }) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['my-tickets'] })
-      qc.invalidateQueries({ queryKey: ['baggage', ticket.maVe] })
       toast.success('Thanh toán thành công!')
       setShowModal(false)
     },
@@ -72,11 +63,11 @@ function TicketPayPanel({ ticket }: { ticket: Ticket }) {
 
   return (
     <div className="px-4 pb-4 pt-2 border-t bg-gray-50 space-y-4">
-      <TicketCard ticket={ticket} baggage={baggage} showTotal={true} />
+      <TicketCard ticket={ticket} />
 
       {isPendingPayment ? (
         <button onClick={() => setShowModal(true)} className="btn-primary w-full justify-center">
-          <CreditCard size={16} /> Thanh toán {formatCurrency(total)}
+          <CreditCard size={16} /> Thanh toán {formatCurrency(ticketAmountWithVAT)}
         </button>
       ) : (
         <div className="text-center text-sm text-gray-500 py-2">
@@ -92,7 +83,7 @@ function TicketPayPanel({ ticket }: { ticket: Ticket }) {
           <>
             <button onClick={() => setShowModal(false)} className="btn-secondary">Hủy</button>
             <button onClick={() => payMutation.mutate()} disabled={payMutation.isPending} className="btn-primary">
-              {payMutation.isPending ? <Spinner size="sm" /> : `Thanh toán ${formatCurrency(total)}`}
+              {payMutation.isPending ? <Spinner size="sm" /> : `Thanh toán ${formatCurrency(ticketAmountWithVAT)}`}
             </button>
           </>
         }
@@ -103,15 +94,13 @@ function TicketPayPanel({ ticket }: { ticket: Ticket }) {
               <span className="text-gray-600">Giá vé ({ticket.hangVe.tenHangVe})</span>
               <span className="font-medium">{formatCurrency(ticket.giaVe)}</span>
             </div>
-            {baggage.map((b) => (
-              <div key={b.maGoiHanhLy} className="flex justify-between">
-                <span className="text-gray-600">Hành lý — {b.bangGia.tenGoi}</span>
-                <span className="font-medium">{formatCurrency(b.tongPhi)}</span>
-              </div>
-            ))}
+            <div className="flex justify-between">
+              <span className="text-gray-600">VAT ({getNum('ThueVAT', 10)}%)</span>
+              <span className="font-medium">{formatCurrency(ticketVat)}</span>
+            </div>
             <div className="flex justify-between font-bold text-base border-t pt-2">
-              <span>Tổng cộng</span>
-              <span className="text-blue-600">{formatCurrency(total)}</span>
+              <span>Tổng thanh toán vé</span>
+              <span className="text-blue-600">{formatCurrency(ticketAmountWithVAT)}</span>
             </div>
           </div>
           <div>

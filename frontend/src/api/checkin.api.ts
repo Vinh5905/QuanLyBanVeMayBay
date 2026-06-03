@@ -2,8 +2,8 @@ import { apiClient, unwrap } from './client'
 import type { BoardingPass } from '../types'
 
 export const checkinApi = {
-  checkIn: async (maVe: number, soGhe: string): Promise<BoardingPass> => {
-    const res = await apiClient.post('/checkin', { maVe, soGhe })
+  checkIn: async (maVe: number): Promise<BoardingPass> => {
+    const res = await apiClient.post('/checkin', { maVe })
     return unwrap<BoardingPass>(res)
   },
 
