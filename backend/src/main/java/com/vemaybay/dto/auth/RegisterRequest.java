@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 public class RegisterRequest {
@@ -26,6 +28,7 @@ public class RegisterRequest {
     @Size(max = 150, message = "Họ tên tối đa 150 ký tự")
     private String hoTen;
 
+    private LocalDate ngaySinh;
     private String soDienThoai;
     private String cccd;
 }

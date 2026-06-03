@@ -1,6 +1,7 @@
 package com.vemaybay.service.impl;
 
 import com.vemaybay.dto.auth.*;
+import com.vemaybay.entity.KhachHang;
 import com.vemaybay.entity.RefreshToken;
 import com.vemaybay.entity.TaiKhoan;
 import com.vemaybay.entity.VaiTro;
@@ -8,9 +9,11 @@ import com.vemaybay.exception.BusinessException;
 import com.vemaybay.exception.ConflictException;
 import com.vemaybay.exception.ResourceNotFoundException;
 import com.vemaybay.exception.UnauthorizedException;
+import com.vemaybay.repository.KhachHangRepository;
 import com.vemaybay.repository.RefreshTokenRepository;
 import com.vemaybay.repository.TaiKhoanRepository;
 import com.vemaybay.repository.VaiTroRepository;
+import org.springframework.jdbc.core.JdbcTemplate;
 import com.vemaybay.security.JwtTokenProvider;
 import com.vemaybay.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,8 +39,10 @@ public class AuthServiceImpl implements AuthService {
     private final TaiKhoanRepository taiKhoanRepository;
     private final VaiTroRepository vaiTroRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final KhachHangRepository khachHangRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
 
     private final Map<String, LoginAttempt> loginAttempts = new ConcurrentHashMap<>();
     private static final int MAX_ATTEMPTS = 5;
@@ -163,11 +169,26 @@ public class AuthServiceImpl implements AuthService {
         VaiTro vaiTroKhachHang = vaiTroRepository.findByTenVaiTro("KhachHang")
                 .orElseThrow(() -> new BusinessException("Vai trò KhachHang không tồn tại trong hệ thống"));
 
+        List<Integer> tierIds = jdbcTemplate.queryForList(
+                "SELECT MaHangThanhVien FROM dbo.HANGTHANHVIEN WHERE DiemToiThieu = 0", Integer.class);
+        Integer maHangDong = tierIds.isEmpty() ? null : tierIds.get(0);
+
+        KhachHang khachHang = KhachHang.builder()
+                .hoTen(request.getHoTen() != null ? request.getHoTen() : request.getTenDangNhap())
+                .email(request.getEmail())
+                .soDienThoai(request.getSoDienThoai())
+                .cccd(request.getCccd())
+                .ngaySinh(request.getNgaySinh())
+                .maHangThanhVien(maHangDong)
+                .build();
+        khachHang = khachHangRepository.save(khachHang);
+
         TaiKhoan taiKhoan = TaiKhoan.builder()
                 .tenDangNhap(request.getTenDangNhap())
                 .matKhauHash(passwordEncoder.encode(request.getMatKhau()))
                 .vaiTro(vaiTroKhachHang)
                 .email(request.getEmail())
+                .maKhachHang(khachHang.getMaKhachHang())
                 .trangThai((byte) 1)
                 .build();
 
