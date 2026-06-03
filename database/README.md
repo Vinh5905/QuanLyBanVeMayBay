@@ -32,8 +32,8 @@ make db-up
 make db-verify
 ```
 
-`make db-up` khởi động SQL Server, chờ healthcheck PASS và chạy các script init idempotent.
-Init runner tạo schema và login least-privilege cho backend sau khi database sẵn sàng.
+`make db-up` khởi động SQL Server, chờ healthcheck PASS, chạy các script init idempotent và áp dụng các migration còn thiếu trong `database/migrations/`.
+Init runner tạo schema và login least-privilege cho backend sau khi database sẵn sàng; migration runner theo dõi version bằng bảng `SCHEMA_VERSION`.
 
 Có thể chạy Docker Compose trực tiếp:
 
@@ -49,6 +49,7 @@ Service `sqlserver-init` sẽ chờ SQL Server healthy rồi chạy script boots
 make db-status
 make db-logs
 make db-init
+make db-migrate
 make db-shell
 make db-down
 ```

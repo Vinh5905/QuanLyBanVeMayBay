@@ -1,13 +1,14 @@
 ENV_FILE ?= .env.test
 COMPOSE := docker compose --env-file $(ENV_FILE)
 
-.PHONY: help config db-up db-init db-down db-logs db-status db-verify db-security-test db-sp-test db-trigger-test db-view-test db-function-test db-seed db-shell db-reset
+.PHONY: help config db-up db-init db-migrate db-down db-logs db-status db-verify db-security-test db-sp-test db-trigger-test db-view-test db-function-test db-seed db-shell db-reset
 
 help:
 	@echo "Database commands:"
 	@echo "  make db-up           Start SQL Server and run full initialization"
-	@echo "                       (schema + security + stored procedures)"
-	@echo "  make db-init         Re-run initialization (idempotent)"
+	@echo "                       (schema + security + stored procedures + migrations)"
+	@echo "  make db-init         Re-run initialization and migrations (idempotent)"
+	@echo "  make db-migrate      Run pending versioned migrations only"
 	@echo "  make db-verify       Verify SQL Server and the application database"
 	@echo "  make db-security-test  Run permission smoke tests"
 	@echo "  make db-sp-test      Run stored procedure tests"
@@ -29,10 +30,14 @@ config:
 
 db-up:
 	$(COMPOSE) up -d --wait sqlserver
-	$(COMPOSE) run --rm sqlserver-init
+	$(MAKE) ENV_FILE=$(ENV_FILE) db-init
 
 db-init:
 	$(COMPOSE) run --rm sqlserver-init
+	ENV_FILE=$(ENV_FILE) ./scripts/db_migrate.sh
+
+db-migrate:
+	ENV_FILE=$(ENV_FILE) ./scripts/db_migrate.sh
 
 db-down:
 	$(COMPOSE) down --remove-orphans

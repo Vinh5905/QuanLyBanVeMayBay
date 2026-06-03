@@ -6,7 +6,10 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 MIGRATIONS_DIR="$PROJECT_ROOT/database/migrations"
 
 # Load environment variables
-if [ -f "$PROJECT_ROOT/.env" ]; then
+ENV_FILE="${ENV_FILE:-.env}"
+if [ -f "$PROJECT_ROOT/$ENV_FILE" ]; then
+    set -a; source "$PROJECT_ROOT/$ENV_FILE"; set +a
+elif [ -f "$PROJECT_ROOT/.env" ]; then
     set -a; source "$PROJECT_ROOT/.env"; set +a
 fi
 
@@ -65,7 +68,18 @@ for migration_file in "$MIGRATIONS_DIR"/V*.sql; do
     echo "Applying: $filename..."
     docker exec "$CONTAINER_NAME" "$SQLCMD_PATH" \
         -S localhost -U sa -P "$SA_PASSWORD" -C \
-        -d "$DB_NAME" -i "/database/migrations/$filename" -b
+        -d "$DB_NAME" -v "DB_NAME=$DB_NAME" -i "/database/migrations/$filename" -b
+
+    description="${filename#${version}__}"
+    description="${description%.sql}"
+    description="${description//_/ }"
+    docker exec "$CONTAINER_NAME" "$SQLCMD_PATH" \
+        -S localhost -U sa -P "$SA_PASSWORD" -C \
+        -d "$DB_NAME" \
+        -v "Version=$version" "Description=$description" \
+        -Q "IF NOT EXISTS (SELECT 1 FROM SCHEMA_VERSION WHERE Version = N'\$(Version)')
+            INSERT INTO SCHEMA_VERSION (Version, Description)
+            VALUES (N'\$(Version)', N'\$(Description)');" -b
     echo "  Done."
 done
 
