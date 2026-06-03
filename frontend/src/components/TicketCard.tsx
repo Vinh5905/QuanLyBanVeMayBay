@@ -1,4 +1,4 @@
-import { Plane } from 'lucide-react'
+import { Plane, CheckCircle } from 'lucide-react'
 import { formatCurrency, formatDateTime, TICKET_STATUS_LABEL, TICKET_STATUS_COLOR } from '../utils/format'
 import type { Ticket, BaggagePackage } from '../types'
 
@@ -69,8 +69,17 @@ export default function TicketCard({ ticket, baggage = [], showTotal = false }: 
           <p className="text-xs text-gray-400 font-medium">Hành lý ký gửi</p>
           {baggage.map((b) => (
             <div key={b.maGoiHanhLy} className="flex justify-between text-sm">
-              <span className="text-gray-600">{b.bangGia.tenGoi} · {b.tongTrongLuong} kg</span>
-              <span className="font-medium">{formatCurrency(b.tongPhi)}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-gray-600 truncate">
+                  {b.bangGia.tenGoi} · {b.danhSachKien.length} kiện · {b.tongTrongLuong} kg
+                </span>
+                {b.daThanhToan ? (
+                  <span className="text-green-600 shrink-0" title="Đã thanh toán"><CheckCircle size={12} /></span>
+                ) : (
+                  <span className="text-xs text-amber-600 shrink-0">(chưa TT)</span>
+                )}
+              </div>
+              <span className="font-medium shrink-0 ml-2">{formatCurrency(b.tongPhi)}</span>
             </div>
           ))}
         </div>

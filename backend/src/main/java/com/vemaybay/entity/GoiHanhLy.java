@@ -40,6 +40,10 @@ public class GoiHanhLy {
     @Column(name = "TrangThai", nullable = false, length = 30)
     private String trangThai = "REGISTERED";
 
+    @Column(name = "DaThanhToan", nullable = false)
+    @Builder.Default
+    private Boolean daThanhToan = false;
+
     @Column(name = "CreatedAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

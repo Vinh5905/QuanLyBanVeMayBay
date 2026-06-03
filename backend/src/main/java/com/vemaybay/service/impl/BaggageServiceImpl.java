@@ -167,6 +167,7 @@ public class BaggageServiceImpl implements BaggageService {
                 .tongTrongLuong(goi.getTongTrongLuong())
                 .tongPhi(goi.getTongPhi())
                 .trangThai(goi.getTrangThai())
+                .daThanhToan(goi.getDaThanhToan())
                 .danhSachKien(pieces)
                 .createdAt(goi.getCreatedAt())
                 .build();

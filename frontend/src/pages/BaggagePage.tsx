@@ -7,11 +7,11 @@ import { useSearchParams } from 'react-router-dom'
 import Spinner from '../components/ui/Spinner'
 import Modal from '../components/ui/Modal'
 import { useToast } from '../components/ui/Toast'
-import { Plus, Trash2, AlertCircle, ChevronDown, ChevronUp, Briefcase } from 'lucide-react'
+import { Plus, Trash2, AlertCircle, ChevronDown, ChevronUp, Briefcase, CheckCircle, Minus } from 'lucide-react'
 import { useConfig } from '../contexts/ConfigContext'
 import { useAuth } from '../contexts/AuthContext'
 import { differenceInHours, parseISO } from 'date-fns'
-import type { Ticket } from '../types'
+import type { Ticket, BaggagePricing } from '../types'
 
 function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
   const qc = useQueryClient()
@@ -36,20 +36,38 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
   })
 
   const [showAdd, setShowAdd] = useState(false)
-  const [selectedPricing, setSelectedPricing] = useState<number | null>(null)
-  const [items, setItems] = useState<{ trongLuong: number; ghiChu: string }[]>([{ trongLuong: 20, ghiChu: '' }])
+
+  // For the add modal: map of maBangGia -> quantity
+  const [quantities, setQuantities] = useState<Record<number, number>>({})
 
   const totalItems = baggage.reduce((s, b) => s + b.danhSachKien.length, 0)
-  const addItemValid = items.every((item) => item.trongLuong > 0 && item.trongLuong <= trongLuongMax)
+  const canAddMore = totalItems < soKienMax
+  const hasSelection = Object.values(quantities).some((q) => q > 0)
 
   const registerMutation = useMutation({
-    mutationFn: () => baggageApi.register({ maVe: ticket.maVe, maBangGia: selectedPricing!, danhSachKien: items }),
+    mutationFn: async () => {
+      // For each package type with quantity > 0, create a separate baggage package
+      const results = []
+      for (const pkg of pricing) {
+        const qty = quantities[pkg.maBangGia] ?? 0
+        if (qty <= 0) continue
+        const danhSachKien = Array.from({ length: qty }, () => ({
+          trongLuong: pkg.trongLuongToiDa,
+        }))
+        const result = await baggageApi.register({
+          maVe: ticket.maVe,
+          maBangGia: pkg.maBangGia,
+          danhSachKien,
+        })
+        results.push(result)
+      }
+      return results
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['baggage', ticket.maVe] })
       toast.success('Đăng ký hành lý thành công')
       setShowAdd(false)
-      setSelectedPricing(null)
-      setItems([{ trongLuong: 20, ghiChu: '' }])
+      setQuantities({})
     },
     onError: (e: Error) => toast.error(e.message),
   })
@@ -59,6 +77,15 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['baggage', ticket.maVe] }); toast.success('Đã hủy gói hành lý') },
     onError: (e: Error) => toast.error(e.message),
   })
+
+  // Calculate price per piece (early or airport)
+  const getPrice = (p: BaggagePricing) => isEarlyPurchase ? p.giaMuaTruoc : p.giaTaiSanBay
+
+  // Calculate total cost of pending additions
+  const addTotal = pricing.reduce((sum, p) => {
+    const qty = quantities[p.maBangGia] ?? 0
+    return sum + getPrice(p) * qty
+  }, 0)
 
   return (
     <div className="px-4 pb-4 pt-2 border-t bg-gray-50 space-y-3">
@@ -87,11 +114,23 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
           {baggage.map((pkg) => (
             <div key={pkg.maGoiHanhLy} className="bg-white rounded-lg p-3 border text-sm">
               <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold">{pkg.bangGia.tenGoi}</p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold">{pkg.bangGia.tenGoi}</p>
+                    {/* Payment status badge */}
+                    {pkg.daThanhToan ? (
+                      <span className="inline-flex items-center gap-0.5 text-xs text-green-700 bg-green-100 rounded-full px-2 py-0.5">
+                        <CheckCircle size={10} /> Đã thanh toán
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-0.5 text-xs text-amber-700 bg-amber-100 rounded-full px-2 py-0.5">
+                        Chưa thanh toán
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500">{pkg.danhSachKien.length} kiện · {pkg.tongTrongLuong} kg</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0 ml-3">
                   <p className="font-bold">{formatCurrency(pkg.tongPhi)}</p>
                   <button onClick={() => cancelMutation.mutate(pkg.maGoiHanhLy)} className="text-red-500 hover:underline text-xs mt-1 flex items-center gap-1 ml-auto">
                     <Trash2 size={10} /> Hủy gói
@@ -113,84 +152,102 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
       {/* Add button */}
       <button
         onClick={() => setShowAdd(true)}
-        disabled={totalItems >= soKienMax}
+        disabled={!canAddMore}
         className="btn-secondary text-sm w-full justify-center"
+        title={!canAddMore ? `Đã đạt tối đa ${soKienMax} kiện` : undefined}
       >
-        <Plus size={14} /> Thêm gói hành lý
+        <Plus size={14} /> Thêm hành lý
       </button>
 
-      {/* Add modal */}
-      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Thêm gói hành lý" size="lg"
+      {/* Add modal — quantity-based selection */}
+      <Modal
+        open={showAdd}
+        onClose={() => { setShowAdd(false); setQuantities({}) }}
+        title="Thêm hành lý ký gửi"
+        size="lg"
         footer={
           <>
-            <button onClick={() => setShowAdd(false)} className="btn-secondary">Hủy</button>
-            <button onClick={() => registerMutation.mutate()} disabled={!selectedPricing || !addItemValid || registerMutation.isPending} className="btn-primary">
-              {registerMutation.isPending ? <Spinner size="sm" /> : 'Đăng ký hành lý'}
+            <button onClick={() => { setShowAdd(false); setQuantities({}) }} className="btn-secondary">Hủy</button>
+            <button
+              onClick={() => registerMutation.mutate()}
+              disabled={!hasSelection || registerMutation.isPending}
+              className="btn-primary"
+            >
+              {registerMutation.isPending ? <Spinner size="sm" /> : `Xác nhận · ${formatCurrency(addTotal)}`}
             </button>
           </>
-        }>
+        }
+      >
         <div className="space-y-4 text-sm">
-          <div>
-            <label className="label">Gói hành lý</label>
-            <div className="grid grid-cols-2 gap-3">
-              {pricing.map((p) => (
-                <div
-                  key={p.maBangGia}
-                  onClick={() => setSelectedPricing(p.maBangGia)}
-                  className={`p-3 border rounded-lg cursor-pointer ${selectedPricing === p.maBangGia ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
-                >
-                  <p className="font-semibold">{p.tenGoi}</p>
-                  <p className="text-xs text-gray-500 mt-1">Tối đa {p.trongLuongToiDa} kg/kiện</p>
-                  <p className="text-green-600 font-medium mt-1">{formatCurrency(isEarlyPurchase ? p.giaMuaTruoc : p.giaTaiSanBay)}</p>
-                  <p className="text-xs text-gray-400">{isEarlyPurchase ? 'Giá ưu đãi' : 'Giá tại sân bay'}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="label mb-0">Kiện hành lý</label>
-              <button onClick={() => setItems([...items, { trongLuong: 20, ghiChu: '' }])} className="text-blue-600 text-xs hover:underline">+ Thêm kiện</button>
-            </div>
-            <div className="space-y-2">
-              {items.map((item, idx) => (
-                <div key={idx} className="flex gap-2 items-start">
+          <p className="text-gray-500">
+            Chọn gói hành lý và số lượng kiện cho từng gói.
+            Mỗi kiện có trọng lượng tối đa {trongLuongMax} kg.
+          </p>
+
+          <div className="divide-y">
+            {pricing.map((p) => {
+              const qty = quantities[p.maBangGia] ?? 0
+              const pricePerPiece = getPrice(p)
+              const subtotal = pricePerPiece * qty
+              return (
+                <div key={p.maBangGia} className="flex items-center gap-4 py-3">
+                  {/* Package info */}
                   <div className="flex-1">
-                    <input
-                      type="number"
-                      value={item.trongLuong}
-                      onChange={(e) => {
-                        const updated = [...items]
-                        updated[idx] = { ...updated[idx], trongLuong: Number(e.target.value) }
-                        setItems(updated)
+                    <p className="font-semibold text-gray-800">{p.tenGoi}</p>
+                    <p className="text-xs text-gray-500">
+                      {p.trongLuongToiDa} kg/kiện · {formatCurrency(pricePerPiece)}/kiện
+                      {isEarlyPurchase ? ' (giá ưu đãi)' : ' (giá tại sân bay)'}
+                    </p>
+                  </div>
+
+                  {/* Quantity control */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setQuantities({ ...quantities, [p.maBangGia]: Math.max(0, qty - 1) })}
+                      disabled={qty <= 0}
+                      className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Minus size={14} />
+                    </button>
+                    <span className="w-8 text-center font-bold text-lg">{qty}</span>
+                    <button
+                      onClick={() => {
+                        const newQty = qty + 1
+                        if (totalItems + Object.values(quantities).reduce((s, v) => s + v, 0) + 1 - qty + newQty > soKienMax) return
+                        setQuantities({ ...quantities, [p.maBangGia]: newQty })
                       }}
-                      max={trongLuongMax}
-                      placeholder={`Trọng lượng (tối đa ${trongLuongMax} kg)`}
-                      className="input text-sm"
-                    />
-                    {item.trongLuong > trongLuongMax && (
-                      <p className="text-xs text-red-600 mt-1 flex gap-1 items-center"><AlertCircle size={12} />Vượt {trongLuongMax} kg</p>
+                      disabled={totalItems + Object.values(quantities).reduce((s, v) => s + v, 0) + 1 > soKienMax}
+                      className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+
+                  {/* Subtotal */}
+                  <div className="w-28 text-right">
+                    {qty > 0 && (
+                      <>
+                        <p className="font-semibold text-blue-600">{formatCurrency(subtotal)}</p>
+                        <p className="text-xs text-gray-400">{qty} kiện</p>
+                      </>
                     )}
                   </div>
-                  <input
-                    value={item.ghiChu}
-                    onChange={(e) => {
-                      const updated = [...items]
-                      updated[idx] = { ...updated[idx], ghiChu: e.target.value }
-                      setItems(updated)
-                    }}
-                    placeholder="Ghi chú"
-                    className="input text-sm flex-1"
-                  />
-                  {items.length > 1 && (
-                    <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="p-2 text-red-500 hover:bg-red-50 rounded">
-                      <Trash2 size={14} />
-                    </button>
-                  )}
                 </div>
-              ))}
-            </div>
+              )
+            })}
           </div>
+
+          {/* Grand total */}
+          {addTotal > 0 && (
+            <div className="flex justify-between items-center bg-blue-50 rounded-lg p-3 border border-blue-200">
+              <span className="font-semibold text-gray-800">Tổng tiền hành lý thêm</span>
+              <span className="text-lg font-bold text-blue-600">{formatCurrency(addTotal)}</span>
+            </div>
+          )}
+
+          {pricing.length === 0 && (
+            <p className="text-center text-gray-400 py-4">Không có gói hành lý nào</p>
+          )}
         </div>
       </Modal>
     </div>

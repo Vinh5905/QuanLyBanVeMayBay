@@ -19,6 +19,7 @@ public class BaggageResponse {
     private BigDecimal tongTrongLuong;
     private BigDecimal tongPhi;
     private String trangThai;
+    private Boolean daThanhToan;
     private List<PieceInfo> danhSachKien;
     private LocalDateTime createdAt;
 

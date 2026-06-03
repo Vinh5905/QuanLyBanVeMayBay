@@ -141,6 +141,7 @@ export interface BaggagePackage {
   tongTrongLuong: number
   tongPhi: number
   trangThai: string
+  daThanhToan: boolean
   danhSachKien: BaggageItem[]
   createdAt: string
 }
