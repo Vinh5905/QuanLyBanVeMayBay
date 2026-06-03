@@ -71,6 +71,17 @@ export interface TicketCustomer {
   cccd?: string
 }
 
+export interface Customer {
+  maKhachHang: number
+  hoTen: string
+  email?: string
+  soDienThoai?: string
+  cccd?: string
+  ngaySinh?: string
+  diemTichLuy: number
+  createdAt: string
+}
+
 export interface TicketFlight {
   maChuyenBay: number
   maChuyenBayCode: string

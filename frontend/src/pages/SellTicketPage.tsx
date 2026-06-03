@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { flightsApi } from '../api/flights.api'
 import { ticketsApi } from '../api/tickets.api'
-import { accountsApi } from '../api/accounts.api'
+import { customersApi } from '../api/customers.api'
 import { formatCurrency, formatDateTime, formatDuration } from '../utils/format'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/ui/Spinner'
@@ -30,15 +30,16 @@ export default function SellTicketPage() {
   })
   const flights: Flight[] = flightsResult?.data ?? []
 
-  const { data: customers } = useQuery({
-    queryKey: ['accounts-customers', customerSearch],
-    queryFn: () => accountsApi.list({ vaiTro: 'KhachHang', keyword: customerSearch, size: 20 }),
-    enabled: customerSearch.length >= 2,
+  const trimmedCustomerSearch = customerSearch.trim()
+  const { data: customers, isLoading: loadCustomers, isError: customerLoadError } = useQuery({
+    queryKey: ['customers-sell', trimmedCustomerSearch],
+    queryFn: () => customersApi.list({ keyword: trimmedCustomerSearch, size: 20 }),
+    enabled: trimmedCustomerSearch.length >= 2,
   })
 
   const selectedFlightData = flights.find((f) => f.maChuyenBay === selectedFlight)
   const selectedClassData = selectedFlightData?.danhSachHangVe.find((h) => h.maHangVe === selectedClass)
-  const selectedCustomerData = customers?.data.find((c) => c.maTaiKhoan === selectedCustomer || c.maKhachHang === selectedCustomer)
+  const selectedCustomerData = customers?.data.find((c) => c.maKhachHang === selectedCustomer)
 
   const sellMutation = useMutation({
     mutationFn: () => ticketsApi.sell({ maChuyenBay: selectedFlight!, maKhachHang: selectedCustomer!, maHangVe: selectedClass! }),
@@ -128,21 +129,29 @@ export default function SellTicketPage() {
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
+                  onChange={(e) => {
+                    setCustomerSearch(e.target.value)
+                    setSelectedCustomer(null)
+                  }}
                   className="input pl-8 text-sm"
-                  placeholder="Tìm theo tên, email (tối thiểu 2 ký tự)..."
+                  placeholder="Tìm theo tên, email, CCCD, số điện thoại..."
                 />
               </div>
+              {trimmedCustomerSearch.length > 0 && trimmedCustomerSearch.length < 2 && (
+                <p className="text-xs text-gray-400">Nhập ít nhất 2 ký tự để tìm khách hàng.</p>
+              )}
+              {loadCustomers && <div className="flex justify-center py-4"><Spinner size="sm" /></div>}
+              {customerLoadError && <p className="text-sm text-red-600">Không tải được danh sách khách hàng. Vui lòng thử lại.</p>}
               {customers?.data && (
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {customers.data.map((c) => (
                     <div
-                      key={c.maTaiKhoan}
-                      onClick={() => setSelectedCustomer(c.maKhachHang ?? c.maTaiKhoan)}
-                      className={`p-3 border rounded-lg cursor-pointer text-sm ${selectedCustomer === (c.maKhachHang ?? c.maTaiKhoan) ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
+                      key={c.maKhachHang}
+                      onClick={() => setSelectedCustomer(c.maKhachHang)}
+                      className={`p-3 border rounded-lg cursor-pointer text-sm ${selectedCustomer === c.maKhachHang ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
                     >
-                      <p className="font-medium">{c.tenDangNhap}</p>
-                      <p className="text-xs text-gray-500">{c.email}</p>
+                      <p className="font-medium">{c.hoTen}</p>
+                      <p className="text-xs text-gray-500">{c.email || 'Chưa có email'}{c.soDienThoai ? ` · ${c.soDienThoai}` : ''}</p>
                     </div>
                   ))}
                   {customers.data.length === 0 && <p className="text-gray-400 text-sm text-center py-2">Không tìm thấy khách hàng</p>}
@@ -173,8 +182,8 @@ export default function SellTicketPage() {
                 {selectedCustomerData && (
                   <div>
                     <p className="text-xs text-gray-400">Khách hàng</p>
-                    <p className="font-medium">{selectedCustomerData.tenDangNhap}</p>
-                    <p className="text-xs text-gray-500">{selectedCustomerData.email}</p>
+                    <p className="font-medium">{selectedCustomerData.hoTen}</p>
+                    <p className="text-xs text-gray-500">{selectedCustomerData.email || selectedCustomerData.soDienThoai || `#${selectedCustomerData.maKhachHang}`}</p>
                   </div>
                 )}
                 {selectedClassData && (

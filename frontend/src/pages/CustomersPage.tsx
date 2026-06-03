@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { accountsApi } from '../api/accounts.api'
+import { customersApi } from '../api/customers.api'
 import { formatDateTime } from '../utils/format'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/ui/Spinner'
@@ -17,7 +17,7 @@ export default function CustomersPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['customers', page, kw],
-    queryFn: () => accountsApi.list({ vaiTro: 'KhachHang', keyword: kw || undefined, page, size: 20 }),
+    queryFn: () => customersApi.list({ keyword: kw || undefined, page, size: 20 }),
   })
 
   return (
@@ -51,31 +51,33 @@ export default function CustomersPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr>
-                    <th className="table-th">Mã TK</th>
-                    <th className="table-th">Tên đăng nhập</th>
+                    <th className="table-th">Mã KH</th>
+                    <th className="table-th">Họ tên</th>
                     <th className="table-th">Email</th>
-                    <th className="table-th">Trạng thái</th>
+                    <th className="table-th">Số điện thoại</th>
+                    <th className="table-th">CCCD</th>
+                    <th className="table-th">Điểm tích lũy</th>
                     <th className="table-th">Ngày tạo</th>
-                    <th className="table-th">Đăng nhập cuối</th>
                     <th className="table-th"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {data?.data.map((c) => (
-                    <tr key={c.maTaiKhoan} className="border-t hover:bg-gray-50">
-                      <td className="table-td font-mono text-xs text-gray-500">#{c.maTaiKhoan}</td>
-                      <td className="table-td font-medium">{c.tenDangNhap}</td>
-                      <td className="table-td text-gray-500">{c.email}</td>
+                    <tr key={c.maKhachHang} className="border-t hover:bg-gray-50">
+                      <td className="table-td font-mono text-xs text-gray-500">#{c.maKhachHang}</td>
+                      <td className="table-td font-medium">{c.hoTen}</td>
+                      <td className="table-td text-gray-500">{c.email || '—'}</td>
+                      <td className="table-td text-gray-500">{c.soDienThoai || '—'}</td>
+                      <td className="table-td text-gray-500">{c.cccd || '—'}</td>
                       <td className="table-td">
-                        <Badge variant={c.trangThai === 1 ? 'green' : 'red'}>
-                          {c.trangThai === 1 ? 'Hoạt động' : 'Bị khóa'}
+                        <Badge variant={c.diemTichLuy > 0 ? 'green' : 'gray'}>
+                          {c.diemTichLuy}
                         </Badge>
                       </td>
                       <td className="table-td text-xs">{formatDateTime(c.createdAt)}</td>
-                      <td className="table-td text-xs">{c.lastLogin ? formatDateTime(c.lastLogin) : '—'}</td>
                       <td className="table-td">
                         <button
-                          onClick={() => navigate(`/tickets?maKhachHang=${c.maKhachHang ?? c.maTaiKhoan}`)}
+                          onClick={() => navigate(`/tickets?maKhachHang=${c.maKhachHang}`)}
                           className="flex items-center gap-1 text-blue-600 hover:underline text-xs"
                         >
                           <Ticket size={12} /> Xem vé

@@ -49,7 +49,7 @@ export default function App() {
                 <Route element={<RequireAuth><MainLayout /></RequireAuth>}>
                   <Route path="/" element={<DashboardPage />} />
                   <Route path="/flights" element={<FlightsPage />} />
-                  <Route path="/flights/search" element={<FlightSearchPage />} />
+                  <Route path="/flights/search" element={<RequireAuth roles={['KhachHang', 'NhanVien']}><FlightSearchPage /></RequireAuth>} />
                   <Route path="/flights/:id" element={<FlightDetailPage />} />
                   <Route path="/customers" element={<CustomersPage />} />
                   <Route path="/tickets" element={<TicketsPage />} />

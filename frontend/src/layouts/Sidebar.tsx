@@ -42,7 +42,7 @@ const navItems: NavItem[] = [
   { label: 'Check-in online', icon: <LogIn size={18} />, to: '/checkin' },
 
   // Staff only
-  { label: 'Tra cứu chuyến bay', icon: <Search size={18} />, to: '/flights/search', hideForRoles: ['KhachHang'] },
+  { label: 'Tra cứu chuyến bay', icon: <Search size={18} />, to: '/flights/search', roles: ['NhanVien'] },
   { label: 'Báo cáo', icon: <BarChart2 size={18} />, to: '/reports', roles: ['Admin', 'NhanVien'] },
   { label: 'Tài khoản', icon: <UserCog size={18} />, to: '/accounts', roles: ['Admin'] },
   { label: 'Tham số hệ thống', icon: <Settings size={18} />, to: '/config', roles: ['Admin', 'NhanVien'] },
@@ -54,6 +54,7 @@ const navItems: NavItem[] = [
 // Ticket children filtering by role
 const ticketChildrenByRole: Record<string, string[]> = {
   KhachHang: ['/tickets/book', '/tickets'],
+  DaiLy: ['/tickets/sell', '/tickets'],
   default: ['/tickets/sell', '/tickets/book', '/tickets'],
 }
 
@@ -86,7 +87,7 @@ export default function Sidebar({ collapsed, onClose }: { collapsed?: boolean; o
         {visible.map((item) => {
           if (item.children) {
             const isOpen = open.includes(item.label)
-            const allowedPaths = role === 'KhachHang' ? ticketChildrenByRole['KhachHang'] : ticketChildrenByRole['default']
+            const allowedPaths = ticketChildrenByRole[role] ?? ticketChildrenByRole['default']
             const visibleChildren = item.children.filter((c) => allowedPaths.includes(c.to))
             if (visibleChildren.length === 0) return null
 

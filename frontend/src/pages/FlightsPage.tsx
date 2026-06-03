@@ -166,7 +166,7 @@ export default function FlightsPage() {
   const toast = useToast()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const isKhachHang = user?.vaiTro === 'KhachHang'
+  const canManageFlights = user?.vaiTro === 'Admin' || user?.vaiTro === 'NhanVien'
   const [page, setPage] = useState(0)
   const [showCreate, setShowCreate] = useState(false)
   const [filter, setFilter] = useState({ sanBayDi: '', sanBayDen: '', ngayBay: '' })
@@ -255,7 +255,7 @@ export default function FlightsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Quản lý chuyến bay</h1>
-        {!isKhachHang && (
+        {canManageFlights && (
           <button
             onClick={openCreateModal}
             disabled={isTicketClassesLoading || ticketClasses.length === 0}
