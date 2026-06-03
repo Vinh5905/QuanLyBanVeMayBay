@@ -47,7 +47,7 @@ export default function App() {
 
                 {/* Protected app routes */}
                 <Route element={<RequireAuth><MainLayout /></RequireAuth>}>
-                  <Route path="/" element={<DashboardPage />} />
+                  <Route path="/" element={<RequireAuth roles={['Admin', 'NhanVien']}><DashboardPage /></RequireAuth>} />
                   <Route path="/flights" element={<FlightsPage />} />
                   <Route path="/flights/search" element={<RequireAuth roles={['KhachHang', 'NhanVien']}><FlightSearchPage /></RequireAuth>} />
                   <Route path="/flights/:id" element={<FlightDetailPage />} />

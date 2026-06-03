@@ -18,7 +18,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   // Staff/Admin/Agent only
-  { label: 'Tổng quan', icon: <LayoutDashboard size={18} />, to: '/', hideForRoles: ['KhachHang'] },
+  { label: 'Tổng quan', icon: <LayoutDashboard size={18} />, to: '/', roles: ['Admin', 'NhanVien'] },
   { label: 'Chuyến bay', icon: <Plane size={18} />, to: '/flights', hideForRoles: ['KhachHang'] },
   { label: 'Khách hàng', icon: <Users size={18} />, to: '/customers', roles: ['Admin', 'NhanVien', 'DaiLy'] },
   { label: 'Danh sách vé', icon: <Ticket size={18} />, to: '/tickets', roles: ['Admin'] },
