@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -36,6 +37,8 @@ public class TicketServiceImpl implements TicketService {
     private final KhachHangRepository khachHangRepository;
     private final ChiTietHangVeRepository chiTietHangVeRepository;
     private final TaiKhoanRepository taiKhoanRepository;
+    private final ThanhToanRepository thanhToanRepository;
+    private final ThamSoRepository thamSoRepository;
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -52,6 +55,7 @@ public class TicketServiceImpl implements TicketService {
         Integer maVe = (Integer) result.data().get("MaVe");
         Ve ve = veRepository.findByMaVeAndIsDeletedFalse(maVe)
                 .orElseThrow(() -> new ResourceNotFoundException("Vé", "id", maVe));
+        recordCounterSalePayment(ve);
         return toTicketResponse(ve);
     }
 
@@ -329,6 +333,41 @@ public class TicketServiceImpl implements TicketService {
                 }
             }
         });
+    }
+
+    private void recordCounterSalePayment(Ve ve) {
+        BigDecimal vatRate = getVatRate();
+        BigDecimal baseAmount = money(ve.getGiaVe());
+        BigDecimal vatAmount = money(baseAmount.multiply(vatRate));
+        BigDecimal totalAmount = money(baseAmount.add(vatAmount));
+
+        ThanhToan payment = ThanhToan.builder()
+                .maVe(ve.getMaVe())
+                .loaiThanhToan("TICKET")
+                .soTien(totalAmount)
+                .thueVAT(vatAmount)
+                .phuongThuc("CASH")
+                .trangThaiThanhToan("COMPLETED")
+                .thoiGianThanhToan(LocalDateTime.now())
+                .build();
+        thanhToanRepository.save(payment);
+    }
+
+    private BigDecimal getVatRate() {
+        return thamSoRepository.findById("ThueVAT")
+                .map(ts -> {
+                    try {
+                        return new BigDecimal(ts.getGiaTri().trim())
+                                .divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP);
+                    } catch (RuntimeException ex) {
+                        return new BigDecimal("0.10");
+                    }
+                })
+                .orElse(new BigDecimal("0.10"));
+    }
+
+    private BigDecimal money(BigDecimal value) {
+        return value.setScale(2, RoundingMode.HALF_UP);
     }
 
     private SpResult callSpDatVe(int maChuyenBay, int maKhachHang, int maHangVe) {
