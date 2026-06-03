@@ -68,10 +68,17 @@ export default function TicketDetailPage() {
   const [showPayment, setShowPayment] = useState(false)
   const [payMethod, setPayMethod] = useState<PaymentMethod>('CASH')
   const vatRate = getNum('ThueVAT', 10) / 100
+
+  const totalBaggage = baggage.reduce((s, b) => s + b.tongPhi, 0)
+
   const payMutation = useMutation({
     mutationFn: () => {
       const amountWithVAT = Math.round(ticket!.giaVe * (1 + vatRate))
-      return paymentsApi.create({ maVe: Number(id), hinhThucThanhToan: payMethod, soTienThanhToan: amountWithVAT })
+      // Use maPhieuDatCho if this ticket has an associated booking
+      const payload = ticket!.maPhieuDatCho
+        ? { maPhieuDatCho: ticket!.maPhieuDatCho, hinhThucThanhToan: payMethod, soTienThanhToan: amountWithVAT }
+        : { maVe: Number(id), hinhThucThanhToan: payMethod, soTienThanhToan: amountWithVAT }
+      return paymentsApi.create(payload)
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['ticket', id] }); toast.success('Thanh toán thành công'); setShowPayment(false) },
     onError: (e: Error) => toast.error(e.message),
@@ -277,15 +284,51 @@ export default function TicketDetailPage() {
           </>
         }>
         <div className="space-y-4 text-sm">
+          {/* Ticket price */}
           <div className="flex justify-between">
-            <span>Giá vé ({ticket.hangVe.tenHangVe})</span>
+            <span className="text-gray-600">Giá vé ({ticket.hangVe.tenHangVe})</span>
             <span className="font-bold">{formatCurrency(ticket.giaVe)}</span>
           </div>
+
+          {/* Baggage packages */}
+          {baggage.length > 0 && (
+            <>
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Hành lý ký gửi</p>
+                <div className="space-y-1.5">
+                  {baggage.map((b) => (
+                    <div key={b.maGoiHanhLy} className="flex justify-between">
+                      <span className="text-gray-600">
+                        {b.bangGia.tenGoi} · {b.danhSachKien.length} kiện · {b.tongTrongLuong} kg
+                        {b.daThanhToan ? <span className="text-green-600 ml-1">(đã TT)</span> : <span className="text-amber-600 ml-1">(chưa TT)</span>}
+                      </span>
+                      <span className="font-medium">{formatCurrency(b.tongPhi)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Total */}
+          {totalBaggage > 0 && (
+            <div className="flex justify-between font-bold text-base border-t pt-2">
+              <span>Tổng cộng</span>
+              <span className="text-blue-600">{formatCurrency(ticket.giaVe + totalBaggage)}</span>
+            </div>
+          )}
+
+          {/* Payment method */}
           <div>
             <label className="label">Hình thức thanh toán</label>
             <select value={payMethod} onChange={(e) => setPayMethod(e.target.value as PaymentMethod)} className="input">
               {Object.entries(PAYMENT_METHOD_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+            <p className="font-medium mb-0.5">Lưu ý</p>
+            <p>Số tiền thanh toán bao gồm VAT 10%. Hành lý chưa thanh toán sẽ được xử lý sau.</p>
           </div>
         </div>
       </Modal>
