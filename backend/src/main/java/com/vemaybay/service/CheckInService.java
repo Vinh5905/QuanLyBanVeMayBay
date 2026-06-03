@@ -8,4 +8,6 @@ public interface CheckInService {
     BoardingPassResponse checkIn(CheckInRequest request);
 
     BoardingPassResponse getBoardingPass(Integer maVe);
+
+    BoardingPassResponse getBoardingPassByTicketCode(String maVeCode);
 }

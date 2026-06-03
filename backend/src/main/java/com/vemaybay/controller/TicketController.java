@@ -38,6 +38,13 @@ public class TicketController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/code/{maVeCode}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<TicketResponse>> getTicketByCode(@PathVariable String maVeCode) {
+        TicketResponse response = ticketService.getTicketByCode(maVeCode);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @PostMapping("/sell")
     @PreAuthorize("hasAnyRole('Admin', 'NhanVien', 'DaiLy')")
     public ResponseEntity<ApiResponse<TicketResponse>> sellTicket(

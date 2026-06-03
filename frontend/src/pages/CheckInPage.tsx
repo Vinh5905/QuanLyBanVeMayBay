@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { checkinApi } from '../api/checkin.api'
 import { ticketsApi } from '../api/tickets.api'
-import { formatCurrency, formatDateTime } from '../utils/format'
+import { formatCurrency, formatDateTime, TICKET_STATUS_COLOR, TICKET_STATUS_LABEL } from '../utils/format'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Spinner from '../components/ui/Spinner'
 import { useToast } from '../components/ui/Toast'
 import { useAuth } from '../contexts/AuthContext'
 import { useConfig } from '../contexts/ConfigContext'
 import { differenceInHours, differenceInMinutes, parseISO, addHours, format } from 'date-fns'
-import { AlertCircle, CheckCircle, Printer, Plane } from 'lucide-react'
+import { AlertCircle, CheckCircle, Printer, Plane, Search } from 'lucide-react'
 import type { BoardingPass, Ticket } from '../types'
 
 function BoardingPassCard({ bp }: { bp: BoardingPass }) {
@@ -217,6 +217,86 @@ function CheckInForm({ ticket, onComplete }: { ticket: Ticket; onComplete: (bp: 
   )
 }
 
+function CheckInStatusPanel({
+  ticket,
+  boardingPass,
+  isLoading,
+  onOpenBoardingPass,
+}: {
+  ticket: Ticket
+  boardingPass?: BoardingPass
+  isLoading: boolean
+  onOpenBoardingPass: (bp: BoardingPass) => void
+}) {
+  return (
+    <div className="card overflow-hidden">
+      <div className="border-b bg-white px-5 py-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="font-mono text-sm font-bold text-blue-600">{ticket.maVeCode}</p>
+            <h2 className="mt-1 text-lg font-semibold text-gray-900">{ticket.khachHang.hoTen}</h2>
+            <p className="mt-0.5 text-sm text-gray-500">
+              {ticket.chuyenBay.maChuyenBayCode} · {ticket.chuyenBay.sanBayDi}→{ticket.chuyenBay.sanBayDen} · {ticket.hangVe.tenHangVe}
+            </p>
+          </div>
+          <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${TICKET_STATUS_COLOR[ticket.trangThaiVe]}`}>
+            {TICKET_STATUS_LABEL[ticket.trangThaiVe]}
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-4 p-5">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border bg-gray-50 px-3 py-2">
+            <p className="text-xs text-gray-400">Khởi hành</p>
+            <p className="mt-1 font-medium text-gray-900">{formatDateTime(ticket.chuyenBay.ngayGioBay)}</p>
+          </div>
+          <div className="rounded-lg border bg-gray-50 px-3 py-2">
+            <p className="text-xs text-gray-400">Hành khách</p>
+            <p className="mt-1 font-medium text-gray-900">{ticket.khachHang.hoTen}</p>
+          </div>
+          <div className="rounded-lg border bg-gray-50 px-3 py-2">
+            <p className="text-xs text-gray-400">Hạng vé</p>
+            <p className="mt-1 font-medium text-gray-900">{ticket.hangVe.tenHangVe}</p>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center rounded-lg border bg-gray-50 py-8">
+            <Spinner />
+          </div>
+        ) : boardingPass ? (
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-start gap-3">
+                <CheckCircle size={18} className="mt-0.5 shrink-0 text-green-700" />
+                <div>
+                  <p className="font-semibold text-green-900">Đã check-in</p>
+                  <p className="mt-1 text-sm text-green-800">
+                    Boarding pass <span className="font-mono font-bold">{boardingPass.boardingPassCode}</span> · Ghế {boardingPass.soGhe || '—'}
+                  </p>
+                  <p className="mt-1 text-xs text-green-700">Check-in lúc {formatDateTime(boardingPass.checkInAt)}</p>
+                </div>
+              </div>
+              <button onClick={() => onOpenBoardingPass(boardingPass)} className="btn-secondary shrink-0 text-sm">
+                Xem thẻ lên máy bay
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <AlertCircle size={16} className="mt-0.5 shrink-0" />
+            <div>
+              <p className="font-semibold">Chưa check-in</p>
+              <p className="mt-1">Vé này hiện chưa có boarding pass trong hệ thống.</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function CheckInPage() {
@@ -225,8 +305,9 @@ export default function CheckInPage() {
   const isKhachHang = user?.vaiTro === 'KhachHang'
 
   const maVeParam = searchParams.get('maVe') ? Number(searchParams.get('maVe')) : null
-  const [maVeInput, setMaVeInput] = useState(maVeParam ? String(maVeParam) : '')
-  const [maVe, setMaVe] = useState<number | null>(maVeParam)
+  const maVeCodeParam = searchParams.get('maVeCode')?.trim() ?? ''
+  const [maVeCodeInput, setMaVeCodeInput] = useState(maVeCodeParam)
+  const [maVeCode, setMaVeCode] = useState<string | null>(maVeCodeParam || null)
   const [selectedMaVe, setSelectedMaVe] = useState<number | null>(maVeParam)
   const [boardingPass, setBoardingPass] = useState<BoardingPass | null>(null)
 
@@ -246,16 +327,30 @@ export default function CheckInPage() {
     }
   }, [eligibleTickets, isKhachHang, selectedMaVe])
 
-  // Lookup specific ticket if entered manually
-  const { data: lookupTicket } = useQuery({
-    queryKey: ['ticket', maVe],
-    queryFn: () => ticketsApi.get(maVe!),
-    enabled: !!maVe && !isKhachHang,
+  // Staff/Admin lookup uses public ticket code, not numeric ticket ID.
+  const { data: lookupTicket, isLoading: loadingLookup, error: lookupError } = useQuery({
+    queryKey: ['ticket-code', maVeCode],
+    queryFn: () => ticketsApi.getByCode(maVeCode!),
+    enabled: !!maVeCode && !isKhachHang,
+    retry: false,
   })
 
   const activeTicket = isKhachHang
     ? myTickets.find((t) => t.maVe === selectedMaVe) ?? null
     : lookupTicket ?? null
+
+  const { data: lookupBoardingPass, isLoading: loadingLookupBoardingPass } = useQuery({
+    queryKey: ['boarding-pass-code', activeTicket?.maVeCode],
+    queryFn: () => checkinApi.getBoardingPassByCode(activeTicket!.maVeCode),
+    enabled: !isKhachHang && !!activeTicket,
+    retry: false,
+  })
+
+  const submitTicketCodeLookup = () => {
+    const code = maVeCodeInput.trim().toUpperCase()
+    setBoardingPass(null)
+    setMaVeCode(code || null)
+  }
 
   // Boarding pass shown?
   if (boardingPass) {
@@ -277,12 +372,14 @@ export default function CheckInPage() {
           <div>
             <h1 className="text-xl font-bold text-gray-900">Check-in online</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Chọn vé hợp lệ, xác nhận check-in và hệ thống sẽ cấp ghế tự động.
+              {isKhachHang
+                ? 'Chọn vé hợp lệ, xác nhận check-in và hệ thống sẽ cấp ghế tự động.'
+                : 'Tra cứu trạng thái check-in bằng mã vé và xem boarding pass nếu vé đã check-in.'}
             </p>
           </div>
           <div className="rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-600">
-            <p className="text-xs text-gray-400">Cửa sổ online</p>
-            <p className="font-medium text-gray-900">24h đến 60 phút trước bay</p>
+            <p className="text-xs text-gray-400">{isKhachHang ? 'Cửa sổ online' : 'Chế độ tra cứu'}</p>
+            <p className="font-medium text-gray-900">{isKhachHang ? '24h đến 60 phút trước bay' : 'Theo MaVeCode'}</p>
           </div>
         </div>
       </div>
@@ -348,33 +445,47 @@ export default function CheckInPage() {
         </>
       )}
 
-      {/* Staff / Manual entry */}
+      {/* Staff/Admin: check-in status lookup by MaVeCode */}
       {!isKhachHang && (
         <div className="grid gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="card p-4">
-            <label className="label">Mã vé (số)</label>
+          <div className="card p-4 h-fit">
+            <label className="label">Mã vé (MaVeCode)</label>
             <div className="flex gap-3">
               <input
-                value={maVeInput}
-                onChange={(e) => setMaVeInput(e.target.value)}
+                value={maVeCodeInput}
+                onChange={(e) => setMaVeCodeInput(e.target.value)}
                 className="input flex-1"
-                placeholder="Nhập mã vé..."
+                placeholder="VD: VE000123"
+                onKeyDown={(e) => e.key === 'Enter' && submitTicketCodeLookup()}
               />
-              <button onClick={() => { setMaVe(Number(maVeInput)); setBoardingPass(null) }} className="btn-primary">
-                Tìm
+              <button onClick={submitTicketCodeLookup} className="btn-primary">
+                <Search size={16} /> Tìm
               </button>
             </div>
+            <p className="mt-2 text-xs text-gray-400">
+              Nhập mã vé hiển thị trên vé, không nhập ID số nội bộ.
+            </p>
           </div>
 
-          {activeTicket ? (
-            <CheckInForm
+          {loadingLookup ? (
+            <div className="card flex min-h-[260px] items-center justify-center p-8">
+              <Spinner size="lg" />
+            </div>
+          ) : lookupError ? (
+            <div className="card flex min-h-[260px] items-center justify-center p-8 text-center text-sm text-red-500">
+              {lookupError instanceof Error ? lookupError.message : 'Không tìm thấy mã vé này'}
+            </div>
+          ) : activeTicket ? (
+            <CheckInStatusPanel
               key={activeTicket.maVe}
               ticket={activeTicket}
-              onComplete={(bp) => setBoardingPass(bp)}
+              boardingPass={lookupBoardingPass}
+              isLoading={loadingLookupBoardingPass}
+              onOpenBoardingPass={(bp) => setBoardingPass(bp)}
             />
           ) : (
             <div className="card flex min-h-[260px] items-center justify-center p-8 text-center text-sm text-gray-400">
-              Nhập mã vé để kiểm tra điều kiện check-in.
+              Nhập MaVeCode để xem trạng thái check-in của vé.
             </div>
           )}
         </div>

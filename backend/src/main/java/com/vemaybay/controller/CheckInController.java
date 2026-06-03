@@ -34,4 +34,12 @@ public class CheckInController {
         BoardingPassResponse response = checkInService.getBoardingPass(maVe);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    @GetMapping("/ticket-code/{maVeCode}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<BoardingPassResponse>> getBoardingPassByTicketCode(
+            @PathVariable String maVeCode) {
+        BoardingPassResponse response = checkInService.getBoardingPassByTicketCode(maVeCode);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
 }

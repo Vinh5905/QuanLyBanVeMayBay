@@ -126,6 +126,24 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    public TicketResponse getTicketByCode(String maVeCode) {
+        if (maVeCode == null || maVeCode.isBlank()) {
+            throw new BusinessException("INVALID_TICKET_CODE", "Mã vé không được để trống");
+        }
+
+        Ve ve = veRepository.findByMaVeCodeIgnoreCaseAndIsDeletedFalse(maVeCode.trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Vé", "mã vé", maVeCode));
+
+        if (SecurityUtils.isUser()) {
+            Integer maKhachHang = resolveCurrentKhachHang();
+            if (!ve.getMaKhachHang().equals(maKhachHang)) {
+                throw new ForbiddenException("Bạn không có quyền xem vé này");
+            }
+        }
+        return toTicketResponse(ve);
+    }
+
+    @Override
     @Transactional
     public TicketResponse changeFlight(Integer id, ChangeFlightRequest request) {
         Ve currentVe = veRepository.findByMaVeAndIsDeletedFalse(id)

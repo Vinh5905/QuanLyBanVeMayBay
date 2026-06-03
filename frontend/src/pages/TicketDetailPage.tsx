@@ -225,6 +225,11 @@ export default function TicketDetailPage() {
             <LogIn size={16} /> Check-in online
           </button>
         )}
+        {isAdmin && (
+          <button onClick={() => navigate(`/checkin?maVeCode=${encodeURIComponent(ticket.maVeCode)}`)} className="btn-secondary">
+            <LogIn size={16} /> Trạng thái check-in
+          </button>
+        )}
         <button onClick={() => navigate(`/baggage?maVe=${id}`)} className="btn-secondary">
           <Briefcase size={16} /> Hành lý ký gửi
         </button>

@@ -16,6 +16,8 @@ public interface VeRepository extends JpaRepository<Ve, Integer> {
 
     Optional<Ve> findByMaVeAndIsDeletedFalse(Integer maVe);
 
+    Optional<Ve> findByMaVeCodeIgnoreCaseAndIsDeletedFalse(String maVeCode);
+
     List<Ve> findByMaKhachHangAndIsDeletedFalse(Integer maKhachHang);
 
     @Query("SELECT v FROM Ve v WHERE v.isDeleted = false " +

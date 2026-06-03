@@ -65,6 +65,18 @@ public class CheckInServiceImpl implements CheckInService {
         return toBoardingPass(checkIn, ve);
     }
 
+    @Override
+    public BoardingPassResponse getBoardingPassByTicketCode(String maVeCode) {
+        Ve ve = findTicketByCode(maVeCode);
+        ensureCustomerOwnsTicket(ve, "xem trạng thái check-in của");
+
+        CheckIn checkIn = checkInRepository.findByMaVe(ve.getMaVe())
+                .orElseThrow(() -> new BusinessException("NOT_CHECKED_IN",
+                        "Vé chưa được check-in"));
+
+        return toBoardingPass(checkIn, ve);
+    }
+
     // ─── SP caller ──────────────────────────────────────────────────────────────
 
     private SpResult callSpCheckIn(int maVe, String soGhe) {
@@ -91,6 +103,14 @@ public class CheckInServiceImpl implements CheckInService {
         int row = ThreadLocalRandom.current().nextInt(1, 31);
         char column = (char) ('A' + ThreadLocalRandom.current().nextInt(6));
         return row + String.valueOf(column);
+    }
+
+    private Ve findTicketByCode(String maVeCode) {
+        if (maVeCode == null || maVeCode.isBlank()) {
+            throw new BusinessException("INVALID_TICKET_CODE", "Mã vé không được để trống");
+        }
+        return veRepository.findByMaVeCodeIgnoreCaseAndIsDeletedFalse(maVeCode.trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Vé", "mã vé", maVeCode));
     }
 
     private void ensureCustomerOwnsTicket(Ve ve, String action) {

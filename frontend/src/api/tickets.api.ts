@@ -24,6 +24,11 @@ export const ticketsApi = {
     return unwrap<Ticket>(res)
   },
 
+  getByCode: async (maVeCode: string): Promise<Ticket> => {
+    const res = await apiClient.get(`/tickets/code/${encodeURIComponent(maVeCode)}`)
+    return unwrap<Ticket>(res)
+  },
+
   sell: async (data: { maChuyenBay: number; maKhachHang: number; maHangVe: number }): Promise<Ticket> => {
     const res = await apiClient.post('/tickets/sell', data)
     return unwrap<Ticket>(res)

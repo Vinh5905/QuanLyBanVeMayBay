@@ -17,6 +17,8 @@ public interface TicketService {
 
     TicketResponse getTicketById(Integer id);
 
+    TicketResponse getTicketByCode(String maVeCode);
+
     TicketResponse changeFlight(Integer id, ChangeFlightRequest request);
 
     TicketResponse upgrade(Integer id, UpgradeRequest request);

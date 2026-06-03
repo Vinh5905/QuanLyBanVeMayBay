@@ -62,7 +62,7 @@ public class ReportServiceImpl implements ReportService {
         try (XSSFWorkbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            Sheet sheet = workbook.createSheet("Báo cáo tháng " + month + "/" + year);
+            Sheet sheet = workbook.createSheet("Báo cáo tháng " + month + "-" + year);
 
             // Header style
             CellStyle headerStyle = workbook.createCellStyle();
