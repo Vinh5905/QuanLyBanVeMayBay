@@ -83,6 +83,15 @@ apiClient.interceptors.response.use(
       }
     }
 
+    const apiMessage = error.response?.data?.message
+    const fieldMessages = error.response?.data?.errors
+      ?.map((fieldError) => fieldError.message)
+      .filter(Boolean)
+      .join('\n')
+    if (apiMessage || fieldMessages) {
+      return Promise.reject(new Error(fieldMessages || apiMessage))
+    }
+
     return Promise.reject(error)
   }
 )

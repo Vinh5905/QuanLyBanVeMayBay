@@ -10,10 +10,12 @@ import Badge from '../components/ui/Badge'
 import { useToast } from '../components/ui/Toast'
 import { Search } from 'lucide-react'
 import type { Flight } from '../types'
+import { useConfig } from '../contexts/ConfigContext'
 
 export default function SellTicketPage() {
   const navigate = useNavigate()
   const toast = useToast()
+  const { getNum } = useConfig()
 
   const [selectedFlight, setSelectedFlight] = useState<number | null>(null)
   const [selectedClass, setSelectedClass] = useState<number | null>(null)
@@ -26,9 +28,16 @@ export default function SellTicketPage() {
   const activeFilter = Object.fromEntries(Object.entries(flightFilter).filter(([, v]) => v !== ''))
   const { data: flightsResult, isLoading: loadFlights, refetch: refetchFlights } = useQuery({
     queryKey: ['flights-sell', activeFilter],
-    queryFn: () => flightsApi.list({ ...activeFilter, size: 50 }),
+    queryFn: () => flightsApi.list({ ...activeFilter, trangThai: 'SCHEDULED', size: 100 }),
   })
-  const flights: Flight[] = flightsResult?.data ?? []
+  const salesCloseMinutes = getNum('ThoiGianDongBanVe', 45)
+  const sellableAfter = new Date(Date.now() + salesCloseMinutes * 60 * 1000)
+  const flights: Flight[] = (flightsResult?.data ?? []).filter((flight) => {
+    const hasAvailableClass = flight.danhSachHangVe.some((hangVe) => hangVe.soGheCon > 0)
+    return flight.trangThaiChuyenBay === 'SCHEDULED'
+      && new Date(flight.ngayGioBay) > sellableAfter
+      && hasAvailableClass
+  })
 
   const trimmedCustomerSearch = customerSearch.trim()
   const { data: customers, isLoading: loadCustomers, isError: customerLoadError } = useQuery({
@@ -92,7 +101,7 @@ export default function SellTicketPage() {
                     <p className="text-xs text-gray-400 mt-0.5">Từ {formatCurrency(f.giaCoBan)}</p>
                   </div>
                 ))}
-                {flights.length === 0 && <p className="text-center text-gray-400 text-sm py-4">Không có chuyến bay nào</p>}
+                {flights.length === 0 && <p className="text-center text-gray-400 text-sm py-4">Không có chuyến bay còn bán theo bộ lọc hiện tại</p>}
               </div>
             )}
           </div>
