@@ -34,11 +34,11 @@ BEGIN
             RETURN;
         END;
 
-        IF @TrangThaiVe <> 'HOP_LE'
+        IF @TrangThaiVe NOT IN ('HOP_LE', 'DANG_GIU_CHO')
         BEGIN
             IF @OuterTranCount = 0 AND @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
             SELECT 4002 AS ErrorCode,
-                   N'Chỉ có thể hủy vé ở trạng thái HOP_LE. Trạng thái hiện tại: '
+                   N'Chỉ có thể hủy vé ở trạng thái HOP_LE hoặc DANG_GIU_CHO. Trạng thái hiện tại: '
                    + @TrangThaiVe AS Message;
             RETURN;
         END;

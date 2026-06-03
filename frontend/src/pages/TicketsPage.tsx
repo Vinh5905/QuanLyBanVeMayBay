@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ticketsApi } from '../api/tickets.api'
 import { formatCurrency, formatDateTime, TICKET_STATUS_LABEL, TICKET_STATUS_COLOR } from '../utils/format'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import Pagination from '../components/ui/Pagination'
@@ -112,13 +112,23 @@ function CustomerTicketsView() {
 
 function StaffTicketsView() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [page, setPage] = useState(0)
   const [trangThai, setTrangThai] = useState('')
+  const maKhachHangParam = searchParams.get('maKhachHang')
+  const maKhachHang = maKhachHangParam ? Number(maKhachHangParam) : undefined
 
   const { data, isLoading } = useQuery({
-    queryKey: ['tickets', page, trangThai],
-    queryFn: () => ticketsApi.list({ trangThaiVe: trangThai || undefined, page, size: 20 }),
+    queryKey: ['tickets', page, trangThai, maKhachHang],
+    queryFn: () => ticketsApi.list({ maKhachHang, trangThaiVe: trangThai || undefined, page, size: 20 }),
   })
+
+  const clearCustomerFilter = () => {
+    const next = new URLSearchParams(searchParams)
+    next.delete('maKhachHang')
+    setSearchParams(next)
+    setPage(0)
+  }
 
   return (
     <>
@@ -129,6 +139,11 @@ function StaffTicketsView() {
         {trangThai && (
           <button onClick={() => { setTrangThai(''); setPage(0) }} className="btn-secondary text-sm">
             <X size={14} /> Xóa lọc
+          </button>
+        )}
+        {maKhachHang && (
+          <button onClick={clearCustomerFilter} className="btn-secondary text-sm">
+            <X size={14} /> Khách hàng #{maKhachHang}
           </button>
         )}
       </div>

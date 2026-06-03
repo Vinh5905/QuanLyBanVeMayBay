@@ -5,6 +5,7 @@ import { formatDateTime } from '../utils/format'
 import Spinner from '../components/ui/Spinner'
 import { useToast } from '../components/ui/Toast'
 import { Save, RefreshCw } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 const PARAM_LABELS: Record<string, string> = {
   TuoiMuaVeToiThieu: 'Tuổi tối thiểu mua vé (năm)',
@@ -30,8 +31,10 @@ const PARAM_LABELS: Record<string, string> = {
 export default function ConfigPage() {
   const qc = useQueryClient()
   const toast = useToast()
+  const { user } = useAuth()
   const [editValues, setEditValues] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState<string | null>(null)
+  const canEdit = user?.vaiTro === 'Admin'
 
   const { data: params = [], isLoading, refetch } = useQuery({
     queryKey: ['config'],
@@ -66,7 +69,11 @@ export default function ConfigPage() {
         </button>
       </div>
 
-      <p className="text-sm text-gray-500">Thay đổi có hiệu lực ngay lập tức với giao dịch mới.</p>
+      <p className="text-sm text-gray-500">
+        {canEdit
+          ? 'Thay đổi có hiệu lực ngay lập tức với giao dịch mới.'
+          : 'Bạn chỉ có quyền xem tham số hệ thống. Chỉ Admin được phép thay đổi.'}
+      </p>
 
       {isLoading ? (
         <div className="flex justify-center py-16"><Spinner size="lg" /></div>
@@ -89,9 +96,10 @@ export default function ConfigPage() {
                     type="text"
                     value={value}
                     onChange={(e) => setEditValues({ ...editValues, [p.tenThamSo]: e.target.value })}
-                    className="input text-sm w-24 text-right"
+                    disabled={!canEdit}
+                    className="input text-sm w-24 text-right disabled:bg-gray-50 disabled:text-gray-500"
                   />
-                  {isEditing && (
+                  {canEdit && isEditing && (
                     <button
                       onClick={() => handleSave(p.tenThamSo)}
                       disabled={saving === p.tenThamSo}

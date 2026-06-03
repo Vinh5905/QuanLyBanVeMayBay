@@ -33,6 +33,7 @@ public class ConfigController {
     }
 
     @PutMapping("/{key}")
+    @PreAuthorize("hasRole('Admin')")
     public ResponseEntity<ApiResponse<ConfigResponse>> updateConfig(
             @PathVariable String key,
             @Valid @RequestBody UpdateConfigRequest request) {
@@ -41,6 +42,7 @@ public class ConfigController {
     }
 
     @PutMapping("/batch")
+    @PreAuthorize("hasRole('Admin')")
     public ResponseEntity<ApiResponse<List<ConfigResponse>>> batchUpdateConfig(
             @Valid @RequestBody BatchUpdateConfigRequest request) {
         return ResponseEntity.ok(

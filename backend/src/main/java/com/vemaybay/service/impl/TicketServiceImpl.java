@@ -276,7 +276,7 @@ public class TicketServiceImpl implements TicketService {
                         && "DANG_GIU_CHO".equals(v.getTrangThaiVe()))
                 .findFirst()
                 .ifPresent(ve -> {
-                    // directly update since sp_HuyVe only handles HOP_LE
+                    // cancel directly to keep booking cancellation independent from SP state rules
                     ve.setTrangThaiVe("DA_HUY");
                     ve.setIsDeleted(true);
                     veRepository.save(ve);

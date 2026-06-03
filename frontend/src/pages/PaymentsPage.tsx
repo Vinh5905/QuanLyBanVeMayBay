@@ -213,7 +213,6 @@ function StaffPaymentsView() {
                     <th className="table-th">Phương thức</th>
                     <th className="table-th">Trạng thái</th>
                     <th className="table-th">Thời gian</th>
-                    <th className="table-th">Mã giao dịch</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -237,7 +236,6 @@ function StaffPaymentsView() {
                         </Badge>
                       </td>
                       <td className="table-td text-xs">{formatDateTime(p.thoiGianThanhToan)}</td>
-                      <td className="table-td font-mono text-xs text-gray-500">{p.maGiaoDich || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
