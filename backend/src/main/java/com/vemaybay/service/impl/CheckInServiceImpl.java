@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -85,7 +86,7 @@ public class CheckInServiceImpl implements CheckInService {
                     "{call dbo.sp_CheckIn_Online(?, ?, ?, ?)}")) {
                 cs.setInt(1, maVe);
                 cs.setString(2, soGhe);
-                cs.setNull(3, Types.TIMESTAMP);
+                cs.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
                 cs.registerOutParameter(4, Types.INTEGER);
                 cs.execute();
                 try (ResultSet rs = cs.getResultSet()) {

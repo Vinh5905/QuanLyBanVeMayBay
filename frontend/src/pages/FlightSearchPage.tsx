@@ -84,7 +84,12 @@ function FlightCard({ flight, onSelect }: { flight: Flight; onSelect?: (f: Fligh
 
 export default function FlightSearchPage() {
   const [params, setParams] = useState({ sanBayDi: '', sanBayDen: '', ngayBay: '' })
-  const [searched, setSearched] = useState(false)
+
+  const searchParams = {
+    sanBayDi: params.sanBayDi || undefined,
+    sanBayDen: params.sanBayDen || undefined,
+    ngayBay: params.ngayBay || undefined,
+  }
 
   const { data: airports = [] } = useQuery({
     queryKey: ['airports'],
@@ -93,13 +98,11 @@ export default function FlightSearchPage() {
   })
 
   const { data: flights = [], isLoading, refetch } = useQuery({
-    queryKey: ['flights-search', params],
-    queryFn: () => flightsApi.search({ sanBayDi: params.sanBayDi || undefined, sanBayDen: params.sanBayDen || undefined, ngayBay: params.ngayBay || undefined }),
-    enabled: false,
+    queryKey: ['flights-search', searchParams],
+    queryFn: () => flightsApi.search(searchParams),
   })
 
   const handleSearch = async () => {
-    setSearched(true)
     refetch()
   }
 
@@ -137,7 +140,7 @@ export default function FlightSearchPage() {
 
       {isLoading && <div className="flex justify-center py-16"><Spinner size="lg" /></div>}
 
-      {searched && !isLoading && (
+      {!isLoading && (
         <div className="space-y-3">
           {flights.length === 0 ? (
             <EmptyState
