@@ -1,6 +1,7 @@
 package com.vemaybay.dto.flight;
 
 import jakarta.validation.constraints.*;
+import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -35,8 +36,10 @@ public class CreateFlightRequest {
 
     @NotNull(message = "Danh sách hạng vé không được để trống")
     @Size(min = 1, message = "Phải có ít nhất 1 hạng vé")
+    @Valid
     private List<HangVeInput> danhSachHangVe;
 
+    @Valid
     private List<TrungGianInput> danhSachTrungGian;
 
     @Getter

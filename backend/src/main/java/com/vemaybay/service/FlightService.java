@@ -20,4 +20,6 @@ public interface FlightService {
     List<FlightResponse> searchFlights(FlightSearchRequest request);
 
     List<SanBayResponse> getAllAirports();
+
+    List<HangVeResponse> getActiveTicketClasses();
 }

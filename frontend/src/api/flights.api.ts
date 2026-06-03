@@ -1,5 +1,5 @@
 import { apiClient, unwrap, unwrapList } from './client'
-import type { Flight, Airport } from '../types'
+import type { Flight, Airport, TicketClassCatalog } from '../types'
 
 export interface FlightSearchParams {
   sanBayDi?: string
@@ -27,6 +27,11 @@ export const flightsApi = {
     return unwrap<Airport[]>(res)
   },
 
+  ticketClasses: async (): Promise<TicketClassCatalog[]> => {
+    const res = await apiClient.get('/flights/ticket-classes')
+    return unwrap<TicketClassCatalog[]>(res)
+  },
+
   get: async (id: number): Promise<Flight> => {
     const res = await apiClient.get(`/flights/${id}`)
     return unwrap<Flight>(res)
@@ -40,7 +45,7 @@ export const flightsApi = {
     thoiGianBay: number
     giaCoBan: number
     danhSachHangVe: { maHangVe: number; soLuong: number; donGia: number }[]
-    danhSachTrungGian?: { maSanBay: string; thoiGianDung: number; ghiChu?: string }[]
+    danhSachTrungGian?: { maSanBay: string; thuTu: number; thoiGianDung: number; ghiChu?: string }[]
   }): Promise<Flight> => {
     const res = await apiClient.post('/flights', data)
     return unwrap<Flight>(res)

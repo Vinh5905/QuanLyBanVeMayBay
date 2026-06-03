@@ -221,7 +221,7 @@ function StaffPaymentsView() {
                 <thead>
                   <tr>
                     <th className="table-th">Mã thanh toán</th>
-                    <th className="table-th">Vé / Phiếu đặt chỗ</th>
+                    <th className="table-th">Đối tượng / nguồn</th>
                     <th className="table-th">Loại thanh toán</th>
                     <th className="table-th text-right">Số tiền</th>
                     <th className="table-th text-right">Thuế VAT</th>
@@ -242,8 +242,12 @@ function StaffPaymentsView() {
                         ) : (
                           <span className="text-xs text-gray-400">Không gắn vé</span>
                         )}
-                        {p.maPhieuDatCho && (
-                          <p className="mt-0.5 text-xs text-gray-500">Phiếu đặt chỗ #{p.maPhieuDatCho}</p>
+                        {p.maPhieuDatCho ? (
+                          <p className="mt-0.5 text-xs text-gray-500">Nguồn: đặt online #{p.maPhieuDatCho}</p>
+                        ) : (
+                          <p className="mt-0.5 text-xs text-gray-500">
+                            Nguồn: {(p.loaiThanhToan ?? 'TICKET') === 'TICKET' ? 'thanh toán trực tiếp' : 'dịch vụ gắn với vé'}
+                          </p>
                         )}
                       </td>
                       <td className="table-td">

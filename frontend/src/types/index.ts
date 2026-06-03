@@ -31,6 +31,13 @@ export interface SeatClass {
   donGia: number
 }
 
+export interface TicketClassCatalog {
+  maHangVe: number
+  tenHangVe: string
+  heSoGia: number
+  moTa?: string
+}
+
 export interface Stopover {
   maTrungGian?: number
   maSanBay: string

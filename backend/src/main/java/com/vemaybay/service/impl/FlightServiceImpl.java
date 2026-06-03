@@ -26,6 +26,8 @@ public class FlightServiceImpl implements FlightService {
     private final ChuyenBayRepository chuyenBayRepository;
     private final SanBayRepository sanBayRepository;
     private final ChiTietHangVeRepository chiTietHangVeRepository;
+    private final TrungGianRepository trungGianRepository;
+    private final HangVeRepository hangVeRepository;
 
     @Override
     @Transactional
@@ -60,16 +62,8 @@ public class FlightServiceImpl implements FlightService {
         chuyenBay = chuyenBayRepository.save(chuyenBay);
 
         final Integer maChuyenBay = chuyenBay.getMaChuyenBay();
-        for (CreateFlightRequest.HangVeInput hv : request.getDanhSachHangVe()) {
-            ChiTietHangVe ct = ChiTietHangVe.builder()
-                    .maChuyenBay(maChuyenBay)
-                    .maHangVe(hv.getMaHangVe())
-                    .soLuong(hv.getSoLuong())
-                    .soGheDaDat(0)
-                    .donGia(hv.getDonGia())
-                    .build();
-            chiTietHangVeRepository.save(ct);
-        }
+        saveSeatClasses(maChuyenBay, request.getDanhSachHangVe());
+        saveStopovers(chuyenBay, request.getDanhSachTrungGian());
 
         return toResponse(chuyenBayRepository.findById(maChuyenBay).orElseThrow());
     }
@@ -140,16 +134,7 @@ public class FlightServiceImpl implements FlightService {
 
         if (request.getDanhSachHangVe() != null) {
             chiTietHangVeRepository.deleteAll(chiTietHangVeRepository.findByMaChuyenBay(id));
-            for (CreateFlightRequest.HangVeInput hv : request.getDanhSachHangVe()) {
-                ChiTietHangVe ct = ChiTietHangVe.builder()
-                        .maChuyenBay(id)
-                        .maHangVe(hv.getMaHangVe())
-                        .soLuong(hv.getSoLuong())
-                        .soGheDaDat(0)
-                        .donGia(hv.getDonGia())
-                        .build();
-                chiTietHangVeRepository.save(ct);
-            }
+            saveSeatClasses(id, request.getDanhSachHangVe());
         }
 
         chuyenBayRepository.save(cb);
@@ -205,6 +190,54 @@ public class FlightServiceImpl implements FlightService {
                 .toList();
     }
 
+    @Override
+    public List<HangVeResponse> getActiveTicketClasses() {
+        return hangVeRepository.findByIsActiveTrueOrderByHeSoGiaAscMaHangVeAsc().stream()
+                .map(hv -> HangVeResponse.builder()
+                        .maHangVe(hv.getMaHangVe())
+                        .tenHangVe(hv.getTenHangVe())
+                        .heSoGia(hv.getHeSoGia())
+                        .moTa(hv.getMoTa())
+                        .build())
+                .toList();
+    }
+
+    private void saveSeatClasses(Integer maChuyenBay, List<CreateFlightRequest.HangVeInput> inputs) {
+        for (CreateFlightRequest.HangVeInput hv : inputs) {
+            ChiTietHangVe ct = ChiTietHangVe.builder()
+                    .maChuyenBay(maChuyenBay)
+                    .maHangVe(hv.getMaHangVe())
+                    .soLuong(hv.getSoLuong())
+                    .soGheDaDat(0)
+                    .donGia(hv.getDonGia())
+                    .build();
+            chiTietHangVeRepository.save(ct);
+        }
+    }
+
+    private void saveStopovers(ChuyenBay chuyenBay, List<CreateFlightRequest.TrungGianInput> inputs) {
+        if (inputs == null || inputs.isEmpty()) {
+            return;
+        }
+
+        int fallbackOrder = 1;
+        for (CreateFlightRequest.TrungGianInput input : inputs) {
+            SanBay sanBayTrungGian = sanBayRepository.findById(input.getMaSanBay())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Sân bay trung gian", "mã", input.getMaSanBay()));
+
+            TrungGian trungGian = TrungGian.builder()
+                    .chuyenBay(chuyenBay)
+                    .sanBay(sanBayTrungGian)
+                    .thuTu(input.getThuTu() != null ? input.getThuTu() : fallbackOrder)
+                    .thoiGianDung(input.getThoiGianDung())
+                    .ghiChu(input.getGhiChu())
+                    .build();
+            trungGianRepository.save(trungGian);
+            fallbackOrder++;
+        }
+    }
+
     private FlightResponse toResponse(ChuyenBay cb) {
         List<ChiTietHangVe> chiTiet = chiTietHangVeRepository.findByMaChuyenBay(cb.getMaChuyenBay());
 
@@ -219,19 +252,18 @@ public class FlightServiceImpl implements FlightService {
                         .build())
                 .toList();
 
-        List<FlightResponse.TrungGianInfo> trungGianInfos = null;
-        if (cb.getDanhSachTrungGian() != null) {
-            trungGianInfos = cb.getDanhSachTrungGian().stream()
-                    .map(tg -> FlightResponse.TrungGianInfo.builder()
-                            .maSanBay(tg.getSanBay().getMaSanBay())
-                            .tenSanBay(tg.getSanBay().getTenSanBay())
-                            .thanhPho(tg.getSanBay().getThanhPho())
-                            .thuTu(tg.getThuTu())
-                            .thoiGianDung(tg.getThoiGianDung())
-                            .ghiChu(tg.getGhiChu())
-                            .build())
-                    .toList();
-        }
+        List<FlightResponse.TrungGianInfo> trungGianInfos = trungGianRepository
+                .findByChuyenBay_MaChuyenBayOrderByThuTuAsc(cb.getMaChuyenBay())
+                .stream()
+                .map(tg -> FlightResponse.TrungGianInfo.builder()
+                        .maSanBay(tg.getSanBay().getMaSanBay())
+                        .tenSanBay(tg.getSanBay().getTenSanBay())
+                        .thanhPho(tg.getSanBay().getThanhPho())
+                        .thuTu(tg.getThuTu())
+                        .thoiGianDung(tg.getThoiGianDung())
+                        .ghiChu(tg.getGhiChu())
+                        .build())
+                .toList();
 
         return FlightResponse.builder()
                 .maChuyenBay(cb.getMaChuyenBay())

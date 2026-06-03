@@ -1,6 +1,7 @@
 package com.vemaybay.dto.flight;
 
 import jakarta.validation.constraints.*;
+import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,7 +22,9 @@ public class UpdateFlightRequest {
     @DecimalMin(value = "0", inclusive = false, message = "Giá cơ bản phải lớn hơn 0")
     private BigDecimal giaCoBan;
 
+    @Valid
     private List<CreateFlightRequest.HangVeInput> danhSachHangVe;
 
+    @Valid
     private List<CreateFlightRequest.TrungGianInput> danhSachTrungGian;
 }

@@ -39,6 +39,12 @@ public class FlightController {
         return ResponseEntity.ok(ApiResponse.success(airports));
     }
 
+    @GetMapping("/ticket-classes")
+    public ResponseEntity<ApiResponse<List<HangVeResponse>>> getTicketClasses() {
+        List<HangVeResponse> ticketClasses = flightService.getActiveTicketClasses();
+        return ResponseEntity.ok(ApiResponse.success(ticketClasses));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<FlightResponse>> getFlightById(@PathVariable Integer id) {
         FlightResponse response = flightService.getFlightById(id);

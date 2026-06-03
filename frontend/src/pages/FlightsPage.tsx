@@ -24,10 +24,13 @@ const schema = z.object({
   ngayGioBay: z.string().min(1, 'Bắt buộc'),
   thoiGianBay: z.coerce.number().min(1, 'Bắt buộc'),
   giaCoBan: z.coerce.number().min(1, 'Bắt buộc'),
-  soGheHang1: z.coerce.number().min(0),
-  donGiaHang1: z.coerce.number().min(0),
-  soGheHang2: z.coerce.number().min(0),
-  donGiaHang2: z.coerce.number().min(0),
+  danhSachHangVe: z.array(z.object({
+    maHangVe: z.coerce.number().min(1),
+    tenHangVe: z.string().min(1),
+    heSoGia: z.coerce.number().optional(),
+    soLuong: z.coerce.number().min(1, 'Số ghế phải lớn hơn 0'),
+    donGia: z.coerce.number().min(1, 'Giá phải lớn hơn 0'),
+  })).min(1, 'Phải có ít nhất 1 hạng ghế'),
   danhSachTrungGian: z.array(z.object({
     maSanBay: z.string().min(1, 'Bắt buộc'),
     thoiGianDung: z.coerce.number().min(45, 'Tối thiểu 45 phút').max(120, 'Tối đa 120 phút'),
@@ -182,14 +185,45 @@ export default function FlightsPage() {
     staleTime: Infinity,
   })
 
+  const { data: ticketClasses = [], isLoading: isTicketClassesLoading } = useQuery({
+    queryKey: ['ticket-classes'],
+    queryFn: flightsApi.ticketClasses,
+    staleTime: Infinity,
+  })
+
   const maxTrungGian = getNum('SoSanBayTrungGianToiDa', 2)
   const minThoiGianBay = getNum('ThoiGianBayToiThieu', 30)
 
   const { register, handleSubmit, control, formState: { errors, isSubmitting }, reset } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { danhSachTrungGian: [] },
+    defaultValues: { danhSachHangVe: [], danhSachTrungGian: [] },
   })
-  const { fields, append, remove } = useFieldArray({ control, name: 'danhSachTrungGian' })
+  const { fields: seatClassFields } = useFieldArray({ control, name: 'danhSachHangVe' })
+  const { fields: stopoverFields, append, remove } = useFieldArray({ control, name: 'danhSachTrungGian' })
+
+  const buildSeatClassDefaults = () => ticketClasses.map((h) => {
+    const normalized = h.tenHangVe.toLowerCase()
+    const defaultSeats = normalized.includes('nhất') ? 10 : normalized.includes('thương') ? 30 : 120
+    const defaultPrice = Math.max(1, Math.round(1000000 * Number(h.heSoGia || 1)))
+
+    return {
+      maHangVe: h.maHangVe,
+      tenHangVe: h.tenHangVe,
+      heSoGia: Number(h.heSoGia),
+      soLuong: defaultSeats,
+      donGia: defaultPrice,
+    }
+  })
+
+  const openCreateModal = () => {
+    reset({ danhSachHangVe: buildSeatClassDefaults(), danhSachTrungGian: [] })
+    setShowCreate(true)
+  }
+
+  const closeCreateModal = () => {
+    setShowCreate(false)
+    reset({ danhSachHangVe: [], danhSachTrungGian: [] })
+  }
 
   const createMutation = useMutation({
     mutationFn: (data: FormData) => flightsApi.create({
@@ -199,17 +233,20 @@ export default function FlightsPage() {
       ngayGioBay: data.ngayGioBay,
       thoiGianBay: data.thoiGianBay,
       giaCoBan: data.giaCoBan,
-      danhSachHangVe: [
-        { maHangVe: 1, soLuong: data.soGheHang1, donGia: data.donGiaHang1 },
-        { maHangVe: 2, soLuong: data.soGheHang2, donGia: data.donGiaHang2 },
-      ],
-      danhSachTrungGian: data.danhSachTrungGian,
+      danhSachHangVe: data.danhSachHangVe.map((h) => ({
+        maHangVe: h.maHangVe,
+        soLuong: h.soLuong,
+        donGia: h.donGia,
+      })),
+      danhSachTrungGian: data.danhSachTrungGian.map((tg, idx) => ({
+        ...tg,
+        thuTu: idx + 1,
+      })),
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['flights'] })
       toast.success('Tạo chuyến bay thành công')
-      setShowCreate(false)
-      reset()
+      closeCreateModal()
     },
     onError: (e: Error) => toast.error(e.message),
   })
@@ -219,8 +256,12 @@ export default function FlightsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Quản lý chuyến bay</h1>
         {!isKhachHang && (
-          <button onClick={() => setShowCreate(true)} className="btn-primary">
-            <Plus size={16} /> Thêm chuyến bay
+          <button
+            onClick={openCreateModal}
+            disabled={isTicketClassesLoading || ticketClasses.length === 0}
+            className="btn-primary disabled:opacity-60"
+          >
+            {isTicketClassesLoading ? <Spinner size="sm" /> : <Plus size={16} />} Thêm chuyến bay
           </button>
         )}
       </div>
@@ -282,12 +323,12 @@ export default function FlightsPage() {
       {/* Create modal */}
       <Modal
         open={showCreate}
-        onClose={() => { setShowCreate(false); reset() }}
+        onClose={closeCreateModal}
         title="Tạo chuyến bay mới"
         size="xl"
         footer={
           <>
-            <button onClick={() => { setShowCreate(false); reset() }} className="btn-secondary">Hủy</button>
+            <button onClick={closeCreateModal} className="btn-secondary">Hủy</button>
             <button onClick={handleSubmit((d) => createMutation.mutate(d))} disabled={isSubmitting || createMutation.isPending} className="btn-primary">
               {createMutation.isPending ? <Spinner size="sm" /> : 'Tạo chuyến bay'}
             </button>
@@ -336,24 +377,43 @@ export default function FlightsPage() {
 
           <div className="border rounded-lg p-3 space-y-3">
             <p className="text-sm font-medium text-gray-700">Hạng ghế</p>
-            <div className="grid grid-cols-4 gap-3">
-              <div className="col-span-2">
-                <label className="label text-xs">Phổ thông — Số ghế</label>
-                <input {...register('soGheHang1')} type="number" className="input text-sm" defaultValue={150} />
-              </div>
-              <div className="col-span-2">
-                <label className="label text-xs">Phổ thông — Giá (VND)</label>
-                <input {...register('donGiaHang1')} type="number" className="input text-sm" placeholder="1000000" />
-              </div>
-              <div className="col-span-2">
-                <label className="label text-xs">Thương gia — Số ghế</label>
-                <input {...register('soGheHang2')} type="number" className="input text-sm" defaultValue={20} />
-              </div>
-              <div className="col-span-2">
-                <label className="label text-xs">Thương gia — Giá (VND)</label>
-                <input {...register('donGiaHang2')} type="number" className="input text-sm" placeholder="3000000" />
-              </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {seatClassFields.map((field, idx) => (
+                <div key={field.id} className="rounded-lg border bg-gray-50 p-3">
+                  <input type="hidden" {...register(`danhSachHangVe.${idx}.maHangVe`)} />
+                  <input type="hidden" {...register(`danhSachHangVe.${idx}.tenHangVe`)} />
+                  <input type="hidden" {...register(`danhSachHangVe.${idx}.heSoGia`)} />
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-gray-900">{field.tenHangVe}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">Hệ số giá {Number(field.heSoGia || 1).toFixed(2)}</p>
+                    </div>
+                    <Badge variant={field.tenHangVe.toLowerCase().includes('nhất') ? 'yellow' : field.tenHangVe.toLowerCase().includes('thương') ? 'blue' : 'gray'}>
+                      {field.tenHangVe.toLowerCase().includes('nhất') ? 'Cao nhất' : field.tenHangVe.toLowerCase().includes('thương') ? 'Cao cấp' : 'Tiêu chuẩn'}
+                    </Badge>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    <div>
+                      <label className="label text-xs">Số ghế</label>
+                      <input {...register(`danhSachHangVe.${idx}.soLuong`)} type="number" className="input text-sm" />
+                      {errors.danhSachHangVe?.[idx]?.soLuong && (
+                        <p className="text-xs text-red-600 mt-1">{errors.danhSachHangVe[idx]?.soLuong?.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="label text-xs">Đơn giá (VND)</label>
+                      <input {...register(`danhSachHangVe.${idx}.donGia`)} type="number" className="input text-sm" />
+                      {errors.danhSachHangVe?.[idx]?.donGia && (
+                        <p className="text-xs text-red-600 mt-1">{errors.danhSachHangVe[idx]?.donGia?.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+            {errors.danhSachHangVe && typeof errors.danhSachHangVe.message === 'string' && (
+              <p className="text-xs text-red-600">{errors.danhSachHangVe.message}</p>
+            )}
           </div>
 
           <div className="border rounded-lg p-3 space-y-3">
@@ -362,13 +422,13 @@ export default function FlightsPage() {
               <button
                 type="button"
                 onClick={() => append({ maSanBay: '', thoiGianDung: 60, ghiChu: '' })}
-                disabled={fields.length >= maxTrungGian}
+                disabled={stopoverFields.length >= maxTrungGian}
                 className="btn-secondary text-xs py-1"
               >
                 <Plus size={12} /> Thêm
               </button>
             </div>
-            {fields.map((field, idx) => (
+            {stopoverFields.map((field, idx) => (
               <div key={field.id} className="grid grid-cols-5 gap-2 items-start">
                 <div className="col-span-2">
                   <select {...register(`danhSachTrungGian.${idx}.maSanBay`)} className="input text-sm">
