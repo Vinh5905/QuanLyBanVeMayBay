@@ -28,7 +28,9 @@ export const reportsApi = {
     a.download = month
       ? `bao-cao-thang-${month}-${year}.xlsx`
       : `bao-cao-nam-${year}.xlsx`
+    document.body.appendChild(a)
     a.click()
+    a.remove()
     URL.revokeObjectURL(url)
   },
 }

@@ -12,4 +12,6 @@ public interface ReportService {
     List<YearlyReportRow> getYearlyReport(int year);
 
     byte[] exportMonthlyReportExcel(int year, int month);
+
+    byte[] exportYearlyReportExcel(int year);
 }

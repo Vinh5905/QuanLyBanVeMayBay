@@ -15,6 +15,7 @@ public class PaymentResponse {
     private Integer maThanhToan;
     private Integer maVe;
     private Integer maPhieuDatCho;
+    private String loaiThanhToan;
     private BigDecimal soTien;
     private BigDecimal thueVAT;
     private String phuongThuc;

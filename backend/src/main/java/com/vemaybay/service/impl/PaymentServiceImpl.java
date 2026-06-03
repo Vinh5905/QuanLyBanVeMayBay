@@ -169,6 +169,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         ThanhToan payment = ThanhToan.builder()
                 .maVe(request.getMaVe())
+                .loaiThanhToan(type)
                 .soTien(amount)
                 .thueVAT(extractVat(amount, vatRate))
                 .phuongThuc(request.getHinhThucThanhToan())
@@ -360,6 +361,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .maThanhToan(tt.getMaThanhToan())
                 .maVe(tt.getMaVe())
                 .maPhieuDatCho(tt.getMaPhieuDatCho())
+                .loaiThanhToan(tt.getLoaiThanhToan() != null ? tt.getLoaiThanhToan() : "TICKET")
                 .soTien(tt.getSoTien())
                 .thueVAT(tt.getThueVAT())
                 .phuongThuc(tt.getPhuongThuc())

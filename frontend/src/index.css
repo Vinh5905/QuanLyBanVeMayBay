@@ -48,8 +48,15 @@
 @media print {
   .no-print { display: none !important; }
   .print-only { display: block !important; }
-  body { background: white; }
+  html, body, #root { height: auto !important; overflow: visible !important; background: white !important; }
+  .h-screen { height: auto !important; }
+  .overflow-hidden, .overflow-y-auto, .overflow-x-auto { overflow: visible !important; }
+  main { height: auto !important; overflow: visible !important; padding: 16px !important; }
   .card { border: 1px solid #e5e7eb; box-shadow: none; }
+  table { page-break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; page-break-inside: avoid; }
+  .recharts-wrapper, .recharts-responsive-container { break-inside: avoid; page-break-inside: avoid; }
 }
 
 .print-only { display: none; }

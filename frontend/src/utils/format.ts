@@ -51,6 +51,32 @@ export const PAYMENT_METHOD_LABEL: Record<string, string> = {
 }
 
 export const FLIGHT_STATUS_LABEL: Record<string, string> = {
-  SCHEDULED: 'Đã lên lịch',
+  SCHEDULED: 'Chưa bay',
+  IN_FLIGHT: 'Đang bay',
+  LANDED: 'Đã hạ cánh',
   CANCELLED: 'Đã hủy',
+}
+
+export type BadgeVariant = 'green' | 'yellow' | 'red' | 'blue' | 'gray'
+
+export function getFlightOperationalStatus(
+  trangThaiChuyenBay: string,
+  ngayGioBay: string,
+  thoiGianBay: number,
+): { label: string; variant: BadgeVariant } {
+  if (trangThaiChuyenBay === 'CANCELLED') {
+    return { label: 'Đã hủy', variant: 'red' }
+  }
+
+  try {
+    const start = parseISO(ngayGioBay).getTime()
+    const end = start + thoiGianBay * 60_000
+    const now = Date.now()
+
+    if (now < start) return { label: 'Chưa bay', variant: 'blue' }
+    if (now <= end) return { label: 'Đang bay', variant: 'yellow' }
+    return { label: 'Đã hạ cánh', variant: 'green' }
+  } catch {
+    return { label: FLIGHT_STATUS_LABEL[trangThaiChuyenBay] ?? trangThaiChuyenBay, variant: 'gray' }
+  }
 }

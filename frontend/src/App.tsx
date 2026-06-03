@@ -54,8 +54,8 @@ export default function App() {
                   <Route path="/customers" element={<CustomersPage />} />
                   <Route path="/tickets" element={<TicketsPage />} />
                   <Route path="/tickets/:id" element={<TicketDetailPage />} />
-                  <Route path="/tickets/sell" element={<SellTicketPage />} />
-                  <Route path="/tickets/book" element={<BookTicketPage />} />
+                  <Route path="/tickets/sell" element={<RequireAuth roles={['NhanVien', 'DaiLy']}><SellTicketPage /></RequireAuth>} />
+                  <Route path="/tickets/book" element={<RequireAuth roles={['KhachHang', 'NhanVien', 'DaiLy']}><BookTicketPage /></RequireAuth>} />
                   <Route path="/payments" element={<PaymentsPage />} />
                   <Route path="/baggage" element={<BaggagePage />} />
                   <Route path="/checkin" element={<CheckInPage />} />

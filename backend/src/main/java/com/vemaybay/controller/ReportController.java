@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -42,11 +41,15 @@ public class ReportController {
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportReport(
             @RequestParam int year,
-            @RequestParam int month,
+            @RequestParam(required = false) Integer month,
             @RequestParam(defaultValue = "excel") String format) {
-        byte[] data = reportService.exportMonthlyReportExcel(year, month);
+        byte[] data = month != null
+                ? reportService.exportMonthlyReportExcel(year, month)
+                : reportService.exportYearlyReportExcel(year);
 
-        String filename = "bao-cao-thang-" + month + "-" + year + ".xlsx";
+        String filename = month != null
+                ? "bao-cao-thang-" + month + "-" + year + ".xlsx"
+                : "bao-cao-nam-" + year + ".xlsx";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));

@@ -21,10 +21,12 @@ const navItems: NavItem[] = [
   { label: 'Tổng quan', icon: <LayoutDashboard size={18} />, to: '/', hideForRoles: ['KhachHang'] },
   { label: 'Chuyến bay', icon: <Plane size={18} />, to: '/flights', hideForRoles: ['KhachHang'] },
   { label: 'Khách hàng', icon: <Users size={18} />, to: '/customers', roles: ['Admin', 'NhanVien', 'DaiLy'] },
+  { label: 'Danh sách vé', icon: <Ticket size={18} />, to: '/tickets', roles: ['Admin'] },
 
   // Ticket submenu - KhachHang sees only book + my tickets
   {
     label: 'Vé máy bay', icon: <Ticket size={18} />,
+    hideForRoles: ['Admin'],
     children: [
       { label: 'Bán vé tại quầy', to: '/tickets/sell' },
       { label: 'Đặt vé online', to: '/tickets/book' },

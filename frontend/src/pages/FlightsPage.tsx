@@ -1,15 +1,14 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { flightsApi } from '../api/flights.api'
-import { formatCurrency, formatDateTime, formatDuration, FLIGHT_STATUS_LABEL } from '../utils/format'
-import { Plus, Search, ChevronDown, ChevronUp, X, AlertCircle } from 'lucide-react'
+import { formatCurrency, formatDateTime, formatDuration, getFlightOperationalStatus } from '../utils/format'
+import { Plus, ChevronDown, ChevronUp, X, AlertCircle, PlaneTakeoff, PlaneLanding, Armchair, Route, Clock3 } from 'lucide-react'
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import Pagination from '../components/ui/Pagination'
 import Badge from '../components/ui/Badge'
 import Modal from '../components/ui/Modal'
 import { useToast } from '../components/ui/Toast'
-import { useQuery as useAirportsQuery } from '@tanstack/react-query'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -41,6 +40,7 @@ function FlightRow({ flight, onDetail }: { flight: Flight; onDetail: () => void 
   const [expanded, setExpanded] = useState(false)
   const totalLeft = flight.danhSachHangVe.reduce((s, h) => s + h.soGheCon, 0)
   const totalSeats = flight.danhSachHangVe.reduce((s, h) => s + h.soLuong, 0)
+  const status = getFlightOperationalStatus(flight.trangThaiChuyenBay, flight.ngayGioBay, flight.thoiGianBay)
 
   return (
     <>
@@ -57,43 +57,99 @@ function FlightRow({ flight, onDetail }: { flight: Flight; onDetail: () => void 
           </Badge>
         </td>
         <td className="table-td">
-          <Badge variant={flight.trangThaiChuyenBay === 'SCHEDULED' ? 'blue' : 'red'}>
-            {FLIGHT_STATUS_LABEL[flight.trangThaiChuyenBay] || flight.trangThaiChuyenBay}
-          </Badge>
+          <Badge variant={status.variant}>{status.label}</Badge>
         </td>
         <td className="table-td">
           <button className="text-gray-400 hover:text-gray-700">{expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</button>
         </td>
       </tr>
       {expanded && (
-        <tr className="bg-blue-50/40">
-          <td colSpan={9} className="px-4 py-3">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-              {flight.danhSachHangVe.map((h) => (
-                <div key={h.maHangVe} className="bg-white rounded-lg p-3 border">
-                  <p className="font-semibold text-gray-700">{h.tenHangVe}</p>
-                  <p className="text-gray-500 mt-1">Giá: <span className="text-gray-900 font-medium">{formatCurrency(h.donGia)}</span></p>
-                  <p className="text-gray-500">Ghế: {h.soGheCon}/{h.soLuong} còn trống</p>
+        <tr className="bg-gray-50">
+          <td colSpan={9} className="p-0">
+            <div className="border-t px-5 py-5">
+              <div className="grid gap-4 xl:grid-cols-[1.15fr_1fr]">
+                <div className="rounded-lg border bg-white p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Lộ trình</p>
+                      <div className="mt-3 grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+                        <div>
+                          <p className="text-2xl font-bold text-gray-900">{flight.sanBayDi.maSanBay}</p>
+                          <p className="mt-1 text-sm text-gray-600">{flight.sanBayDi.tenSanBay}</p>
+                          <p className="text-xs text-gray-400">{flight.sanBayDi.thanhPho}</p>
+                        </div>
+                        <div className="flex w-full flex-col items-center text-gray-400 md:min-w-28">
+                          <PlaneTakeoff size={18} className="text-blue-500" />
+                          <div className="my-2 h-px w-full border-t border-dashed" />
+                          <PlaneLanding size={18} className="text-blue-500" />
+                        </div>
+                        <div className="md:text-right">
+                          <p className="text-2xl font-bold text-gray-900">{flight.sanBayDen.maSanBay}</p>
+                          <p className="mt-1 text-sm text-gray-600">{flight.sanBayDen.tenSanBay}</p>
+                          <p className="text-xs text-gray-400">{flight.sanBayDen.thanhPho}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDetail() }}
+                      className="btn-secondary shrink-0 text-sm"
+                    >
+                      Xem chi tiết
+                    </button>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-lg border bg-gray-50 px-3 py-2">
+                      <p className="flex items-center gap-1 text-xs text-gray-400"><Clock3 size={13} /> Khởi hành</p>
+                      <p className="mt-1 font-medium text-gray-900">{formatDateTime(flight.ngayGioBay)}</p>
+                    </div>
+                    <div className="rounded-lg border bg-gray-50 px-3 py-2">
+                      <p className="flex items-center gap-1 text-xs text-gray-400"><Route size={13} /> Thời gian bay</p>
+                      <p className="mt-1 font-medium text-gray-900">{formatDuration(flight.thoiGianBay)}</p>
+                    </div>
+                    <div className="rounded-lg border bg-gray-50 px-3 py-2">
+                      <p className="flex items-center gap-1 text-xs text-gray-400"><Armchair size={13} /> Ghế còn</p>
+                      <p className="mt-1 font-medium text-gray-900">{totalLeft}/{totalSeats}</p>
+                    </div>
+                  </div>
                 </div>
-              ))}
-              {flight.danhSachTrungGian.length > 0 && (
-                <div className="sm:col-span-3">
-                  <p className="font-medium text-gray-700 mb-2">Sân bay trung gian:</p>
-                  <div className="flex gap-3 flex-wrap">
-                    {flight.danhSachTrungGian.map((tg, i) => (
-                      <div key={i} className="bg-white rounded-lg p-3 border text-xs">
-                        <p className="font-medium">{tg.maSanBay}</p>
-                        <p className="text-gray-500">Dừng: {tg.thoiGianDung} phút</p>
-                        {tg.ghiChu && <p className="text-gray-400">{tg.ghiChu}</p>}
+
+                <div className="space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {flight.danhSachHangVe.map((h) => (
+                      <div key={h.maHangVe} className="rounded-lg border bg-white p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-gray-900">{h.tenHangVe}</p>
+                            <p className="mt-1 text-xs text-gray-500">{h.soGheDaDat}/{h.soLuong} ghế đã đặt</p>
+                          </div>
+                          <Badge variant={h.soGheCon > 10 ? 'green' : h.soGheCon > 0 ? 'yellow' : 'red'}>
+                            {h.soGheCon} còn
+                          </Badge>
+                        </div>
+                        <p className="mt-3 text-lg font-bold text-blue-600">{formatCurrency(h.donGia)}</p>
                       </div>
                     ))}
                   </div>
+
+                  <div className="rounded-lg border bg-white p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Sân bay trung gian</p>
+                    {flight.danhSachTrungGian.length === 0 ? (
+                      <p className="mt-2 text-sm text-gray-500">Bay thẳng, không có điểm dừng.</p>
+                    ) : (
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {flight.danhSachTrungGian.map((tg, i) => (
+                          <div key={i} className="rounded-lg border bg-gray-50 px-3 py-2 text-sm">
+                            <p className="font-semibold text-gray-900">{tg.maSanBay}</p>
+                            <p className="text-xs text-gray-500">Dừng {tg.thoiGianDung} phút</p>
+                            {tg.ghiChu && <p className="mt-1 text-xs text-gray-400">{tg.ghiChu}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
-            <button onClick={(e) => { e.stopPropagation(); onDetail() }} className="mt-3 text-sm text-blue-600 hover:underline">
-              Xem chi tiết →
-            </button>
           </td>
         </tr>
       )}

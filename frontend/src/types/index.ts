@@ -104,11 +104,13 @@ export interface Booking {
 
 // ── Payment ───────────────────────────────────────────────────────────────────
 export type PaymentMethod = 'CASH' | 'CARD' | 'MOMO' | 'ZALOPAY' | 'BANK_TRANSFER'
+export type PaymentType = 'TICKET' | 'BAGGAGE' | 'UPGRADE' | 'SERVICE'
 
 export interface Payment {
   maThanhToan: number
   maVe?: number
   maPhieuDatCho?: number
+  loaiThanhToan?: PaymentType
   soTien: number
   thueVAT: number
   phuongThuc: PaymentMethod

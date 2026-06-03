@@ -9,6 +9,7 @@ import {
 import Spinner from '../components/ui/Spinner'
 import EmptyState from '../components/ui/EmptyState'
 import { Download, Printer, BarChart2 } from 'lucide-react'
+import { useToast } from '../components/ui/Toast'
 
 const MONTH_NAMES = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12']
 
@@ -18,6 +19,8 @@ export default function ReportsPage() {
   const [tab, setTab] = useState<'monthly' | 'yearly'>('monthly')
   const [year, setYear] = useState(currentYear)
   const [month, setMonth] = useState(currentMonth)
+  const [exporting, setExporting] = useState(false)
+  const toast = useToast()
 
   const { data: monthlyData = [], isLoading: loadingMonthly } = useQuery({
     queryKey: ['report-monthly', year, month],
@@ -38,9 +41,17 @@ export default function ReportsPage() {
     ? monthlyData.reduce((s, r) => s + r.soVeBan, 0)
     : yearlyData.reduce((s, r) => s + r.soVe, 0)
 
-  const handleExport = () => {
-    if (tab === 'monthly') reportsApi.exportExcel(year, month)
-    else reportsApi.exportExcel(year)
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      if (tab === 'monthly') await reportsApi.exportExcel(year, month)
+      else await reportsApi.exportExcel(year)
+      toast.success('Đã xuất file Excel')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Không thể xuất file Excel')
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
@@ -48,8 +59,8 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Báo cáo doanh thu</h1>
         <div className="flex gap-2">
-          <button onClick={handleExport} className="btn-secondary text-sm">
-            <Download size={14} /> Xuất Excel
+          <button onClick={handleExport} disabled={exporting} className="btn-secondary text-sm no-print">
+            {exporting ? <Spinner size="sm" /> : <Download size={14} />} Xuất Excel
           </button>
           <button onClick={() => window.print()} className="btn-secondary text-sm no-print">
             <Printer size={14} /> In PDF

@@ -18,6 +18,8 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
   const qc = useQueryClient()
   const toast = useToast()
   const { getNum } = useConfig()
+  const { user } = useAuth()
+  const isAdmin = user?.vaiTro === 'Admin'
 
   const thoiGianUuDai = getNum('ThoiGianMuaHanhLyUuDai', 3)
   const trongLuongMax = getNum('TrongLuongToiDaMotKien', 32)
@@ -25,7 +27,7 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
   const vatRate = getNum('ThueVAT', 10) / 100
 
   const isEarlyPurchase = differenceInHours(parseISO(ticket.chuyenBay.ngayGioBay), new Date()) >= thoiGianUuDai
-  const canUseBaggageService = ticket.trangThaiVe === 'HOP_LE'
+  const canUseBaggageService = ticket.trangThaiVe === 'HOP_LE' && !isAdmin
 
   const { data: baggage = [], isLoading } = useQuery({
     queryKey: ['baggage', ticket.maVe],
@@ -45,9 +47,12 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
 
   const [quantities, setQuantities] = useState<Record<number, number>>({})
 
-  const totalItems = baggage.reduce((s, b) => s + b.danhSachKien.length, 0)
-  const paidItems = baggage.filter((b) => b.daThanhToan).reduce((s, b) => s + b.danhSachKien.length, 0)
-  const pendingItems = baggage.filter((b) => !b.daThanhToan).reduce((s, b) => s + b.danhSachKien.length, 0)
+  const getPieces = (pkg: BaggagePackage) => pkg.danhSachKien ?? []
+  const getPackageName = (pkg: BaggagePackage) => pkg.bangGia?.tenGoi ?? `Gói hành lý #${pkg.maGoiHanhLy}`
+
+  const totalItems = baggage.reduce((s, b) => s + getPieces(b).length, 0)
+  const paidItems = baggage.filter((b) => b.daThanhToan).reduce((s, b) => s + getPieces(b).length, 0)
+  const pendingItems = baggage.filter((b) => !b.daThanhToan).reduce((s, b) => s + getPieces(b).length, 0)
   const selectedItems = Object.values(quantities).reduce((s, q) => s + q, 0)
   const remainingSlots = Math.max(0, soKienMax - totalItems - selectedItems)
   const canAddMore = canUseBaggageService && totalItems < soKienMax
@@ -126,20 +131,13 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
         throw error
       }
     },
-    onSuccess: (result) => {
-      const paidIds = new Set(result.packageIds)
-      qc.setQueryData<BaggagePackage[]>(['baggage', ticket.maVe], (current = []) => {
-        const byId = new Map(current.map((pkg) => [pkg.maGoiHanhLy, pkg]))
-        result.createdPackages.forEach((pkg) => {
-          byId.set(pkg.maGoiHanhLy, { ...pkg, daThanhToan: true, trangThai: 'ACTIVE' })
-        })
-        return Array.from(byId.values()).map((pkg) => (
-          paidIds.has(pkg.maGoiHanhLy)
-            ? { ...pkg, daThanhToan: true, trangThai: 'ACTIVE' }
-            : pkg
-        ))
-      })
-      qc.invalidateQueries({ queryKey: ['baggage', ticket.maVe] })
+    onSuccess: async () => {
+      try {
+        const updated = await baggageApi.byTicket(ticket.maVe)
+        qc.setQueryData(['baggage', ticket.maVe], updated)
+      } catch {
+        await qc.invalidateQueries({ queryKey: ['baggage', ticket.maVe] })
+      }
       toast.success('Thanh toán hành lý thành công')
       resetAddFlow()
     },
@@ -203,7 +201,14 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
         </div>
       </div>
 
-      {!canUseBaggageService && (
+      {isAdmin && (
+        <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          Admin chỉ xem hành lý hiện tại của vé, không thêm mới hoặc thanh toán hành lý.
+        </div>
+      )}
+
+      {!canUseBaggageService && !isAdmin && (
         <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           <AlertCircle size={16} className="mt-0.5 shrink-0" />
           Chỉ có thể mua hành lý ký gửi sau khi vé ở trạng thái hợp lệ.
@@ -223,7 +228,7 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate font-semibold text-gray-900">{pkg.bangGia.tenGoi}</p>
+                    <p className="truncate font-semibold text-gray-900">{getPackageName(pkg)}</p>
                     {pkg.daThanhToan ? (
                       <span className="inline-flex items-center gap-0.5 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
                         <CheckCircle size={10} /> Đã thanh toán
@@ -235,12 +240,12 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
                     )}
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
-                    {pkg.danhSachKien.length} kiện · {pkg.tongTrongLuong} kg · #{pkg.maGoiHanhLy}
+                    {getPieces(pkg).length} kiện · {pkg.tongTrongLuong} kg · #{pkg.maGoiHanhLy}
                   </p>
                 </div>
                 <div className="ml-3 shrink-0 text-right">
                   <p className="font-bold text-gray-900">{formatCurrency(pkg.tongPhi)}</p>
-                  {!pkg.daThanhToan && (
+                  {!pkg.daThanhToan && !isAdmin && (
                     <button onClick={() => cancelMutation.mutate(pkg.maGoiHanhLy)} className="ml-auto mt-1 flex items-center gap-1 text-xs text-red-500 hover:underline">
                       <Trash2 size={10} /> Hủy gói
                     </button>
@@ -248,7 +253,7 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {pkg.danhSachKien.map((item) => (
+                {getPieces(pkg).map((item) => (
                   <span key={item.maKienHanhLy} className="rounded border bg-gray-50 px-2 py-0.5 font-mono text-xs text-gray-500">
                     {item.trongLuong} kg
                   </span>
@@ -259,21 +264,23 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => setShowAdd(true)}
-          disabled={!canAddMore}
-          className="btn-secondary justify-center text-sm"
-          title={!canAddMore ? `Đã đạt tối đa ${soKienMax} kiện hoặc vé chưa hợp lệ` : undefined}
-        >
-          <Plus size={14} /> Thêm hành lý
-        </button>
-        {unpaidBaggage.length > 0 && (
-          <button onClick={openPaymentForExistingBaggage} className="btn-primary justify-center text-sm">
-            <CreditCard size={14} /> Thanh toán hành lý chờ · {formatCurrency(pendingBaggageTotalWithVat)}
+      {!isAdmin && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowAdd(true)}
+            disabled={!canAddMore}
+            className="btn-secondary justify-center text-sm"
+            title={!canAddMore ? `Đã đạt tối đa ${soKienMax} kiện hoặc vé chưa hợp lệ` : undefined}
+          >
+            <Plus size={14} /> Thêm hành lý
           </button>
-        )}
-      </div>
+          {unpaidBaggage.length > 0 && (
+            <button onClick={openPaymentForExistingBaggage} className="btn-primary justify-center text-sm">
+              <CreditCard size={14} /> Thanh toán hành lý chờ · {formatCurrency(pendingBaggageTotalWithVat)}
+            </button>
+          )}
+        </div>
+      )}
 
       <Modal
         open={showAdd}
@@ -421,7 +428,7 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
                 ))
               : unpaidBaggage.map((pkg) => (
                   <div key={pkg.maGoiHanhLy} className="flex justify-between">
-                    <span className="text-gray-600">{pkg.bangGia.tenGoi} · {pkg.danhSachKien.length} kiện</span>
+                    <span className="text-gray-600">{getPackageName(pkg)} · {getPieces(pkg).length} kiện</span>
                     <span className="font-medium">{formatCurrency(pkg.tongPhi)}</span>
                   </div>
                 ))}

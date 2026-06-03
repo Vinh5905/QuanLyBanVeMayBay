@@ -175,6 +175,101 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
+    @Override
+    public byte[] exportYearlyReportExcel(int year) {
+        List<YearlyReportRow> rows = getYearlyReport(year);
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Báo cáo năm " + year);
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderBottom(BorderStyle.THIN);
+
+            CellStyle numberStyle = workbook.createCellStyle();
+            DataFormat fmt = workbook.createDataFormat();
+            numberStyle.setDataFormat(fmt.getFormat("#,##0"));
+
+            CellStyle currencyStyle = workbook.createCellStyle();
+            currencyStyle.setDataFormat(fmt.getFormat("#,##0 \\₫"));
+
+            String[] headers = {
+                "Tháng", "Số chuyến bay", "Số vé bán", "Doanh thu (đ)", "Tỷ lệ (%)"
+            };
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            int rowNum = 1;
+            int totalFlights = 0;
+            int totalTickets = 0;
+            BigDecimal totalRevenue = BigDecimal.ZERO;
+
+            for (YearlyReportRow row : rows) {
+                Row dataRow = sheet.createRow(rowNum++);
+                dataRow.createCell(0).setCellValue(row.getThang() != null ? row.getThang() : 0);
+
+                Cell flightCell = dataRow.createCell(1);
+                flightCell.setCellValue(row.getSoChuyenBay() != null ? row.getSoChuyenBay() : 0);
+                flightCell.setCellStyle(numberStyle);
+
+                Cell ticketCell = dataRow.createCell(2);
+                ticketCell.setCellValue(row.getSoVe() != null ? row.getSoVe() : 0);
+                ticketCell.setCellStyle(numberStyle);
+
+                Cell revenueCell = dataRow.createCell(3);
+                revenueCell.setCellValue(row.getDoanhThu() != null ? row.getDoanhThu().doubleValue() : 0);
+                revenueCell.setCellStyle(currencyStyle);
+
+                dataRow.createCell(4).setCellValue(row.getPhanTram() != null ? row.getPhanTram() : 0);
+
+                if (row.getSoChuyenBay() != null) totalFlights += row.getSoChuyenBay();
+                if (row.getSoVe() != null) totalTickets += row.getSoVe();
+                if (row.getDoanhThu() != null) totalRevenue = totalRevenue.add(row.getDoanhThu());
+            }
+
+            Row sumRow = sheet.createRow(rowNum);
+            CellStyle sumStyle = workbook.createCellStyle();
+            Font sumFont = workbook.createFont();
+            sumFont.setBold(true);
+            sumStyle.setFont(sumFont);
+
+            Cell sumLabel = sumRow.createCell(0);
+            sumLabel.setCellValue("TỔNG CỘNG");
+            sumLabel.setCellStyle(sumStyle);
+
+            Cell sumFlights = sumRow.createCell(1);
+            sumFlights.setCellValue(totalFlights);
+            sumFlights.setCellStyle(numberStyle);
+
+            Cell sumTickets = sumRow.createCell(2);
+            sumTickets.setCellValue(totalTickets);
+            sumTickets.setCellStyle(numberStyle);
+
+            Cell sumRevenue = sumRow.createCell(3);
+            sumRevenue.setCellValue(totalRevenue.doubleValue());
+            sumRevenue.setCellStyle(currencyStyle);
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new BusinessException("EXPORT_FAILED", "Không thể xuất file Excel: " + e.getMessage());
+        }
+    }
+
     private MonthlyReportRow mapMonthlyRow(ResultSet rs) throws SQLException {
         Object ngayGioObj = rs.getObject("NgayGioBay");
         LocalDateTime ngayGio = null;

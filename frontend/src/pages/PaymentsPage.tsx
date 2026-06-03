@@ -16,6 +16,20 @@ import { CreditCard, ChevronDown, ChevronUp } from 'lucide-react'
 import TicketCard from '../components/TicketCard'
 import type { Ticket, PaymentMethod } from '../types'
 
+const PAYMENT_TYPE_LABEL: Record<string, string> = {
+  TICKET: 'Vé',
+  BAGGAGE: 'Hành lý',
+  UPGRADE: 'Nâng hạng',
+  SERVICE: 'Dịch vụ',
+}
+
+const PAYMENT_TYPE_VARIANT: Record<string, 'blue' | 'green' | 'yellow' | 'gray'> = {
+  TICKET: 'blue',
+  BAGGAGE: 'green',
+  UPGRADE: 'yellow',
+  SERVICE: 'gray',
+}
+
 // ─── Customer panel ─────────────────────────────────────────────────────────
 
 function TicketPayPanel({ ticket }: { ticket: Ticket }) {
@@ -207,7 +221,8 @@ function StaffPaymentsView() {
                 <thead>
                   <tr>
                     <th className="table-th">Mã thanh toán</th>
-                    <th className="table-th">Mã vé</th>
+                    <th className="table-th">Vé / Phiếu đặt chỗ</th>
+                    <th className="table-th">Loại thanh toán</th>
                     <th className="table-th text-right">Số tiền</th>
                     <th className="table-th text-right">Thuế VAT</th>
                     <th className="table-th">Phương thức</th>
@@ -220,12 +235,21 @@ function StaffPaymentsView() {
                     <tr key={p.maThanhToan} className="border-t hover:bg-gray-50">
                       <td className="table-td font-mono text-xs text-blue-600">#{p.maThanhToan}</td>
                       <td className="table-td">
-                        {p.maVe && (
+                        {p.maVe ? (
                           <button onClick={() => navigate(`/tickets/${p.maVe}`)} className="text-blue-600 hover:underline text-xs">
                             Vé #{p.maVe}
                           </button>
+                        ) : (
+                          <span className="text-xs text-gray-400">Không gắn vé</span>
                         )}
-                        {p.maPhieuDatCho && <span className="text-xs text-gray-500"> / Đặt #{p.maPhieuDatCho}</span>}
+                        {p.maPhieuDatCho && (
+                          <p className="mt-0.5 text-xs text-gray-500">Phiếu đặt chỗ #{p.maPhieuDatCho}</p>
+                        )}
+                      </td>
+                      <td className="table-td">
+                        <Badge variant={PAYMENT_TYPE_VARIANT[p.loaiThanhToan ?? 'TICKET'] ?? 'gray'}>
+                          {PAYMENT_TYPE_LABEL[p.loaiThanhToan ?? 'TICKET'] ?? p.loaiThanhToan}
+                        </Badge>
                       </td>
                       <td className="table-td text-right font-medium">{formatCurrency(p.soTien)}</td>
                       <td className="table-td text-right text-gray-500">{formatCurrency(p.thueVAT)}</td>

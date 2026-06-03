@@ -11,6 +11,7 @@ import Badge from '../components/ui/Badge'
 import Modal from '../components/ui/Modal'
 import { useToast } from '../components/ui/Toast'
 import { useConfig } from '../contexts/ConfigContext'
+import { useAuth } from '../contexts/AuthContext'
 import { differenceInHours, differenceInMinutes, parseISO } from 'date-fns'
 import { paymentsApi } from '../api/payments.api'
 import type { PaymentMethod } from '../types'
@@ -21,6 +22,7 @@ export default function TicketDetailPage() {
   const qc = useQueryClient()
   const toast = useToast()
   const { getNum } = useConfig()
+  const { user } = useAuth()
 
   const { data: ticket, isLoading } = useQuery({
     queryKey: ['ticket', id],
@@ -132,6 +134,7 @@ export default function TicketDetailPage() {
   const canChange = ticket.trangThaiVe === 'HOP_LE' && hoursUntilDep >= getNum('ThoiGianChoPhepDoiVe', 24)
   const canCheckin = ticket.trangThaiVe === 'HOP_LE' && hoursUntilDep <= getNum('ThoiGianMoCheckInOnline', 24) && minutesUntilDep >= getNum('ThoiGianDongCheckInOnline', 60)
   const canPayment = ticket.trangThaiVe === 'DANG_GIU_CHO'
+  const isAdmin = user?.vaiTro === 'Admin'
 
   return (
     <div className="space-y-5">
@@ -187,37 +190,37 @@ export default function TicketDetailPage() {
             {baggage.map((pkg) => (
               <div key={pkg.maGoiHanhLy} className="flex justify-between text-sm bg-gray-50 rounded-lg p-3">
                 <div>
-                  <p className="font-medium">{pkg.bangGia.tenGoi}</p>
-                  <p className="text-xs text-gray-500">{pkg.danhSachKien.length} kiện — {pkg.tongTrongLuong} kg</p>
+                  <p className="font-medium">{pkg.bangGia?.tenGoi ?? `Gói hành lý #${pkg.maGoiHanhLy}`}</p>
+                  <p className="text-xs text-gray-500">{(pkg.danhSachKien ?? []).length} kiện — {pkg.tongTrongLuong} kg</p>
                 </div>
                 <p className="font-bold text-gray-900">{formatCurrency(pkg.tongPhi)}</p>
               </div>
             ))}
           </div>
           <button onClick={() => navigate(`/baggage?maVe=${id}`)} className="mt-3 text-sm text-blue-600 hover:underline">
-            Quản lý hành lý →
+            {isAdmin ? 'Xem hành lý' : 'Quản lý hành lý'} →
           </button>
         </div>
       )}
 
       {/* Actions */}
       <div className="flex flex-wrap gap-3">
-        {canPayment && (
+        {!isAdmin && canPayment && (
           <button onClick={() => setShowPayment(true)} className="btn-primary">
             <CreditCard size={16} /> Thanh toán vé
           </button>
         )}
-        {canUpgrade && (
+        {!isAdmin && canUpgrade && (
           <button onClick={() => setShowUpgrade(true)} className="btn-secondary">
             <TrendingUp size={16} /> Nâng hạng
           </button>
         )}
-        {canChange && (
+        {!isAdmin && canChange && (
           <button onClick={() => setShowChange(true)} className="btn-secondary">
             <RefreshCw size={16} /> Đổi chuyến
           </button>
         )}
-        {canCheckin && (
+        {!isAdmin && canCheckin && (
           <button onClick={() => navigate(`/checkin?maVe=${id}`)} className="btn-secondary">
             <LogIn size={16} /> Check-in online
           </button>
@@ -225,7 +228,7 @@ export default function TicketDetailPage() {
         <button onClick={() => navigate(`/baggage?maVe=${id}`)} className="btn-secondary">
           <Briefcase size={16} /> Hành lý ký gửi
         </button>
-        {canCancel && (
+        {!isAdmin && canCancel && (
           <button onClick={() => setShowCancel(true)} className="btn-danger">
             <XCircle size={16} /> Hủy vé
           </button>
