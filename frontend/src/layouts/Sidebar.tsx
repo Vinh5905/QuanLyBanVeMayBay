@@ -106,6 +106,7 @@ export default function Sidebar({ collapsed, onClose }: { collapsed?: boolean; o
                       <NavLink
                         key={child.to}
                         to={child.to}
+                        end={child.to === '/tickets'}
                         onClick={onClose}
                         className={({ isActive }) =>
                           `block py-2 px-3 text-sm rounded-lg mb-0.5 transition-colors ${

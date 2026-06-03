@@ -12,6 +12,7 @@ import Modal from '../components/ui/Modal'
 import { useToast } from '../components/ui/Toast'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useConfig } from '../contexts/ConfigContext'
 import { CreditCard, ChevronDown, ChevronUp } from 'lucide-react'
 import TicketCard from '../components/TicketCard'
 import type { Ticket, BaggagePackage, PaymentMethod } from '../types'
@@ -21,6 +22,7 @@ import type { Ticket, BaggagePackage, PaymentMethod } from '../types'
 function TicketPayPanel({ ticket }: { ticket: Ticket }) {
   const qc = useQueryClient()
   const toast = useToast()
+  const { getNum } = useConfig()
   const [showModal, setShowModal] = useState(false)
   const [payMethod, setPayMethod] = useState<PaymentMethod>('CASH')
 
@@ -34,22 +36,30 @@ function TicketPayPanel({ ticket }: { ticket: Ticket }) {
 
   const isPendingPayment = ticket.trangThaiVe === 'DANG_GIU_CHO'
 
+  // Stored procedure sp_ThanhToan_Create validates:
+  //   @SoTienThanhToan >= @GiaGoc * (1 + @ThuVAT)
+  // where @GiaGoc = VE.GiaVe (or PHIEUDATCHO.TongTien) and @ThuVAT from THAM_SO (default 10%).
+  // So we must send the VAT-inclusive amount.
+  const vatRate = getNum('ThueVAT', 10) / 100
+  const ticketAmountWithVAT = Math.round(ticket.giaVe * (1 + vatRate))
+
   const payMutation = useMutation({
     mutationFn: async () => {
-      // Pay ticket first (via booking ID if available, else via ticket ID)
+      // Pay ticket (via booking ID if available, else via ticket ID).
+      // The stored procedure only handles ticket payment, not baggage.
+      // Baggage is registered via POST /api/baggage with its fee recorded separately.
       const ticketPayload = ticket.maPhieuDatCho
-        ? { maPhieuDatCho: ticket.maPhieuDatCho, hinhThucThanhToan: payMethod, soTienThanhToan: ticket.giaVe }
-        : { maVe: ticket.maVe, hinhThucThanhToan: payMethod, soTienThanhToan: ticket.giaVe }
+        ? {
+            maPhieuDatCho: ticket.maPhieuDatCho,
+            hinhThucThanhToan: payMethod,
+            soTienThanhToan: ticketAmountWithVAT,
+          }
+        : {
+            maVe: ticket.maVe,
+            hinhThucThanhToan: payMethod,
+            soTienThanhToan: ticketAmountWithVAT,
+          }
       await paymentsApi.create(ticketPayload)
-
-      // Then pay each baggage package
-      for (const b of baggage) {
-        await paymentsApi.create({
-          maVe: ticket.maVe,
-          hinhThucThanhToan: payMethod,
-          soTienThanhToan: b.tongPhi,
-        })
-      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['my-tickets'] })

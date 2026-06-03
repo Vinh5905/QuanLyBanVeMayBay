@@ -71,7 +71,9 @@ function TicketBaggagePanel({ ticket }: { ticket: Ticket }) {
           <span className="ml-2 text-gray-500">{ticket.chuyenBay.sanBayDi}→{ticket.chuyenBay.sanBayDen} · {formatDateTime(ticket.chuyenBay.ngayGioBay)}</span>
         </div>
         <span className={`text-xs font-medium ${isEarlyPurchase ? 'text-green-600' : 'text-amber-600'}`}>
-          {isEarlyPurchase ? `Giá ưu đãi (trước ${thoiGianUuDai}h)` : 'Giá tại sân bay'}
+          {isEarlyPurchase
+            ? `Giá mua trước (còn ≥${thoiGianUuDai}h trước giờ bay)`
+            : 'Giá tại sân bay (đã quá hạn mua ưu đãi)'}
         </span>
       </div>
 

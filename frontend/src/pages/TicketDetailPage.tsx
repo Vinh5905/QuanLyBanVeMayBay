@@ -64,11 +64,15 @@ export default function TicketDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   })
 
-  // Payment modal
+  // Payment modal — sp_ThanhToan_Create expects @SoTienThanhToan >= VE.GiaVe * (1 + VAT)
   const [showPayment, setShowPayment] = useState(false)
   const [payMethod, setPayMethod] = useState<PaymentMethod>('CASH')
+  const vatRate = getNum('ThueVAT', 10) / 100
   const payMutation = useMutation({
-    mutationFn: () => paymentsApi.create({ maVe: Number(id), hinhThucThanhToan: payMethod, soTienThanhToan: ticket!.giaVe }),
+    mutationFn: () => {
+      const amountWithVAT = Math.round(ticket!.giaVe * (1 + vatRate))
+      return paymentsApi.create({ maVe: Number(id), hinhThucThanhToan: payMethod, soTienThanhToan: amountWithVAT })
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['ticket', id] }); toast.success('Thanh toán thành công'); setShowPayment(false) },
     onError: (e: Error) => toast.error(e.message),
   })

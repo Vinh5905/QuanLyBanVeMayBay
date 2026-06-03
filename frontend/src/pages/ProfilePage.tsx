@@ -87,7 +87,7 @@ export default function ProfilePage() {
   const tierClass = TIER_COLORS[profile.hangThanhVien ?? ''] ?? 'text-gray-600 bg-gray-100 border-gray-300'
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5">
       <h1 className="text-xl font-bold text-gray-900">Thông tin của tôi</h1>
 
       {/* Profile card */}
